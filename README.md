@@ -1,50 +1,49 @@
-# Welcome to your Expo app 👋
+# Smart F&B Chain Platform — App Phục vụ (Waiter)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Bản phác thảo giao diện **tablet** cho actor **Phục vụ (Waiter)** trong đồ án
+*Smart F&B Chain Platform (SP26SE123)* — bám **Phân tích nghiệp vụ v2**
+(bỏ app khách, thanh toán trước qua QR, khái niệm **Table Session**, cơ chế **nhận việc bưng món**).
 
-## Get started
+- **Stack:** Expo SDK 54 · React Native · TypeScript · expo-router
+- **UI:** `@ant-design/react-native` (ant-design-mobile-rn), theme **trắng–đen** (nền sáng, chỉ 1 chế độ)
+- **Icon:** `lucide-react-native` (gom ở `src/components/ui/icon.tsx`)
+- **Font:** HarmonyOS Sans — file `.ttf` trong `assets/fonts/`, phủ toàn cục qua `src/theme/global-font.ts`
+- **Dữ liệu:** hoàn toàn **mock** trong `src/data/` (chưa nối backend / Socket.IO)
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Chạy thử
 
 ```bash
-npm run reset-project
+pnpm install
+pnpm start        # rồi bấm a / i / w
+# hoặc web trực tiếp:
+pnpm web
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Màn hình (use case Waiter v2)
 
-## Learn more
+| Route | Use case | Nội dung |
+|-------|----------|----------|
+| `app/login.tsx` | WT-01 | Đăng nhập + check-in ca tại chi nhánh |
+| `app/(waiter)/floor.tsx` | WT-02, W03 | Sơ đồ bàn real-time; tap bàn Trống → mở phiên + kích hoạt QR; bàn Cần dọn → báo đã dọn |
+| `app/(waiter)/table/[id].tsx` | WT-03,05,06,07,08 | Chi tiết **phiên bàn**: danh sách order (đọc), order thay khách, xử lý hết món, đổi bàn, đóng phiên |
+| `app/(waiter)/ready.tsx` | WT-04, W05 | Món **chờ bưng** — nhận việc (ai bấm trước thắng) rồi "Đã phục vụ"; leo thang khi chờ quá lâu |
+| `app/(waiter)/reservations.tsx` | backlog | Danh sách đặt trước — **chỉ xem** |
+| `app/(waiter)/shift.tsx` | WT-01 | Thông tin ca, phiên đang phụ trách, check-out |
 
-To learn more about developing your project with Expo, look at the following resources:
+Điều hướng: **Navigation Rail** dọc bên trái (`src/components/nav-rail.tsx`),
+thu gọn icon-only khi bề rộng < 820. Layout co giãn cho cả ngang lẫn dọc.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Ghi chú
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- **Sơ đồ bàn** tô màu theo 4 trạng thái bàn để nhận diện nhanh — xanh lá (Trống), vàng (Đã đặt
+  trước), xanh dương (Đang phục vụ), đỏ (Cần dọn) — bảng màu ở `src/theme/status-colors.ts`.
+  Trạng thái món và phần còn lại của app vẫn đơn sắc trắng–đen (`src/components/status-badge.tsx`).
+- `src/data/store.tsx` — mọi luồng nghiệp vụ v2 chạy trên mock: phiên bàn, order tự "xuống bếp"
+  khi thanh toán (BR-03), backend sinh trạng thái "Chờ bưng" theo *chế độ ra món* của danh mục
+  (BR-07), khoá "nhận việc" theo waiter (BR-08), leo thang 3'/5' (BR-09). Mô phỏng bếp mỗi ~9s,
+  tắt ở màn **Ca làm**.
+- Font HarmonyOS Sans được phủ lên **mọi** `<Text>` (kể cả bên trong component antd)
+  bằng patch `Text.render` trong `src/theme/global-font.ts`.
+- Lớp UI dùng chung ở `src/components/ui/` (`Btn`, `IconButton`, `Pill`, `Segmented`,
+  `Stepper`, `Field`, `AppModal`, `Txt`) — Pressable/antd + token theme.
+- Theme token trắng–đen: `src/theme/antd-theme.ts` (`lightTheme`).
