@@ -4,21 +4,20 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/src/components/screen-header';
-import { Btn } from '@/src/components/ui/button';
 import { Icon } from '@/src/components/ui/icon';
 import { Txt } from '@/src/components/ui/txt';
 import { clockAt, durationSince } from '@/src/data/format';
-import { shiftInfo, staff } from '@/src/data/mock';
+import { shiftInfo, staffByRole } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
 import { useAppTheme } from '@/src/theme/use-theme';
 
 export default function ShiftScreen() {
   const theme = useAppTheme();
-  const { state, checkOut, setSimulate } = useStore();
+  const { state, setSimulate } = useStore();
 
   const myTables = state.tables.filter((t) => t.status === 'Đang phục vụ');
   const sessionOf = (tableId: string) =>
-    state.sessions.find((s) => s.tableId === tableId && s.status === 'Đang hoạt động');
+    state.sessions.find((s) => s.tableIds.includes(tableId) && s.status === 'Đang hoạt động');
 
   const cardStyle = [
     styles.card,
@@ -28,7 +27,10 @@ export default function ShiftScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.pad}>
-        <ScreenHeader title="Ca làm việc" subtitle={`${staff.name} · ${staff.role}`} />
+        <ScreenHeader
+          title="Ca làm việc"
+          subtitle={`${staffByRole['Phục vụ'].name} · ${staffByRole['Phục vụ'].role}`}
+        />
 
         <View style={cardStyle}>
           <View style={styles.shiftHead}>
@@ -41,16 +43,9 @@ export default function ShiftScreen() {
           <Row label="Giờ check-in" value={state.checkedInAt ? clockAt(state.checkedInAt) : '—'} />
           <Row label="Thời lượng" value={state.checkedInAt ? durationSince(state.checkedInAt) : '—'} />
           <Row label="Phiên đang phục vụ" value={`${myTables.length} bàn`} />
-          <Btn
-            label="Check-out ca"
-            icon="logout"
-            block
-            style={styles.checkout}
-            onPress={() => {
-              checkOut();
-              router.replace('/login');
-            }}
-          />
+          <Txt variant="caption" muted style={styles.checkoutNote}>
+            Quản lý chi nhánh sẽ check-out cho bạn khi hết ca.
+          </Txt>
         </View>
 
         <Txt variant="bodyStrong" muted style={styles.sectionTitle}>
@@ -133,7 +128,7 @@ const styles = StyleSheet.create({
   shiftHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   divider: { height: StyleSheet.hairlineWidth, marginVertical: 10 },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  checkout: { marginTop: 14 },
+  checkoutNote: { marginTop: 10 },
   sectionTitle: { marginTop: 12, marginBottom: 6 },
   rowPad: { padding: 14 },
   tableRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 12 },

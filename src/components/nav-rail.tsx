@@ -1,9 +1,9 @@
 import { Badge } from '@ant-design/react-native';
 import { router, usePathname } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { staff } from '@/src/data/mock';
+import { staffByRole } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { Icon, type IconName } from './ui/icon';
@@ -47,12 +47,19 @@ export function NavRail({ compact }: { compact: boolean }) {
         },
       ]}>
       <View style={[styles.brand, compact && styles.brandCompact]}>
-        <Icon name="brand" size={22} />
-        {!compact ? (
-          <Txt variant="label" numberOfLines={1} style={styles.brandText}>
-            Smart F&B
-          </Txt>
-        ) : null}
+        {compact ? (
+          <Image
+            source={require('@/assets/logo/logo2-icon.png')}
+            style={styles.brandIconCompact}
+            resizeMode="contain"
+          />
+        ) : (
+          <Image
+            source={require('@/assets/logo/logo2.png')}
+            style={styles.brandLogo}
+            resizeMode="contain"
+          />
+        )}
       </View>
 
       <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
@@ -94,11 +101,11 @@ export function NavRail({ compact }: { compact: boolean }) {
         <Pressable
           onPress={() => router.replace('/(waiter)/shift')}
           style={[styles.avatar, { borderColor: theme.border_color_base }]}>
-          <Txt variant="label">{initials(staff.name)}</Txt>
+          <Txt variant="label">{initials(staffByRole['Phục vụ'].name)}</Txt>
         </Pressable>
         {!compact ? (
           <Txt variant="tiny" muted numberOfLines={1} style={styles.staffName}>
-            {staff.name}
+            {staffByRole['Phục vụ'].name}
           </Txt>
         ) : null}
       </View>
@@ -108,9 +115,10 @@ export function NavRail({ compact }: { compact: boolean }) {
 
 const styles = StyleSheet.create({
   rail: { borderRightWidth: StyleSheet.hairlineWidth, paddingHorizontal: 8 },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 6, minHeight: 32 },
+  brand: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6, minHeight: 32 },
   brandCompact: { justifyContent: 'center' },
-  brandText: { flexShrink: 1 },
+  brandLogo: { width: 84, height: 119 },
+  brandIconCompact: { width: 32, height: 32 },
   divider: { height: StyleSheet.hairlineWidth, marginVertical: 12 },
   destList: { gap: 6, flex: 1 },
   dest: { paddingVertical: 10, paddingHorizontal: 4, borderRadius: 2 },

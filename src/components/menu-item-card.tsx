@@ -8,16 +8,20 @@ import { Txt } from './ui/txt';
 
 export function MenuItemCard({
   item,
-  disabled,
+  categoryLabel,
+  available,
+  remainingPortions,
   onPress,
 }: {
   item: MenuItem;
-  disabled?: boolean;
+  categoryLabel: string;
+  available: boolean;
+  remainingPortions?: number;
   onPress: () => void;
 }) {
   const theme = useAppTheme();
-  const off = disabled || !item.available;
-  const low = !off && item.remainingPortions !== undefined && item.remainingPortions <= 5;
+  const off = !available || remainingPortions === 0;
+  const low = !off && remainingPortions !== undefined && remainingPortions <= 5;
 
   return (
     <Pressable
@@ -42,7 +46,7 @@ export function MenuItemCard({
         <View style={styles.meta}>
           <Icon name="pin" size={12} color={theme.color_text_caption} />
           <Txt variant="tiny" muted>
-            {off ? 'Hết món' : low ? `còn ${item.remainingPortions} suất` : item.station}
+            {off ? 'Hết món' : low ? `còn ${remainingPortions} suất` : categoryLabel}
           </Txt>
         </View>
       </View>

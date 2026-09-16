@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { staff } from '@/src/data/mock';
+import { staffByRole } from '@/src/data/mock';
 import { durationSince } from '@/src/data/format';
 import type { ClaimEntry } from '@/src/data/types';
 import { useAppTheme } from '@/src/theme/use-theme';
@@ -18,7 +18,7 @@ export function ClaimCard({
   onServe: () => void;
 }) {
   const theme = useAppTheme();
-  const mine = entry.claimedBy === staff.name;
+  const mine = entry.claimedBy === staffByRole['Phục vụ'].name;
   const byOther = !!entry.claimedBy && !mine;
   const urgent = entry.escalation !== 'thường';
 
@@ -45,7 +45,7 @@ export function ClaimCard({
         <View style={styles.metaRow}>
           <Icon name="pin" size={12} color={theme.color_text_caption} />
           <Txt variant="label" muted>
-            {entry.station} · chờ {durationSince(entry.waitingSince)}
+            {entry.categoryLabel} · chờ {durationSince(entry.waitingSince)}
           </Txt>
           {entry.escalation === 'khẩn' ? (
             <Txt variant="tiny" style={[styles.tag, { borderColor: theme.color_text_base }]}>

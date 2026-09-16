@@ -1,18 +1,14 @@
 import { Stack } from 'expo-router';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { KitchenReadyBanner } from '@/src/components/kitchen-ready-banner';
-import { NavRail } from '@/src/components/nav-rail';
+import { KitchenNav } from '@/src/components/kitchen/kitchen-nav';
 import { useAppTheme } from '@/src/theme/use-theme';
 
-export default function WaiterLayout() {
+export default function KitchenLayout() {
   const theme = useAppTheme();
-  const { width } = useWindowDimensions();
-  const compact = width < 820;
-
   return (
     <View style={[styles.shell, { backgroundColor: theme.fill_body }]}>
-      <NavRail compact={compact} />
+      <KitchenNav />
       <View style={styles.content}>
         <Stack
           screenOptions={{
@@ -20,7 +16,6 @@ export default function WaiterLayout() {
             contentStyle: { backgroundColor: theme.fill_body },
           }}
         />
-        <KitchenReadyBanner />
       </View>
     </View>
   );

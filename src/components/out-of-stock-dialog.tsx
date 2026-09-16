@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { formatVnd } from '@/src/data/format';
-import { menu } from '@/src/data/mock';
+import { categoryById, menu } from '@/src/data/mock';
 import type { OrderItem } from '@/src/data/types';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { AppModal } from './ui/app-modal';
@@ -12,20 +12,20 @@ import { Txt } from './ui/txt';
 export function OutOfStockDialog({
   visible,
   item,
-  unavailableMenu,
+  isMenuAvailable,
   onDismiss,
   onSwap,
-  onRefund,
+  onDrop,
 }: {
   visible: boolean;
   item: OrderItem | null;
-  unavailableMenu: string[];
+  isMenuAvailable: (menuItemId: string) => boolean;
   onDismiss: () => void;
-  onSwap: (newMenuItemId: string, unitPrice: number) => void;
-  onRefund: (reason: string) => void;
+  onSwap: (newMenuItemId: string) => void;
+  onDrop: () => void;
 }) {
   const theme = useAppTheme();
-  const [mode, setMode] = useState<'choose' | 'swap' | 'refund'>('choose');
+  const [mode, setMode] = useState<'choose' | 'swap'>('choose');
 
   const close = () => {
     setMode('choose');
@@ -34,9 +34,7 @@ export function OutOfStockDialog({
 
   if (!item) return null;
 
-  const options = menu.filter(
-    (m) => m.id !== item.menuItemId && m.available && !unavailableMenu.includes(m.id),
-  );
+  const options = menu.filter((m) => m.id !== item.menuItemId && isMenuAvailable(m.id));
 
   return (
     <AppModal
@@ -51,15 +49,19 @@ export function OutOfStockDialog({
       {mode === 'choose' ? (
         <>
           <Txt variant="caption" muted>
-            Bếp báo hết. Ra bàn trao đổi với khách rồi chọn cách xử lý (mục 7.4).
+            Bếp báo hết. Chưa thu tiền nên không phát sinh hoàn tiền — ra bàn xin lỗi rồi chọn
+            cách xử lý (mục 6.4).
           </Txt>
           <View style={styles.choiceRow}>
             <Btn label="Đổi món" icon="edit" onPress={() => setMode('swap')} />
             <Btn
-              label="Chuyển hoàn tiền"
-              icon="receipt"
+              label="Bỏ món khỏi hoá đơn"
+              icon="remove"
               variant="ghost"
-              onPress={() => setMode('refund')}
+              onPress={() => {
+                onDrop();
+                close();
+              }}
             />
           </View>
         </>
@@ -68,58 +70,30 @@ export function OutOfStockDialog({
       {mode === 'swap' ? (
         <>
           <Txt variant="caption" muted>
-            Chọn món thay. Chênh lệch giá tính theo {item.qty} phần.
+            Chọn món thay cho khách.
           </Txt>
           <ScrollView style={styles.list}>
-            {options.map((m) => {
-              const diff = (m.price - item.unitPrice) * item.qty;
-              return (
-                <Pressable
-                  key={m.id}
-                  onPress={() => {
-                    onSwap(m.id, m.price);
-                    close();
-                  }}
-                  style={({ pressed }) => [
-                    styles.opt,
-                    { borderColor: theme.border_color_thin },
-                    pressed && { backgroundColor: theme.fill_tap },
-                  ]}>
-                  <View style={styles.optText}>
-                    <Txt variant="bodyStrong">{m.name}</Txt>
-                    <Txt variant="caption" muted>
-                      {formatVnd(m.price)} · {m.station}
-                    </Txt>
-                  </View>
-                  <Txt variant="label">
-                    {diff === 0
-                      ? 'ngang giá'
-                      : diff > 0
-                        ? `phụ thu ${formatVnd(diff)}`
-                        : `hoàn ${formatVnd(-diff)}`}
+            {options.map((m) => (
+              <Pressable
+                key={m.id}
+                onPress={() => {
+                  onSwap(m.id);
+                  close();
+                }}
+                style={({ pressed }) => [
+                  styles.opt,
+                  { borderColor: theme.border_color_thin },
+                  pressed && { backgroundColor: theme.fill_tap },
+                ]}>
+                <View style={styles.optText}>
+                  <Txt variant="bodyStrong">{m.name}</Txt>
+                  <Txt variant="caption" muted>
+                    {formatVnd(m.price)} · {categoryById[m.categoryId]?.label}
                   </Txt>
-                </Pressable>
-              );
-            })}
+                </View>
+              </Pressable>
+            ))}
           </ScrollView>
-        </>
-      ) : null}
-
-      {mode === 'refund' ? (
-        <>
-          <Txt variant="body">
-            Tạo yêu cầu hoàn {formatVnd(item.unitPrice * item.qty)} cho {item.name}, chuyển
-            Thu ngân xử lý và ghi audit log (BR-11).
-          </Txt>
-          <Btn
-            label="Xác nhận chuyển hoàn tiền"
-            icon="check"
-            block
-            onPress={() => {
-              onRefund('Bếp báo hết món sau khi khách đã thanh toán');
-              close();
-            }}
-          />
         </>
       ) : null}
     </AppModal>
@@ -127,7 +101,7 @@ export function OutOfStockDialog({
 }
 
 const styles = StyleSheet.create({
-  choiceRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  choiceRow: { flexDirection: 'row', gap: 10, marginTop: 4, flexWrap: 'wrap' },
   list: { maxHeight: 280 },
   opt: {
     flexDirection: 'row',

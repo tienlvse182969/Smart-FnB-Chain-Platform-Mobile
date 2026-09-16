@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 import type { TableStatus } from '@/src/data/types';
 import { TableStatusBadge } from './status-badge';
 
-const ORDER: TableStatus[] = ['Trống', 'Đã đặt trước', 'Đang phục vụ', 'Cần dọn'];
+const ORDER: TableStatus[] = ['Trống', 'Đã đặt trước', 'Đang phục vụ', 'Tạm khoá'];
 
 export function LegendBar() {
   return (

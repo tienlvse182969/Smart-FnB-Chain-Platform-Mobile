@@ -1,16 +1,10 @@
-export type Station = 'Bếp chính' | 'Quầy nước' | 'Quầy tráng miệng';
-
-/** v2: trạng thái bàn (mục 6.1) */
-export type TableStatus = 'Trống' | 'Đã đặt trước' | 'Đang phục vụ' | 'Cần dọn';
+/** v6: trạng thái bàn (mục 5.3) — bỏ "Cần dọn", thanh toán xong về Trống ngay */
+export type TableStatus = 'Trống' | 'Đã đặt trước' | 'Đang phục vụ' | 'Tạm khoá';
 
 export type TableArea = 'Tầng 1' | 'Sân vườn' | 'VIP';
 
-/** v2: chế độ ra món, cấu hình theo danh mục (mục 7.2) */
-export type ServingMode = 'Ra ngay' | 'Ra theo bàn';
-
-/** v2: vòng đời order item (mục 6.4) */
+/** v6: vòng đời dòng món (mục 5.6) — không còn trạm chế biến, không còn "chờ xếp lịch" */
 export type OrderItemStatus =
-  | 'Chờ xếp lịch'
   | 'Trong hàng đợi'
   | 'Đang làm'
   | 'Xong'
@@ -19,10 +13,8 @@ export type OrderItemStatus =
   | 'Hết món'
   | 'Huỷ';
 
-/** v2: vòng đời thanh toán của một order (mục 6.3 / 6.5) */
-export type OrderPaymentStatus = 'Chờ thanh toán' | 'Đã thanh toán' | 'Hết hạn' | 'Huỷ';
-
-export type SessionStatus = 'Đang hoạt động' | 'Đã đóng';
+/** Nhóm hiển thị cho bếp — chỉ để sắp thứ tự (đồ uống/khai vị lên trước món chính), không chặn gì. */
+export type Course = 'Khai vị & đồ uống' | 'Món chính';
 
 export type MenuOptionGroup = {
   id: string;
@@ -37,11 +29,8 @@ export type MenuItem = {
   name: string;
   categoryId: string;
   price: number;
-  station: Station;
-  /** thời gian chế biến trung bình (phút) — đầu vào thuật toán xếp lịch (mục 9.2) */
-  prepMinutes: number;
   available: boolean;
-  /** số suất còn lại trong ngày; undefined = không giới hạn (mục 2.2b) */
+  /** số suất còn lại trong ngày; undefined = không giới hạn (BR-06, BR-07, BR-08) */
   remainingPortions?: number;
   description?: string;
   options: MenuOptionGroup[];
@@ -50,49 +39,60 @@ export type MenuItem = {
 export type MenuCategory = {
   id: string;
   label: string;
-  /** chế độ ra món áp cho cả danh mục (mục 7.2) */
-  servingMode: ServingMode;
+  course: Course;
 };
 
 export type OrderItem = {
   id: string;
   menuItemId: string;
   name: string;
-  station: Station;
-  servingMode: ServingMode;
   unitPrice: number; // đã gồm option
   qty: number;
   note?: string;
   optionLabels: string[];
   status: OrderItemStatus;
-  /** waiter đã bấm "nhận việc" bưng món này (BR-08) */
+  /** ISO — lúc waiter bấm gửi bếp, dùng để tính FIFO + màu SLA bên bếp */
+  queuedAt: string;
+  /** waiter đã bấm "nhận việc" bưng món này — chỉ 1 người nhận được, khoá bằng transaction (BR-11) */
   claimedBy?: string;
-  /** ISO — thời điểm chuyển sang "Chờ bưng", để tính leo thang (BR-09) */
+  /** ISO — thời điểm chuyển sang "Chờ bưng", để tính leo thang 3'/5' (BR-12) */
   waitingSince?: string;
-  /** ghi chú phát sinh khi đổi món hết hàng (WT-08) */
+  /** ghi chú phát sinh khi đổi món hết hàng (mục 6.4) */
   swapNote?: string;
 };
 
-/** Một lần khách bấm gửi món trong phiên. Gọi thêm giữa bữa = order mới cùng session. */
+/** Một lần waiter bấm gửi món. Gọi thêm giữa bữa = order mới cùng session. */
 export type SessionOrder = {
   id: string;
   createdAt: string;
-  paymentStatus: OrderPaymentStatus;
-  /** true = waiter order thay khách (WT-07); false = khách tự quét QR */
-  viaWaiter: boolean;
-  method?: 'QR' | 'Tiền mặt';
-  paidAt?: string;
   items: OrderItem[];
 };
 
-/** Khái niệm trung tâm v2: một lượt khách dùng bàn, chứa nhiều order (mục 4). */
+export type CheckoutMethod = 'Chuyển khoản QR' | 'Tiền mặt';
+
+/** Thanh toán ở cấp PHIÊN (gộp mọi order), chỉ Branch Manager sinh mã QR và xác nhận (BR-13). */
+export type SessionPayment = {
+  requestedAt: string;
+  method: CheckoutMethod;
+  /** waiter chỉ thu hộ tiền mặt mang lên quầy, hệ thống ghi tên người thu (BR-13) */
+  collectedBy?: string;
+  collectedAt?: string;
+  confirmedAt?: string;
+  confirmedBy?: string;
+};
+
+export type SessionStatus = 'Đang hoạt động' | 'Đã đóng' | 'Huỷ';
+
+/** Khái niệm trung tâm: một lượt khách dùng bàn (hoặc khối bàn ghép), chứa nhiều order. */
 export type TableSession = {
   id: string;
-  tableId: string;
+  /** nhiều bàn khi ghép khối (mục 8) */
+  tableIds: string[];
   guests: number;
   openedAt: string;
   status: SessionStatus;
   orders: SessionOrder[];
+  payment?: SessionPayment;
 };
 
 export type Table = {
@@ -101,13 +101,24 @@ export type Table = {
   seats: number;
   area: TableArea;
   status: TableStatus;
-  /** phiên đang hoạt động tại bàn */
+  /** các bàn liền kề — Branch Manager khai báo thủ công, không suy ra từ toạ độ (mục 8.6) */
+  adjacentIds: string[];
+  /** phiên đang hoạt động tại bàn (mọi bàn trong 1 khối ghép trỏ cùng id) */
   sessionId?: string;
   /** thông tin đặt trước, chỉ hiển thị (backlog) */
   reservedFor?: { name: string; time: string; partySize: number };
 };
 
-/** Danh sách đặt trước — chỉ xem (backlog "nhập đặt bàn hộ khách gọi điện"). */
+/** Kết quả 1 phương án xếp/ghép bàn do thuật toán gợi ý (mục 8.4). */
+export type SeatingOption = {
+  tableIds: string[];
+  tableNames: string[];
+  area: TableArea;
+  totalSeats: number;
+  leftover: number;
+};
+
+/** Danh sách đặt trước — chỉ xem (Branch Manager nhận qua điện thoại). */
 export type Reservation = {
   id: string;
   guestName: string;
@@ -118,31 +129,16 @@ export type Reservation = {
   tableName?: string;
 };
 
-/** Yêu cầu hoàn tiền chuyển cho Thu ngân (WT-08). */
-export type RefundRequest = {
-  id: string;
-  tableName: string;
-  itemName: string;
-  amount: number;
-  reason: string;
-  createdAt: string;
-};
+export type StaffRole = 'Phục vụ' | 'Bếp';
 
 export type Staff = {
   id: string;
   name: string;
-  role: 'Phục vụ';
+  role: StaffRole;
   branch: string;
 };
 
-export type Shift = {
-  staffId: string;
-  branch: string;
-  zone: string;
-  checkedInAt: string | null;
-};
-
-/** Item đang chờ waiter bưng, đã kèm ngữ cảnh + mức leo thang. */
+/** Item đang chờ waiter bưng, đã kèm ngữ cảnh + mức leo thang (BR-12, 3'/5'). */
 export type ClaimEntry = {
   key: string;
   sessionId: string;
@@ -151,8 +147,29 @@ export type ClaimEntry = {
   tableName: string;
   name: string;
   qty: number;
-  station: Station;
+  categoryLabel: string;
   waitingSince: string;
   claimedBy?: string;
   escalation: 'thường' | 'khẩn' | 'manager';
+};
+
+/** 1 dòng món trong hàng đợi bếp, kèm ngữ cảnh hiển thị + mức SLA riêng của bếp (5'/10'/15'). */
+export type KitchenTicketItem = {
+  itemId: string;
+  sessionId: string;
+  orderId: string;
+  tableNames: string[];
+  menuItemId: string;
+  name: string;
+  qty: number;
+  note?: string;
+  optionLabels: string[];
+  status: OrderItemStatus;
+  categoryId: string;
+  categoryLabel: string;
+  course: Course;
+  queuedAt: string;
+  sla: 'bình thường' | 'sắp trễ' | 'trễ';
+  /** các id dòng gốc đã gộp mẻ vào thẻ này (batching) */
+  mergedItemIds: string[];
 };

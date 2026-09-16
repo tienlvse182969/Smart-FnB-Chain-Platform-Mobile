@@ -13,11 +13,10 @@ const TABLE_STATUS_ICON: Record<TableStatus, IconName> = {
   Trống: 'available',
   'Đã đặt trước': 'reserved',
   'Đang phục vụ': 'occupied',
-  'Cần dọn': 'cleaning',
+  'Tạm khoá': 'lock',
 };
 
 const ITEM_STATUS_VISUAL: Record<OrderItemStatus, Visual> = {
-  'Chờ xếp lịch': { label: 'Chờ xếp lịch', icon: 'edit', variant: 'dashed' },
   'Trong hàng đợi': { label: 'Trong hàng đợi', icon: 'send', variant: 'outline' },
   'Đang làm': { label: 'Đang làm', icon: 'preparing', variant: 'solid' },
   Xong: { label: 'Xong', icon: 'check', variant: 'outline' },

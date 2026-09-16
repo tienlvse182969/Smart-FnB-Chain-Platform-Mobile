@@ -6,11 +6,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LegendBar } from '@/src/components/legend-bar';
 import { ScreenHeader } from '@/src/components/screen-header';
+import { SeatingDialog } from '@/src/components/seating-dialog';
 import { TableCard } from '@/src/components/table-card';
 import { AppModal } from '@/src/components/ui/app-modal';
+import { Btn } from '@/src/components/ui/button';
 import { Icon, IconButton } from '@/src/components/ui/icon';
 import { Pill } from '@/src/components/ui/pill';
-import { Stepper } from '@/src/components/ui/stepper';
 import { Txt } from '@/src/components/ui/txt';
 import { clockAt } from '@/src/data/format';
 import { shiftInfo } from '@/src/data/mock';
@@ -23,11 +24,12 @@ const AREAS: (TableArea | 'Tất cả')[] = ['Tất cả', 'Tầng 1', 'Sân vư
 export default function FloorScreen() {
   const theme = useAppTheme();
   const { width } = useWindowDimensions();
-  const { state, sessionByTable, openSession, markCleaned } = useStore();
+  const { state, sessionByTable, openSession } = useStore();
 
   const [area, setArea] = useState<(typeof AREAS)[number]>('Tất cả');
-  const [dialog, setDialog] = useState<{ table: Table; mode: 'open' | 'clean' } | null>(null);
-  const [guests, setGuests] = useState(2);
+  const [seating, setSeating] = useState<{ area?: TableArea } | null>(null);
+  const [reservedDialog, setReservedDialog] = useState<Table | null>(null);
+  const [lockedToast, setLockedToast] = useState(false);
 
   const railWidth = width < 820 ? 68 : 116;
   const numColumns = Math.max(2, Math.min(5, Math.floor((width - railWidth - 32) / 210)));
@@ -42,25 +44,21 @@ export default function FloorScreen() {
 
   const onTablePress = (table: Table) => {
     if (table.status === 'Đang phục vụ') return goSession(table.id);
-    if (table.status === 'Cần dọn') return setDialog({ table, mode: 'clean' });
-    // Trống hoặc Đã đặt trước → mở phiên
-    setGuests(table.reservedFor?.partySize ?? 2);
-    setDialog({ table, mode: 'open' });
+    if (table.status === 'Tạm khoá') {
+      setLockedToast(true);
+      return;
+    }
+    if (table.status === 'Đã đặt trước') return setReservedDialog(table);
+    setSeating({ area: table.area });
   };
 
-  const confirmOpen = () => {
-    if (!dialog) return;
-    openSession(dialog.table.id, guests);
-    Toast.info(`Đã kích hoạt mã QR bàn ${dialog.table.name}.`, 1.6);
-    const id = dialog.table.id;
-    setDialog(null);
+  const confirmReserved = () => {
+    if (!reservedDialog) return;
+    openSession([reservedDialog.id], reservedDialog.reservedFor?.partySize ?? 2);
+    Toast.info(`Đã kích hoạt QR bàn ${reservedDialog.name}.`, 1.6);
+    const id = reservedDialog.id;
+    setReservedDialog(null);
     goSession(id);
-  };
-
-  const confirmClean = () => {
-    if (!dialog) return;
-    markCleaned(dialog.table.id);
-    setDialog(null);
   };
 
   return (
@@ -86,6 +84,7 @@ export default function FloorScreen() {
                 variant="outlined"
                 onPress={() => Toast.info('Đã tải lại trạng thái bàn mới nhất.', 1.5)}
               />
+              <Btn label="Mở bàn mới" icon="plus" size="sm" onPress={() => setSeating({})} />
             </>
           }
         />
@@ -117,38 +116,44 @@ export default function FloorScreen() {
         />
       </View>
 
+      <SeatingDialog
+        visible={!!seating}
+        tables={state.tables}
+        defaultArea={seating?.area}
+        onDismiss={() => setSeating(null)}
+        onOpen={(tableIds, guests) => {
+          openSession(tableIds, guests);
+          setSeating(null);
+          Toast.info(`Đã kích hoạt QR bàn ${tableIds.length > 1 ? 'ghép' : ''}.`, 1.6);
+          goSession(tableIds[0]);
+        }}
+      />
+
       <AppModal
-        visible={dialog?.mode === 'open'}
-        title={`Mở phiên bàn ${dialog?.table.name ?? ''}`}
-        onClose={() => setDialog(null)}
-        maxWidth={400}
+        visible={!!reservedDialog}
+        title={`Bàn ${reservedDialog?.name ?? ''} — đã đặt trước`}
+        onClose={() => setReservedDialog(null)}
+        maxWidth={380}
         actions={[
-          { text: 'Huỷ', onPress: () => setDialog(null) },
-          { text: 'Mở phiên & kích hoạt QR', primary: true, onPress: confirmOpen },
+          { text: 'Đóng', onPress: () => setReservedDialog(null) },
+          { text: 'Khách đã đến — mở phiên', primary: true, onPress: confirmReserved },
         ]}>
         <Txt variant="body" muted>
-          {dialog?.table.reservedFor
-            ? `Khách đặt trước lúc ${clockAt(dialog.table.reservedFor.time)}. `
+          {reservedDialog?.reservedFor
+            ? `${reservedDialog.reservedFor.name} · ${reservedDialog.reservedFor.partySize} khách · đặt lúc ${clockAt(reservedDialog.reservedFor.time)}`
             : ''}
-          Mở phiên sẽ kích hoạt mã QR dán trên bàn để khách tự gọi món (WT-03).
         </Txt>
-        <View style={styles.guestRow}>
-          <Txt variant="bodyStrong">Số khách</Txt>
-          <Stepper value={guests} onChange={setGuests} />
-        </View>
       </AppModal>
 
       <AppModal
-        visible={dialog?.mode === 'clean'}
-        title={`Bàn ${dialog?.table.name ?? ''} cần dọn`}
-        onClose={() => setDialog(null)}
-        maxWidth={360}
-        actions={[
-          { text: 'Chưa xong', onPress: () => setDialog(null) },
-          { text: 'Đã dọn xong', primary: true, onPress: confirmClean },
-        ]}>
+        visible={lockedToast}
+        title="Bàn tạm khoá"
+        onClose={() => setLockedToast(false)}
+        maxWidth={340}
+        actions={[{ text: 'Đã hiểu', onPress: () => setLockedToast(false) }]}>
         <Txt variant="body" muted>
-          Xác nhận bàn đã dọn sạch, chuyển về trạng thái Trống.
+          Bàn đang tạm khoá (hỏng/bảo trì), không thể mở phiên. Liên hệ Branch Manager nếu cần mở
+          lại.
         </Txt>
       </AppModal>
     </SafeAreaView>
@@ -169,10 +174,4 @@ const styles = StyleSheet.create({
   },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 4 },
   grid: { paddingVertical: 12, gap: 12 },
-  guestRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
 });

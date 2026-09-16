@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "expo-web",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["expo", "start", "--web", "--port", "8082"],
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "set NODE_OPTIONS=--max-old-space-size=8192 && npx expo start --web --port 8082"],
       "port": 8082
     }
   ]

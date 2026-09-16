@@ -15,5 +15,5 @@ export const TABLE_STATUS_COLORS: Record<
   Trống: { fill: '#2E7D32', tint: '#E6F2E7', on: '#FFFFFF' }, // xanh lá — sẵn sàng
   'Đã đặt trước': { fill: '#B7791F', tint: '#FBF0DA', on: '#FFFFFF' }, // vàng hổ phách — lưu ý
   'Đang phục vụ': { fill: '#1E5FB4', tint: '#E4EDFB', on: '#FFFFFF' }, // xanh dương — đang dùng
-  'Cần dọn': { fill: '#C0392B', tint: '#FAE4E2', on: '#FFFFFF' }, // đỏ — cần xử lý
+  'Tạm khoá': { fill: '#5A6169', tint: '#EBECEE', on: '#FFFFFF' }, // xám — ngừng hoạt động
 };
