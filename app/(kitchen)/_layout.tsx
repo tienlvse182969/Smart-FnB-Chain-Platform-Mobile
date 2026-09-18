@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { KitchenNav } from '@/src/components/kitchen/kitchen-nav';
+import { KitchenNewItemBanner } from '@/src/components/kitchen/kitchen-new-item-banner';
 import { useAppTheme } from '@/src/theme/use-theme';
 
 export default function KitchenLayout() {
@@ -16,6 +17,7 @@ export default function KitchenLayout() {
             contentStyle: { backgroundColor: theme.fill_body },
           }}
         />
+        <KitchenNewItemBanner />
       </View>
     </View>
   );

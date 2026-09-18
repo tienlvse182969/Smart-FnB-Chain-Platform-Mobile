@@ -38,9 +38,18 @@ export function KitchenTicketCard({ ticket }: { ticket: KitchenTicket }) {
 
       {ticket.items.map((item) => (
         <View key={item.id} style={styles.itemRow}>
-          <Txt style={styles.itemName} numberOfLines={1}>
-            {item.name} ×{item.qty}
-          </Txt>
+          <View style={styles.itemInfo}>
+            <Txt style={styles.itemName} numberOfLines={1}>
+              {item.name} ×{item.qty}
+            </Txt>
+            {item.optionLabels.length || item.note ? (
+              <Txt style={styles.itemNote} numberOfLines={2}>
+                {[item.optionLabels.join(', '), item.note ? `✎ ${item.note}` : null]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </Txt>
+            ) : null}
+          </View>
           <ItemStatusBadge status={item.status} size="sm" />
         </View>
       ))}
@@ -54,6 +63,8 @@ const styles = StyleSheet.create({
   tables: { fontFamily: fontFamily.bold, fontSize: 22, flexShrink: 1 },
   progress: { fontFamily: fontFamily.bold, fontSize: 18 },
   divider: { height: StyleSheet.hairlineWidth, marginVertical: 6 },
-  itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
+  itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4, gap: 8 },
+  itemInfo: { flex: 1, gap: 2 },
   itemName: { fontFamily: fontFamily.medium, fontSize: 18, flexShrink: 1 },
+  itemNote: { fontFamily: fontFamily.medium, fontSize: 14 },
 });

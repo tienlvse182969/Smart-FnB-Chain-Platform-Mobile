@@ -4,6 +4,7 @@ import { clockAt, durationSince, formatVnd } from '@/src/data/format';
 import { sessionTotal } from '@/src/data/store';
 import type { OrderItem, Table, TableSession } from '@/src/data/types';
 import { useAppTheme } from '@/src/theme/use-theme';
+import { fontFamily } from '@/src/theme/typography';
 import { EmptyState } from './empty-state';
 import { OrderCard } from './order-card';
 import { Btn } from './ui/button';
@@ -106,7 +107,9 @@ export function SessionPanel({
       <View style={styles.footer}>
         <View style={styles.summaryRow}>
           <Txt variant="body">{session.orders.length} order</Txt>
-          <Txt variant="title">{formatVnd(sessionTotal(session))}</Txt>
+          <Txt variant="title" style={{ fontFamily: fontFamily.bold, fontSize: 20, lineHeight: 26 }}>
+            {formatVnd(sessionTotal(session))}
+          </Txt>
         </View>
         <View style={styles.actions}>
           <Btn label="Ghi order" icon="plus" size="sm" onPress={onNewOrder} />

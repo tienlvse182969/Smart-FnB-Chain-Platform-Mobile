@@ -1,13 +1,20 @@
 import { Toast } from '@ant-design/react-native';
-import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Animated,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LegendBar } from '@/src/components/legend-bar';
 import { ScreenHeader } from '@/src/components/screen-header';
 import { SeatingDialog } from '@/src/components/seating-dialog';
 import { TableCard } from '@/src/components/table-card';
+import { TableDetailPanel } from '@/src/components/table-detail-panel';
 import { AppModal } from '@/src/components/ui/app-modal';
 import { Btn } from '@/src/components/ui/button';
 import { Icon } from '@/src/components/ui/icon';
@@ -24,6 +31,7 @@ const AREAS: (TableArea | 'Tất cả')[] = ['Tất cả', 'Tầng 1', 'Sân vư
 export default function FloorScreen() {
   const theme = useAppTheme();
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const { state, sessionByTable, openSession } = useStore();
 
   const [area, setArea] = useState<(typeof AREAS)[number]>('Tất cả');
@@ -31,17 +39,32 @@ export default function FloorScreen() {
   const [reservedDialog, setReservedDialog] = useState<Table | null>(null);
   const [lockedToast, setLockedToast] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [panelId, setPanelId] = useState<string | null>(null);
+  const panelAnim = useRef(new Animated.Value(0)).current;
 
   const railWidth = width < 820 ? 68 : 116;
   const numColumns = Math.max(2, Math.min(5, Math.floor((width - railWidth - 32) / 210)));
+  const panelWidth = Math.min(440, Math.max(340, width - railWidth - 80));
 
   const data = useMemo(
     () => state.tables.filter((t) => area === 'Tất cả' || t.area === area),
     [state.tables, area],
   );
 
-  const goSession = (tableId: string) =>
-    router.push({ pathname: '/(waiter)/table/[id]', params: { id: tableId } });
+  useEffect(() => {
+    if (openId) setPanelId(openId);
+    Animated.timing(panelAnim, {
+      toValue: openId ? 1 : 0,
+      duration: 220,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished && !openId) setPanelId(null);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openId]);
+
+  const goSession = (tableId: string) => setOpenId(tableId);
 
   const onTablePress = (table: Table) => {
     if (table.status === 'Đang phục vụ') return goSession(table.id);
@@ -168,6 +191,37 @@ export default function FloorScreen() {
           lại.
         </Txt>
       </AppModal>
+
+      {panelId ? (
+        <Animated.View
+          pointerEvents={openId ? 'auto' : 'none'}
+          style={[
+            styles.panelWrap,
+            {
+              width: panelWidth,
+              top: insets.top,
+              right: insets.right,
+              bottom: insets.bottom,
+              backgroundColor: theme.fill_body,
+              borderLeftColor: theme.border_color_thin,
+              transform: [
+                {
+                  translateX: panelAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [panelWidth, 0],
+                  }),
+                },
+              ],
+            },
+          ]}>
+          <TableDetailPanel
+            embedded
+            id={panelId}
+            onClose={() => setOpenId(null)}
+            onNavigate={(toId) => setOpenId(toId)}
+          />
+        </Animated.View>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -186,4 +240,13 @@ const styles = StyleSheet.create({
   },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 4 },
   grid: { paddingVertical: 12, gap: 12 },
+  panelWrap: {
+    position: 'absolute',
+    borderLeftWidth: StyleSheet.hairlineWidth,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    shadowOffset: { width: -4, height: 0 },
+    elevation: 8,
+  },
 });

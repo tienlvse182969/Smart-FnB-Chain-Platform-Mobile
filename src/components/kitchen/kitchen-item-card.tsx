@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     flexBasis: '22%',
     minHeight: 64,
     borderWidth: 2,
-    borderRadius: 6,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,

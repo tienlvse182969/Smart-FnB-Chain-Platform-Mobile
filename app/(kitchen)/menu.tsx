@@ -5,7 +5,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenHeader } from '@/src/components/screen-header';
 import { Stepper } from '@/src/components/ui/stepper';
 import { Txt } from '@/src/components/ui/txt';
-import { formatVnd } from '@/src/data/format';
 import { categoryById, menu } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
 import { fontFamily } from '@/src/theme/typography';
@@ -37,7 +36,7 @@ export default function KitchenMenuScreen() {
                     {item.name}
                   </Txt>
                   <Txt variant="title" muted>
-                    {formatVnd(item.price)} · {categoryById[item.categoryId]?.label}
+                    {categoryById[item.categoryId]?.label}
                   </Txt>
                 </View>
                 {portions !== undefined ? (

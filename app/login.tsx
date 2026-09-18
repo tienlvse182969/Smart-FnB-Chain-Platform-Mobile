@@ -8,12 +8,10 @@ import { Field } from '@/src/components/ui/field';
 import { Icon, type IconName } from '@/src/components/ui/icon';
 import { Pill } from '@/src/components/ui/pill';
 import { Txt } from '@/src/components/ui/txt';
-import { categories } from '@/src/data/mock';
+import { categories, shiftInfo } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
 import type { StaffRole } from '@/src/data/types';
 import { useAppTheme } from '@/src/theme/use-theme';
-
-const BRANCHES = ['Chi nhánh Q1 · Nguyễn Huệ', 'Chi nhánh Q3 · Võ Văn Tần', 'Chi nhánh Thủ Đức'];
 
 const ROLES: { value: StaffRole; label: string; icon: IconName }[] = [
   { value: 'Phục vụ', label: 'Phục vụ', icon: 'guestArrived' },
@@ -26,7 +24,6 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState('tien@smartfnb.vn');
   const [pin, setPin] = useState('');
-  const [branchIdx, setBranchIdx] = useState(0);
   const [role, setRole] = useState<StaffRole>('Phục vụ');
   const [stationCats, setStationCats] = useState<string[]>([]);
 
@@ -61,7 +58,7 @@ export default function LoginScreen() {
             />
           </View>
           <Txt variant="body" muted style={styles.subtitle}>
-            Check-in ca tại chi nhánh
+            Check-in ca tại {shiftInfo.branch}
           </Txt>
 
           <View>
@@ -114,35 +111,6 @@ export default function LoginScreen() {
             secureTextEntry
             left={<Icon name="lock" size={16} color={theme.color_text_caption} />}
           />
-
-          <View>
-            <Txt variant="label" muted style={styles.fieldLabel}>
-              Chi nhánh
-            </Txt>
-            <View style={styles.branchRow}>
-              {BRANCHES.map((b, i) => (
-                <Pressable
-                  key={b}
-                  onPress={() => setBranchIdx(i)}
-                  style={[
-                    styles.branch,
-                    {
-                      borderColor:
-                        i === branchIdx ? theme.brand_primary : theme.border_color_base,
-                      backgroundColor: i === branchIdx ? theme.brand_primary : 'transparent',
-                    },
-                  ]}>
-                  <Txt
-                    variant="caption"
-                    color={
-                      i === branchIdx ? theme.color_text_base_inverse : theme.color_text_base
-                    }>
-                    {b}
-                  </Txt>
-                </Pressable>
-              ))}
-            </View>
-          </View>
 
           {role === 'Bếp' ? (
             <View>
@@ -204,8 +172,6 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     paddingVertical: 14,
   },
-  branchRow: { gap: 6 },
-  branch: { borderWidth: 1, borderRadius: 2, paddingHorizontal: 12, paddingVertical: 9 },
   catRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   cta: { marginTop: 8 },
   hint: { textAlign: 'center' },

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,7 +11,16 @@ import { Pill } from '@/src/components/ui/pill';
 import { Txt } from '@/src/components/ui/txt';
 import { categories } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
+import type { OrderItemStatus } from '@/src/data/types';
 import { useAppTheme } from '@/src/theme/use-theme';
+
+type StatusFilter = 'all' | OrderItemStatus;
+
+const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
+  { value: 'all', label: 'Tất cả' },
+  { value: 'Trong hàng đợi', label: 'Trong hàng đợi' },
+  { value: 'Đang làm', label: 'Đang làm' },
+];
 
 export default function KitchenQueueScreen() {
   const theme = useAppTheme();
@@ -24,12 +33,14 @@ export default function KitchenQueueScreen() {
       selectedCats.includes(id) ? selectedCats.filter((x) => x !== id) : [...selectedCats, id],
     );
 
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+
   const filteredItems = useMemo(
     () =>
-      selectedCats.length === 0
-        ? kitchenQueue
-        : kitchenQueue.filter((t) => selectedCats.includes(t.categoryId)),
-    [kitchenQueue, selectedCats],
+      kitchenQueue
+        .filter((t) => selectedCats.length === 0 || selectedCats.includes(t.categoryId))
+        .filter((t) => statusFilter === 'all' || t.status === statusFilter),
+    [kitchenQueue, selectedCats, statusFilter],
   );
 
   return (
@@ -73,12 +84,24 @@ export default function KitchenQueueScreen() {
         />
 
         {state.kitchenView === 'item' ? (
-          <View style={styles.filterRow}>
-            <Pill label="Tất cả" selected={selectedCats.length === 0} onPress={() => setKitchenStationCategories([])} />
-            {categories.map((c) => (
-              <Pill key={c.id} label={c.label} selected={selectedCats.includes(c.id)} onPress={() => toggleCat(c.id)} />
-            ))}
-          </View>
+          <>
+            <View style={styles.filterRow}>
+              <Pill label="Tất cả" selected={selectedCats.length === 0} onPress={() => setKitchenStationCategories([])} />
+              {categories.map((c) => (
+                <Pill key={c.id} label={c.label} selected={selectedCats.includes(c.id)} onPress={() => toggleCat(c.id)} />
+              ))}
+            </View>
+            <View style={styles.statusRow}>
+              {STATUS_FILTERS.map((s) => (
+                <Pill
+                  key={s.value}
+                  label={s.label}
+                  selected={statusFilter === s.value}
+                  onPress={() => setStatusFilter(s.value)}
+                />
+              ))}
+            </View>
+          </>
         ) : null}
 
         {state.kitchenView === 'item' ? (
@@ -117,8 +140,9 @@ export default function KitchenQueueScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   pad: { flex: 1, paddingHorizontal: 20, paddingTop: 16 },
-  viewToggle: { flexDirection: 'row', borderWidth: 1, borderRadius: 4, overflow: 'hidden' },
+  viewToggle: { flexDirection: 'row', borderWidth: 1, borderRadius: 8, overflow: 'hidden' },
   viewBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 10 },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 8 },
+  statusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 8 },
   list: { gap: 12, paddingVertical: 8, paddingBottom: 24 },
 });

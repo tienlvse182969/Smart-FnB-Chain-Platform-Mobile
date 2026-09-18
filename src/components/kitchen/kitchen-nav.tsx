@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   rail: { width: 132, borderRightWidth: StyleSheet.hairlineWidth, paddingHorizontal: 10 },
   brand: { alignItems: 'center', marginBottom: 18 },
   destList: { gap: 12, flex: 1 },
-  dest: { paddingVertical: 16, borderRadius: 4, alignItems: 'center', gap: 8 },
+  dest: { paddingVertical: 16, borderRadius: 8, alignItems: 'center', gap: 8 },
   label: { textAlign: 'center', fontSize: 15, lineHeight: 19 },
   staffName: { textAlign: 'center' },
 });

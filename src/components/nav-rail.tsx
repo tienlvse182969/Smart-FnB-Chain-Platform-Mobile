@@ -30,10 +30,11 @@ export function NavRail({ compact, edge = 'left' }: { compact: boolean; edge?: '
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
-  const { unclaimedCount } = useStore();
+  const { state, unclaimedCount } = useStore();
 
   const bottom = edge === 'bottom';
   const width = compact ? 68 : 116;
+  const reservedCount = state.tables.filter((t) => t.status === 'Đã đặt trước').length;
 
   return (
     <View
@@ -84,7 +85,9 @@ export function NavRail({ compact, edge = 'left' }: { compact: boolean; edge?: '
       <View style={[styles.destList, bottom && styles.destListBottom]}>
         {DESTS.map((d) => {
           const active = pathname.includes(d.match);
-          const showBadge = d.match === '/ready' && unclaimedCount > 0;
+          const badgeCount =
+            d.match === '/ready' ? unclaimedCount : d.match === '/reservations' ? reservedCount : 0;
+          const showBadge = badgeCount > 0;
           const fg = active ? theme.color_text_base_inverse : theme.color_text_base;
           return (
             <Pressable
@@ -100,7 +103,7 @@ export function NavRail({ compact, edge = 'left' }: { compact: boolean; edge?: '
                 <View style={styles.badgeSlot}>
                   {showBadge ? (
                     <Badge
-                      text={unclaimedCount}
+                      text={badgeCount}
                       styles={{
                         textDom: {
                           top: -6,
@@ -112,7 +115,7 @@ export function NavRail({ compact, edge = 'left' }: { compact: boolean; edge?: '
                           borderRadius: 8,
                           alignItems: 'center',
                           justifyContent: 'center',
-                          backgroundColor: '#C0392B',
+                          ...(d.match === '/ready' ? { backgroundColor: '#C0392B' } : null),
                         },
                         text: { fontSize: 10, lineHeight: 12 },
                       }}>
