@@ -86,7 +86,7 @@ export function TableCard({
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1.5,
-    borderRadius: 2,
+    borderRadius: 10,
     padding: 12,
     paddingLeft: 15,
     gap: 8,
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 2,
+    borderRadius: 8,
     borderWidth: 1,
   },
 });

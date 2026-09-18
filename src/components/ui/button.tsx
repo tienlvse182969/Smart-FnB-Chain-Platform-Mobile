@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 7,
     borderWidth: 1,
-    borderRadius: 2,
+    borderRadius: 8,
   },
   md: { minHeight: 42, paddingHorizontal: 16 },
   sm: { minHeight: 32, paddingHorizontal: 12 },

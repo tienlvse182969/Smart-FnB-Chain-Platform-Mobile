@@ -26,45 +26,62 @@ const DESTS: Dest[] = [
 const initials = (name: string) =>
   name.split(' ').slice(-2).map((w) => w[0]).join('').toUpperCase();
 
-export function NavRail({ compact }: { compact: boolean }) {
+export function NavRail({ compact, edge = 'left' }: { compact: boolean; edge?: 'left' | 'bottom' }) {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const { unclaimedCount } = useStore();
 
+  const bottom = edge === 'bottom';
   const width = compact ? 68 : 116;
 
   return (
     <View
       style={[
         styles.rail,
-        {
-          width,
-          paddingTop: insets.top + 12,
-          paddingBottom: insets.bottom + 12,
-          backgroundColor: theme.fill_base,
-          borderRightColor: theme.border_color_thin,
-        },
+        bottom
+          ? {
+              flexDirection: 'row',
+              paddingLeft: insets.left + 10,
+              paddingRight: insets.right + 10,
+              paddingTop: 8,
+              paddingBottom: insets.bottom + 8,
+              backgroundColor: theme.fill_base,
+              borderRightWidth: 0,
+              borderTopWidth: StyleSheet.hairlineWidth,
+              borderTopColor: theme.border_color_thin,
+            }
+          : {
+              width,
+              paddingTop: insets.top + 12,
+              paddingBottom: insets.bottom + 12,
+              backgroundColor: theme.fill_base,
+              borderRightColor: theme.border_color_thin,
+            },
       ]}>
-      <View style={[styles.brand, compact && styles.brandCompact]}>
-        {compact ? (
-          <Image
-            source={require('@/assets/logo/logo2-icon.png')}
-            style={styles.brandIconCompact}
-            resizeMode="contain"
-          />
-        ) : (
-          <Image
-            source={require('@/assets/logo/logo2.png')}
-            style={styles.brandLogo}
-            resizeMode="contain"
-          />
-        )}
-      </View>
+      {!bottom ? (
+        <>
+          <View style={[styles.brand, compact && styles.brandCompact]}>
+            {compact ? (
+              <Image
+                source={require('@/assets/logo/logo2-icon.png')}
+                style={styles.brandIconCompact}
+                resizeMode="contain"
+              />
+            ) : (
+              <Image
+                source={require('@/assets/logo/logo2.png')}
+                style={styles.brandLogo}
+                resizeMode="contain"
+              />
+            )}
+          </View>
 
-      <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
+          <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
+        </>
+      ) : null}
 
-      <View style={styles.destList}>
+      <View style={[styles.destList, bottom && styles.destListBottom]}>
         {DESTS.map((d) => {
           const active = pathname.includes(d.match);
           const showBadge = d.match === '/ready' && unclaimedCount > 0;
@@ -75,19 +92,42 @@ export function NavRail({ compact }: { compact: boolean }) {
               onPress={() => router.replace(d.href)}
               style={({ pressed }) => [
                 styles.dest,
+                bottom && styles.destBottom,
                 active && { backgroundColor: theme.brand_primary },
                 pressed && !active && { backgroundColor: theme.fill_tap },
               ]}>
-              <View style={styles.destInner}>
-                {showBadge ? (
-                  <Badge text={unclaimedCount}>
+              <View style={[styles.destInner, bottom && styles.destInnerBottom]}>
+                <View style={styles.badgeSlot}>
+                  {showBadge ? (
+                    <Badge
+                      text={unclaimedCount}
+                      styles={{
+                        textDom: {
+                          top: -6,
+                          right: -8,
+                          minWidth: 16,
+                          height: 16,
+                          paddingHorizontal: 3,
+                          paddingVertical: 0,
+                          borderRadius: 8,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: '#C0392B',
+                        },
+                        text: { fontSize: 10, lineHeight: 12 },
+                      }}>
+                      <Icon name={d.icon} size={23} color={fg} />
+                    </Badge>
+                  ) : (
                     <Icon name={d.icon} size={23} color={fg} />
-                  </Badge>
-                ) : (
-                  <Icon name={d.icon} size={23} color={fg} />
-                )}
-                {!compact ? (
-                  <Txt variant="tiny" color={fg} style={styles.destLabel} numberOfLines={2}>
+                  )}
+                </View>
+                {!compact || bottom ? (
+                  <Txt
+                    variant="tiny"
+                    color={fg}
+                    style={[styles.destLabel, bottom && styles.destLabelBottom]}
+                    numberOfLines={bottom ? 1 : 2}>
                     {d.label}
                   </Txt>
                 ) : null}
@@ -97,18 +137,20 @@ export function NavRail({ compact }: { compact: boolean }) {
         })}
       </View>
 
-      <View style={styles.footer}>
-        <Pressable
-          onPress={() => router.replace('/(waiter)/shift')}
-          style={[styles.avatar, { borderColor: theme.border_color_base }]}>
-          <Txt variant="label">{initials(staffByRole['Phục vụ'].name)}</Txt>
-        </Pressable>
-        {!compact ? (
-          <Txt variant="tiny" muted numberOfLines={1} style={styles.staffName}>
-            {staffByRole['Phục vụ'].name}
-          </Txt>
-        ) : null}
-      </View>
+      {!bottom ? (
+        <View style={styles.footer}>
+          <Pressable
+            onPress={() => router.replace('/(waiter)/shift')}
+            style={[styles.avatar, { borderColor: theme.border_color_base }]}>
+            <Txt variant="label">{initials(staffByRole['Phục vụ'].name)}</Txt>
+          </Pressable>
+          {!compact ? (
+            <Txt variant="tiny" muted numberOfLines={1} style={styles.staffName}>
+              {staffByRole['Phục vụ'].name}
+            </Txt>
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -121,9 +163,14 @@ const styles = StyleSheet.create({
   brandIconCompact: { width: 32, height: 32 },
   divider: { height: StyleSheet.hairlineWidth, marginVertical: 12 },
   destList: { gap: 6, flex: 1 },
-  dest: { paddingVertical: 10, paddingHorizontal: 4, borderRadius: 2 },
+  destListBottom: { flexDirection: 'row', gap: 0, alignItems: 'center', justifyContent: 'space-evenly' },
+  dest: { paddingVertical: 10, paddingHorizontal: 4, borderRadius: 8 },
+  destBottom: { paddingVertical: 4, flex: 1 },
   destInner: { alignItems: 'center', gap: 4 },
+  destInnerBottom: { flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center' },
+  badgeSlot: { paddingVertical: 6, paddingHorizontal: 8 },
   destLabel: { textAlign: 'center' },
+  destLabelBottom: { textAlign: 'left' },
   footer: { alignItems: 'center', gap: 8, marginTop: 8 },
   avatar: {
     width: 36,

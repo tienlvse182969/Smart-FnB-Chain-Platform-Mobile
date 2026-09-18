@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/src/components/screen-header';
+import { Btn } from '@/src/components/ui/button';
 import { Icon } from '@/src/components/ui/icon';
 import { Txt } from '@/src/components/ui/txt';
 import { clockAt, durationSince } from '@/src/data/format';
@@ -13,7 +14,7 @@ import { useAppTheme } from '@/src/theme/use-theme';
 
 export default function ShiftScreen() {
   const theme = useAppTheme();
-  const { state, setSimulate } = useStore();
+  const { state, checkOut, setSimulate } = useStore();
 
   const myTables = state.tables.filter((t) => t.status === 'Đang phục vụ');
   const sessionOf = (tableId: string) =>
@@ -43,9 +44,16 @@ export default function ShiftScreen() {
           <Row label="Giờ check-in" value={state.checkedInAt ? clockAt(state.checkedInAt) : '—'} />
           <Row label="Thời lượng" value={state.checkedInAt ? durationSince(state.checkedInAt) : '—'} />
           <Row label="Phiên đang phục vụ" value={`${myTables.length} bàn`} />
-          <Txt variant="caption" muted style={styles.checkoutNote}>
-            Quản lý chi nhánh sẽ check-out cho bạn khi hết ca.
-          </Txt>
+          <Btn
+            label="Check-out ca"
+            icon="logout"
+            block
+            style={styles.checkout}
+            onPress={() => {
+              checkOut();
+              router.replace('/login');
+            }}
+          />
         </View>
 
         <Txt variant="bodyStrong" muted style={styles.sectionTitle}>
@@ -128,7 +136,7 @@ const styles = StyleSheet.create({
   shiftHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   divider: { height: StyleSheet.hairlineWidth, marginVertical: 10 },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  checkoutNote: { marginTop: 10 },
+  checkout: { marginTop: 14 },
   sectionTitle: { marginTop: 12, marginBottom: 6 },
   rowPad: { padding: 14 },
   tableRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 12 },

@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   pill: {
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 2,
+    borderRadius: 8,
     borderWidth: 1,
   },
 });

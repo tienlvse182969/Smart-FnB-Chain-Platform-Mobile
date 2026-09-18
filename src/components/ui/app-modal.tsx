@@ -62,7 +62,7 @@ export function AppModal({
 }
 
 const styles = StyleSheet.create({
-  container: { borderWidth: StyleSheet.hairlineWidth, paddingTop: 20 },
+  container: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 16, paddingTop: 20 },
   body: { paddingHorizontal: 20, paddingBottom: 20 },
   title: { marginBottom: 12 },
   content: { gap: 10 },

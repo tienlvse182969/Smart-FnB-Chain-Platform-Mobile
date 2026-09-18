@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     gap: 5,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 2,
+    borderRadius: 8,
     alignSelf: 'flex-start',
     overflow: 'hidden',
   },

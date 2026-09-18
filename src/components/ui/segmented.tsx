@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
   wrap: {
     flexDirection: 'row',
     borderWidth: 1,
-    borderRadius: 2,
+    borderRadius: 8,
     overflow: 'hidden',
   },
   seg: {

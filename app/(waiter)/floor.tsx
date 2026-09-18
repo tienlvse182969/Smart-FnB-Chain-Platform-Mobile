@@ -1,7 +1,7 @@
 import { Toast } from '@ant-design/react-native';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LegendBar } from '@/src/components/legend-bar';
@@ -10,7 +10,7 @@ import { SeatingDialog } from '@/src/components/seating-dialog';
 import { TableCard } from '@/src/components/table-card';
 import { AppModal } from '@/src/components/ui/app-modal';
 import { Btn } from '@/src/components/ui/button';
-import { Icon, IconButton } from '@/src/components/ui/icon';
+import { Icon } from '@/src/components/ui/icon';
 import { Pill } from '@/src/components/ui/pill';
 import { Txt } from '@/src/components/ui/txt';
 import { clockAt } from '@/src/data/format';
@@ -30,6 +30,7 @@ export default function FloorScreen() {
   const [seating, setSeating] = useState<{ area?: TableArea } | null>(null);
   const [reservedDialog, setReservedDialog] = useState<Table | null>(null);
   const [lockedToast, setLockedToast] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const railWidth = width < 820 ? 68 : 116;
   const numColumns = Math.max(2, Math.min(5, Math.floor((width - railWidth - 32) / 210)));
@@ -50,6 +51,14 @@ export default function FloorScreen() {
     }
     if (table.status === 'Đã đặt trước') return setReservedDialog(table);
     setSeating({ area: table.area });
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+      Toast.info('Đã tải lại trạng thái bàn mới nhất.', 1.5);
+    }, 600);
   };
 
   const confirmReserved = () => {
@@ -79,11 +88,6 @@ export default function FloorScreen() {
                   {state.simulate ? 'Real-time: bật' : 'Real-time: tắt'}
                 </Txt>
               </View>
-              <IconButton
-                name="refresh"
-                variant="outlined"
-                onPress={() => Toast.info('Đã tải lại trạng thái bàn mới nhất.', 1.5)}
-              />
               <Btn label="Mở bàn mới" icon="plus" size="sm" onPress={() => setSeating({})} />
             </>
           }
@@ -104,6 +108,14 @@ export default function FloorScreen() {
           keyExtractor={(t) => t.id}
           columnWrapperStyle={{ gap: 12 }}
           contentContainerStyle={styles.grid}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.color_text_base}
+              colors={[theme.color_text_base]}
+            />
+          }
           renderItem={({ item }) => (
             <View style={{ flex: 1 / numColumns }}>
               <TableCard
