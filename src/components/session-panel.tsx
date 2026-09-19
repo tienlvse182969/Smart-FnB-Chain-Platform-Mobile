@@ -53,7 +53,9 @@ export function SessionPanel({
         { backgroundColor: theme.fill_base, borderColor: theme.border_color_thin },
       ]}>
       <View style={styles.header}>
-        <Txt variant="h2">Phiên · {tableNames.join(' + ')}</Txt>
+        <Txt variant="h2" style={styles.title}>
+          Phiên · {tableNames.join(' + ')}
+        </Txt>
         <Txt variant="caption" muted>
           {session.guests} khách · mở {clockAt(session.openedAt)} · ngồi{' '}
           {durationSince(session.openedAt)}
@@ -139,6 +141,7 @@ export function SessionPanel({
 const styles = StyleSheet.create({
   panel: { flex: 1, borderWidth: StyleSheet.hairlineWidth, borderRadius: 2, overflow: 'hidden' },
   header: { padding: 14, gap: 3 },
+  title: { fontFamily: fontFamily.semibold },
   divider: { height: StyleSheet.hairlineWidth },
   banner: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12 },
   bannerText: { flex: 1, gap: 2 },

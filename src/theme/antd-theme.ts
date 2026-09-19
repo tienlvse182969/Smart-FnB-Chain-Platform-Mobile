@@ -45,9 +45,10 @@ export const lightTheme: PartialTheme = {
   border_color_thin: mono.lineThin,
 
   radius_xs: 2,
-  radius_sm: 2,
+  // radius_sm/lg là thứ duy nhất bo góc Toast (và Badge) của antd — để 8 cho khớp Btn/Pill/IconButton.
+  radius_sm: 8,
   radius_md: 2,
-  radius_lg: 2,
+  radius_lg: 8,
 
   primary_button_fill: mono.line,
   primary_button_fill_tap: '#333333',

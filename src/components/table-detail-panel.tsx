@@ -5,6 +5,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { menuById } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
 import type { CheckoutMethod, OrderItem } from '@/src/data/types';
+import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { EmptyState } from './empty-state';
 import { ItemOptionsDialog } from './item-options-dialog';
@@ -131,7 +132,9 @@ export function TableDetailPanel({
       <View style={[styles.header, { borderBottomColor: theme.border_color_thin }]}>
         <IconButton name="close" onPress={onClose} />
         <View style={styles.headTitle}>
-          <Txt variant="h2">Bàn {tableNames.join(' + ')}</Txt>
+          <Txt variant="h2" style={styles.title}>
+            Bàn {tableNames.join(' + ')}
+          </Txt>
           <View style={styles.headMeta}>
             <TableStatusBadge status={table.status} size="sm" />
             <Txt variant="label" muted>
@@ -317,6 +320,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   headTitle: { flex: 1, minWidth: 140 },
+  title: { fontFamily: fontFamily.semibold },
   headMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2, flexWrap: 'wrap' },
   body: { flex: 1, paddingVertical: 12 },
   emptyWrap: { alignItems: 'center', gap: 8 },

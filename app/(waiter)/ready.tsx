@@ -63,7 +63,17 @@ export default function ReadyScreen() {
                 }}
                 onServe={() => {
                   serveItem(item.itemId);
-                  Toast.success(`${item.tableName} · ${item.name} → đã phục vụ.`, 1.4);
+                  Toast.show(
+                    {
+                      content: `${item.tableName} · ${item.name} → đã phục vụ.`,
+                      icon: (
+                        <View style={styles.toastIcon}>
+                          <Icon name="done" size={36} color={theme.color_text_base_inverse} />
+                        </View>
+                      ),
+                    },
+                    1.4,
+                  );
                 }}
               />
             )}
@@ -87,4 +97,5 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   list: { gap: 10, paddingVertical: 8, paddingBottom: 24 },
+  toastIcon: { marginBottom: 6 },
 });

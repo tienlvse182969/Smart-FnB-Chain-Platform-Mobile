@@ -2,6 +2,7 @@ import { Toast } from '@ant-design/react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
+  Easing,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -27,6 +28,9 @@ import type { Table, TableArea } from '@/src/data/types';
 import { useAppTheme } from '@/src/theme/use-theme';
 
 const AREAS: (TableArea | 'Tất cả')[] = ['Tất cả', 'Tầng 1', 'Sân vườn', 'VIP'];
+
+/** WinJS showPanel/hidePanel (Windows 8.1): 550ms, đường cong giảm tốc mũ, trượt thuần không fade. */
+const PANEL_MOTION = { duration: 550, easing: Easing.bezier(0.1, 0.9, 0.2, 1) };
 
 export default function FloorScreen() {
   const theme = useAppTheme();
@@ -54,15 +58,23 @@ export default function FloorScreen() {
 
   useEffect(() => {
     if (openId) setPanelId(openId);
-    Animated.timing(panelAnim, {
-      toValue: openId ? 1 : 0,
-      duration: 220,
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished && !openId) setPanelId(null);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openId]);
+
+  // Chỉ trượt sau khi panel đã mount + vẽ xong, nếu không lần render đầu nuốt mất frame đầu của slide.
+  useEffect(() => {
+    if (!openId && !panelId) return;
+    if (openId && panelId !== openId) return;
+    const frame = requestAnimationFrame(() => {
+      Animated.timing(panelAnim, {
+        toValue: openId ? 1 : 0,
+        ...PANEL_MOTION,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished && !openId) setPanelId(null);
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [openId, panelId, panelAnim]);
 
   const goSession = (tableId: string) => setOpenId(tableId);
 
@@ -167,6 +179,7 @@ export default function FloorScreen() {
       <AppModal
         visible={!!reservedDialog}
         title={`Bàn ${reservedDialog?.name ?? ''} — đã đặt trước`}
+        icon="reserved"
         onClose={() => setReservedDialog(null)}
         maxWidth={380}
         actions={[
@@ -183,6 +196,7 @@ export default function FloorScreen() {
       <AppModal
         visible={lockedToast}
         title="Bàn tạm khoá"
+        icon="lock"
         onClose={() => setLockedToast(false)}
         maxWidth={340}
         actions={[{ text: 'Đã hiểu', onPress: () => setLockedToast(false) }]}>

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { clockAt, durationSince } from '@/src/data/format';
 import type { Table, TableSession } from '@/src/data/types';
 import { TABLE_STATUS_COLORS } from '@/src/theme/status-colors';
+import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { TableStatusBadge } from './status-badge';
 import { Icon } from './ui/icon';
@@ -40,7 +41,9 @@ export function TableCard({
       <View style={[styles.accent, { backgroundColor: color.fill }]} />
 
       <View style={styles.topRow}>
-        <Txt variant="h2">{table.name}</Txt>
+        <Txt variant="h2" style={styles.name}>
+          {table.name}
+        </Txt>
         <View style={styles.seats}>
           <Icon name="user" size={13} color={theme.color_text_caption} />
           <Txt variant="label" muted>
@@ -95,6 +98,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   accent: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 5 },
+  name: { fontFamily: fontFamily.semibold },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   seats: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   bottomRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 6 },

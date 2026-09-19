@@ -1,40 +1,53 @@
 import { Badge } from '@ant-design/react-native';
+import type { Href } from 'expo-router';
 import { router, usePathname } from 'expo-router';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { staffByRole } from '@/src/data/mock';
-import { useStore } from '@/src/data/store';
+import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { Icon, type IconName } from './ui/icon';
 import { Txt } from './ui/txt';
 
-type Dest = {
-  href: '/(waiter)/floor' | '/(waiter)/reservations' | '/(waiter)/ready' | '/(waiter)/shift';
+export type NavDest = {
+  href: Href;
   match: string;
   label: string;
   icon: IconName;
+  badgeCount?: number;
 };
-
-const DESTS: Dest[] = [
-  { href: '/(waiter)/floor', match: '/floor', label: 'Sơ đồ bàn', icon: 'grid' },
-  { href: '/(waiter)/ready', match: '/ready', label: 'Món chờ bưng', icon: 'bell' },
-  { href: '/(waiter)/reservations', match: '/reservations', label: 'Đặt trước', icon: 'reservations' },
-  { href: '/(waiter)/shift', match: '/shift', label: 'Ca làm', icon: 'shift' },
-];
 
 const initials = (name: string) =>
   name.split(' ').slice(-2).map((w) => w[0]).join('').toUpperCase();
 
-export function NavRail({ compact, edge = 'left' }: { compact: boolean; edge?: 'left' | 'bottom' }) {
+/**
+ * Nav rail dùng chung cho mọi actor (Waiter, Kitchen…) — logo, badge, avatar cuối rail
+ * đồng nhất. `size="lg"` phóng to icon/chữ/khoảng chạm cho Kitchen (mục 4.7: đọc lướt,
+ * tay bẩn, đứng xa) mà không tách component riêng.
+ */
+export function NavRail({
+  compact,
+  edge = 'left',
+  dests,
+  staffName,
+  staffHref,
+  size = 'md',
+}: {
+  compact: boolean;
+  edge?: 'left' | 'bottom';
+  dests: NavDest[];
+  staffName: string;
+  staffHref: Href;
+  size?: 'md' | 'lg';
+}) {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
-  const { state, unclaimedCount } = useStore();
 
   const bottom = edge === 'bottom';
-  const width = compact ? 68 : 116;
-  const reservedCount = state.tables.filter((t) => t.status === 'Đã đặt trước').length;
+  const large = size === 'lg';
+  const width = compact ? 68 : large ? 132 : 116;
+  const iconSize = large ? 30 : 23;
 
   return (
     <View
@@ -83,18 +96,17 @@ export function NavRail({ compact, edge = 'left' }: { compact: boolean; edge?: '
       ) : null}
 
       <View style={[styles.destList, bottom && styles.destListBottom]}>
-        {DESTS.map((d) => {
+        {dests.map((d) => {
           const active = pathname.includes(d.match);
-          const badgeCount =
-            d.match === '/ready' ? unclaimedCount : d.match === '/reservations' ? reservedCount : 0;
-          const showBadge = badgeCount > 0;
+          const showBadge = (d.badgeCount ?? 0) > 0;
           const fg = active ? theme.color_text_base_inverse : theme.color_text_base;
           return (
             <Pressable
-              key={d.href}
+              key={d.match}
               onPress={() => router.replace(d.href)}
               style={({ pressed }) => [
                 styles.dest,
+                large && styles.destLg,
                 bottom && styles.destBottom,
                 active && { backgroundColor: theme.brand_primary },
                 pressed && !active && { backgroundColor: theme.fill_tap },
@@ -103,7 +115,7 @@ export function NavRail({ compact, edge = 'left' }: { compact: boolean; edge?: '
                 <View style={styles.badgeSlot}>
                   {showBadge ? (
                     <Badge
-                      text={badgeCount}
+                      text={d.badgeCount}
                       styles={{
                         textDom: {
                           top: -6,
@@ -115,21 +127,25 @@ export function NavRail({ compact, edge = 'left' }: { compact: boolean; edge?: '
                           borderRadius: 8,
                           alignItems: 'center',
                           justifyContent: 'center',
-                          ...(d.match === '/ready' ? { backgroundColor: '#C0392B' } : null),
+                          backgroundColor: '#C0392B',
                         },
-                        text: { fontSize: 10, lineHeight: 12 },
+                        text: { fontFamily: fontFamily.medium, fontSize: 10, lineHeight: 12 },
                       }}>
-                      <Icon name={d.icon} size={23} color={fg} />
+                      <Icon name={d.icon} size={iconSize} color={fg} />
                     </Badge>
                   ) : (
-                    <Icon name={d.icon} size={23} color={fg} />
+                    <Icon name={d.icon} size={iconSize} color={fg} />
                   )}
                 </View>
                 {!compact || bottom ? (
                   <Txt
-                    variant="tiny"
+                    variant={large ? 'bodyStrong' : 'tiny'}
                     color={fg}
-                    style={[styles.destLabel, bottom && styles.destLabelBottom]}
+                    style={[
+                      styles.destLabel,
+                      bottom && styles.destLabelBottom,
+                      large && styles.destLabelLg,
+                    ]}
                     numberOfLines={bottom ? 1 : 2}>
                     {d.label}
                   </Txt>
@@ -143,13 +159,13 @@ export function NavRail({ compact, edge = 'left' }: { compact: boolean; edge?: '
       {!bottom ? (
         <View style={styles.footer}>
           <Pressable
-            onPress={() => router.replace('/(waiter)/shift')}
+            onPress={() => router.replace(staffHref)}
             style={[styles.avatar, { borderColor: theme.border_color_base }]}>
-            <Txt variant="label">{initials(staffByRole['Phục vụ'].name)}</Txt>
+            <Txt variant="label">{initials(staffName)}</Txt>
           </Pressable>
           {!compact ? (
             <Txt variant="tiny" muted numberOfLines={1} style={styles.staffName}>
-              {staffByRole['Phục vụ'].name}
+              {staffName}
             </Txt>
           ) : null}
         </View>
@@ -168,12 +184,14 @@ const styles = StyleSheet.create({
   destList: { gap: 6, flex: 1 },
   destListBottom: { flexDirection: 'row', gap: 0, alignItems: 'center', justifyContent: 'space-evenly' },
   dest: { paddingVertical: 10, paddingHorizontal: 4, borderRadius: 8 },
+  destLg: { paddingVertical: 16 },
   destBottom: { paddingVertical: 4, flex: 1 },
   destInner: { alignItems: 'center', gap: 4 },
   destInnerBottom: { flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center' },
   badgeSlot: { paddingVertical: 6, paddingHorizontal: 8 },
   destLabel: { textAlign: 'center' },
   destLabelBottom: { textAlign: 'left' },
+  destLabelLg: { fontSize: 15, lineHeight: 19 },
   footer: { alignItems: 'center', gap: 8, marginTop: 8 },
   avatar: {
     width: 36,

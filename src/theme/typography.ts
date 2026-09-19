@@ -5,7 +5,7 @@ import { HARMONY_FAMILY } from './harmony-fonts';
 /** Preset chữ dùng cho các component tự dựng. Chữ khác đã được `global-font` phủ Regular. */
 export const text = StyleSheet.create({
   display: { fontFamily: HARMONY_FAMILY.bold, fontSize: 28, lineHeight: 34 },
-  h1: { fontFamily: HARMONY_FAMILY.bold, fontSize: 22, lineHeight: 28 },
+  h1: { fontFamily: HARMONY_FAMILY.black, fontSize: 32, lineHeight: 38 },
   h2: { fontFamily: HARMONY_FAMILY.medium, fontSize: 18, lineHeight: 24 },
   title: { fontFamily: HARMONY_FAMILY.medium, fontSize: 16, lineHeight: 22 },
   bodyStrong: { fontFamily: HARMONY_FAMILY.medium, fontSize: 14, lineHeight: 20 },
