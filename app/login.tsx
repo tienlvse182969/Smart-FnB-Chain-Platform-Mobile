@@ -6,9 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Btn } from '@/src/components/ui/button';
 import { Field } from '@/src/components/ui/field';
 import { Icon, type IconName } from '@/src/components/ui/icon';
-import { Pill } from '@/src/components/ui/pill';
 import { Txt } from '@/src/components/ui/txt';
-import { categories, shiftInfo } from '@/src/data/mock';
+import { shiftInfo } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
 import type { StaffRole } from '@/src/data/types';
 import { useAppTheme } from '@/src/theme/use-theme';
@@ -20,20 +19,15 @@ const ROLES: { value: StaffRole; label: string; icon: IconName }[] = [
 
 export default function LoginScreen() {
   const theme = useAppTheme();
-  const { checkIn, setKitchenStationCategories } = useStore();
+  const { checkIn } = useStore();
 
   const [email, setEmail] = useState('tien@smartfnb.vn');
   const [pin, setPin] = useState('');
   const [role, setRole] = useState<StaffRole>('Phục vụ');
-  const [stationCats, setStationCats] = useState<string[]>([]);
-
-  const toggleCat = (id: string) =>
-    setStationCats((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   const submit = () => {
     checkIn(role);
     if (role === 'Bếp') {
-      setKitchenStationCategories(stationCats);
       router.replace('/(kitchen)/queue');
     } else {
       router.replace('/(waiter)/floor');
@@ -112,24 +106,6 @@ export default function LoginScreen() {
             left={<Icon name="lock" size={16} color={theme.color_text_caption} />}
           />
 
-          {role === 'Bếp' ? (
-            <View>
-              <Txt variant="label" muted style={styles.fieldLabel}>
-                Danh mục phụ trách (tuỳ chọn — như chọn trạm)
-              </Txt>
-              <View style={styles.catRow}>
-                {categories.map((c) => (
-                  <Pill
-                    key={c.id}
-                    label={c.label}
-                    selected={stationCats.includes(c.id)}
-                    onPress={() => toggleCat(c.id)}
-                  />
-                ))}
-              </View>
-            </View>
-          ) : null}
-
           <Btn
             label={`Đăng nhập & Check-in ca (${role})`}
             icon="login"
@@ -172,7 +148,6 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     paddingVertical: 14,
   },
-  catRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   cta: { marginTop: 8 },
   hint: { textAlign: 'center' },
 });

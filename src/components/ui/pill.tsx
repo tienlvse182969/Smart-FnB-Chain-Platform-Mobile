@@ -1,9 +1,10 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { Tag } from '@ant-design/react-native';
+import type { TagStyle } from '@ant-design/react-native/lib/tag/style';
 
+import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
-import { Txt } from './txt';
 
-/** Chip lọc chọn/không chọn — monochrome (fill khi chọn). */
+/** Chip lọc chọn/không chọn — dựng trên antd `Tag`, override style cho monochrome. */
 export function Pill({
   label,
   selected,
@@ -14,31 +15,19 @@ export function Pill({
   onPress?: () => void;
 }) {
   const theme = useAppTheme();
+
+  const styles: Partial<TagStyle> = {
+    wrap: { height: 32, paddingHorizontal: 12, paddingVertical: 0, borderRadius: 8, borderWidth: 1 },
+    text: { fontFamily: fontFamily.regular, fontSize: 13 },
+    normalWrap: { backgroundColor: 'transparent', borderColor: theme.border_color_base },
+    normalText: { color: theme.color_text_base },
+    activeWrap: { backgroundColor: theme.brand_primary, borderColor: theme.brand_primary },
+    activeText: { color: theme.color_text_base_inverse },
+  };
+
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.pill,
-        {
-          backgroundColor: selected ? theme.brand_primary : 'transparent',
-          borderColor: selected ? theme.brand_primary : theme.border_color_base,
-        },
-        pressed && { opacity: 0.6 },
-      ]}>
-      <Txt
-        variant="label"
-        color={selected ? theme.color_text_base_inverse : theme.color_text_base}>
-        {label}
-      </Txt>
-    </Pressable>
+    <Tag selected={selected} onChange={() => onPress?.()} styles={styles}>
+      {label}
+    </Tag>
   );
 }
-
-const styles = StyleSheet.create({
-  pill: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-});

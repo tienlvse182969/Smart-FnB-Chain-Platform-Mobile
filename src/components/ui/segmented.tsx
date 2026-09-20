@@ -1,9 +1,8 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
-import { useAppTheme } from '@/src/theme/use-theme';
-import { Txt } from './txt';
+import { Pill } from './pill';
 
-/** Segmented control tự dựng (antd-mobile-rn v5 đã bỏ SegmentedControl). */
+/** Segmented control (antd-mobile-rn v5 không có sẵn) — dựng bằng hàng antd `Tag` chọn đơn. */
 export function Segmented<T extends string>({
   value,
   options,
@@ -15,47 +14,16 @@ export function Segmented<T extends string>({
   onChange: (value: T) => void;
   style?: object;
 }) {
-  const theme = useAppTheme();
   return (
-    <View
-      style={[
-        styles.wrap,
-        { borderColor: theme.border_color_base, backgroundColor: theme.fill_base },
-        style,
-      ]}>
-      {options.map((opt) => {
-        const active = opt.value === value;
-        return (
-          <Pressable
-            key={opt.value}
-            onPress={() => onChange(opt.value)}
-            style={[
-              styles.seg,
-              { backgroundColor: active ? theme.brand_primary : 'transparent' },
-            ]}>
-            <Txt
-              variant="bodyStrong"
-              color={active ? theme.color_text_base_inverse : theme.color_text_base}>
-              {opt.label}
-            </Txt>
-          </Pressable>
-        );
-      })}
+    <View style={[{ flexDirection: 'row', gap: 8 }, style]}>
+      {options.map((opt) => (
+        <Pill
+          key={opt.value}
+          label={opt.label}
+          selected={opt.value === value}
+          onPress={() => onChange(opt.value)}
+        />
+      ))}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  seg: {
-    flex: 1,
-    paddingVertical: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

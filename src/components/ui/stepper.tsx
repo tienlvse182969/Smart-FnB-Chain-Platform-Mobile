@@ -1,7 +1,8 @@
-import { StyleSheet, View } from 'react-native';
+import { Stepper as AntdStepper } from '@ant-design/react-native';
+import type { StepperStyle } from '@ant-design/react-native/lib/stepper/style';
 
-import { IconButton } from './icon';
-import { Txt } from './txt';
+import { fontFamily } from '@/src/theme/typography';
+import { useAppTheme } from '@/src/theme/use-theme';
 
 export function Stepper({
   value,
@@ -16,33 +17,38 @@ export function Stepper({
   max?: number;
   size?: 'md' | 'sm';
 }) {
+  const theme = useAppTheme();
   const s = size === 'sm' ? 30 : 36;
+
+  const styles: Partial<StepperStyle> = {
+    container: { width: size === 'sm' ? 96 : 116 },
+    stepWrap: {
+      flex: 0,
+      width: s,
+      height: s,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.border_color_base,
+      backgroundColor: 'transparent',
+    },
+    stepText: { fontSize: size === 'sm' ? 15 : 17, color: theme.color_text_base },
+    stepDisabled: { opacity: 0.3, borderColor: theme.border_color_thin },
+    disabledStepTextColor: { color: theme.color_text_disabled },
+  };
+
   return (
-    <View style={styles.row}>
-      <IconButton
-        name="minus"
-        size={size === 'sm' ? 14 : 16}
-        variant="outlined"
-        disabled={value <= min}
-        onPress={() => onChange(Math.max(min, value - 1))}
-        style={{ width: s, height: s }}
-      />
-      <Txt variant="title" style={styles.value}>
-        {value}
-      </Txt>
-      <IconButton
-        name="plus"
-        size={size === 'sm' ? 14 : 16}
-        variant="outlined"
-        disabled={value >= max}
-        onPress={() => onChange(Math.min(max, value + 1))}
-        style={{ width: s, height: s }}
-      />
-    </View>
+    <AntdStepper
+      value={value}
+      min={min}
+      max={max}
+      editable={false}
+      styles={styles}
+      inputStyle={{
+        fontFamily: fontFamily.regular,
+        fontSize: size === 'sm' ? 15 : 17,
+        color: theme.color_text_base,
+      }}
+      onChange={(v) => onChange(v ?? min)}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  value: { minWidth: 24, textAlign: 'center' },
-});
