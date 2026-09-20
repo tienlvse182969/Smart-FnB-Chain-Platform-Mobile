@@ -1,22 +1,14 @@
 import { Toast } from '@ant-design/react-native';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Animated,
-  Easing,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FlatList, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LegendBar } from '@/src/components/legend-bar';
 import { ScreenHeader } from '@/src/components/screen-header';
 import { SeatingDialog } from '@/src/components/seating-dialog';
 import { TableCard } from '@/src/components/table-card';
-import { TableDetailPanel } from '@/src/components/table-detail-panel';
+import { useTablePanel } from '@/src/components/table-panel-overlay';
 import { AppModal } from '@/src/components/ui/app-modal';
 import { Btn } from '@/src/components/ui/button';
 import { Icon } from '@/src/components/ui/icon';
@@ -31,15 +23,12 @@ import { useAppTheme } from '@/src/theme/use-theme';
 
 const AREAS: (TableArea | 'Tất cả')[] = ['Tất cả', 'Tầng 1', 'Sân vườn', 'VIP'];
 
-/** WinJS showPanel/hidePanel (Windows 8.1): 550ms, đường cong giảm tốc mũ, trượt thuần không fade. */
-const PANEL_MOTION = { duration: 550, easing: Easing.bezier(0.1, 0.9, 0.2, 1) };
-
 export default function FloorScreen() {
   const theme = useAppTheme();
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   const { state, sessionByTable, openSession } = useStore();
+  const { openTablePanel } = useTablePanel();
 
   const areaLabel = (a: (typeof AREAS)[number]) => (a === 'Tất cả' ? t('status.area.all') : t(tableAreaKey[a]));
 
@@ -48,40 +37,16 @@ export default function FloorScreen() {
   const [reservedDialog, setReservedDialog] = useState<Table | null>(null);
   const [lockedToast, setLockedToast] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [openId, setOpenId] = useState<string | null>(null);
-  const [panelId, setPanelId] = useState<string | null>(null);
-  const panelAnim = useRef(new Animated.Value(0)).current;
 
   const railWidth = width < 820 ? 68 : 116;
   const numColumns = Math.max(2, Math.min(5, Math.floor((width - railWidth - 32) / 210)));
-  const panelWidth = Math.min(440, Math.max(340, width - railWidth - 80));
 
   const data = useMemo(
     () => state.tables.filter((t) => area === 'Tất cả' || t.area === area),
     [state.tables, area],
   );
 
-  useEffect(() => {
-    if (openId) setPanelId(openId);
-  }, [openId]);
-
-  // Chỉ trượt sau khi panel đã mount + vẽ xong, nếu không lần render đầu nuốt mất frame đầu của slide.
-  useEffect(() => {
-    if (!openId && !panelId) return;
-    if (openId && panelId !== openId) return;
-    const frame = requestAnimationFrame(() => {
-      Animated.timing(panelAnim, {
-        toValue: openId ? 1 : 0,
-        ...PANEL_MOTION,
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (finished && !openId) setPanelId(null);
-      });
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [openId, panelId, panelAnim]);
-
-  const goSession = (tableId: string) => setOpenId(tableId);
+  const goSession = (tableId: string) => openTablePanel(tableId);
 
   const onTablePress = (table: Table) => {
     if (table.status === 'Đang phục vụ') return goSession(table.id);
@@ -216,37 +181,6 @@ export default function FloorScreen() {
           {t('floor.lockedBody')}
         </Txt>
       </AppModal>
-
-      {panelId ? (
-        <Animated.View
-          pointerEvents={openId ? 'auto' : 'none'}
-          style={[
-            styles.panelWrap,
-            {
-              width: panelWidth,
-              top: insets.top,
-              right: insets.right,
-              bottom: insets.bottom,
-              backgroundColor: theme.fill_body,
-              borderLeftColor: theme.border_color_thin,
-              transform: [
-                {
-                  translateX: panelAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [panelWidth, 0],
-                  }),
-                },
-              ],
-            },
-          ]}>
-          <TableDetailPanel
-            embedded
-            id={panelId}
-            onClose={() => setOpenId(null)}
-            onNavigate={(toId) => setOpenId(toId)}
-          />
-        </Animated.View>
-      ) : null}
     </SafeAreaView>
   );
 }
@@ -265,13 +199,4 @@ const styles = StyleSheet.create({
   },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 4 },
   grid: { paddingVertical: 12, gap: 12 },
-  panelWrap: {
-    position: 'absolute',
-    borderLeftWidth: StyleSheet.hairlineWidth,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    shadowOffset: { width: -4, height: 0 },
-    elevation: 8,
-  },
 });

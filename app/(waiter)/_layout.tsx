@@ -4,6 +4,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { KitchenReadyBanner } from '@/src/components/kitchen-ready-banner';
 import { NavRail, type NavDest } from '@/src/components/nav-rail';
+import { TablePanelOverlay } from '@/src/components/table-panel-overlay';
 import { staffByRole } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
 import { useAppTheme } from '@/src/theme/use-theme';
@@ -41,33 +42,35 @@ export default function WaiterLayout() {
         styles.shell,
         { backgroundColor: theme.fill_body, flexDirection: isPortrait ? 'column' : 'row' },
       ]}>
-      {!isPortrait ? (
-        <NavRail
-          compact={compact}
-          edge="left"
-          dests={dests}
-          staffName={staffByRole['Phục vụ'].name}
-          staffHref="/(waiter)/account"
-        />
-      ) : null}
-      <View style={styles.content}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: theme.fill_body },
-          }}
-        />
-        <KitchenReadyBanner />
-      </View>
-      {isPortrait ? (
-        <NavRail
-          compact={compact}
-          edge="bottom"
-          dests={dests}
-          staffName={staffByRole['Phục vụ'].name}
-          staffHref="/(waiter)/account"
-        />
-      ) : null}
+      <TablePanelOverlay railWidth={compact ? 68 : 116}>
+        {!isPortrait ? (
+          <NavRail
+            compact={compact}
+            edge="left"
+            dests={dests}
+            staffName={staffByRole['Phục vụ'].name}
+            staffHref="/(waiter)/account"
+          />
+        ) : null}
+        <View style={styles.content}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: theme.fill_body },
+            }}
+          />
+          <KitchenReadyBanner />
+        </View>
+        {isPortrait ? (
+          <NavRail
+            compact={compact}
+            edge="bottom"
+            dests={dests}
+            staffName={staffByRole['Phục vụ'].name}
+            staffHref="/(waiter)/account"
+          />
+        ) : null}
+      </TablePanelOverlay>
     </View>
   );
 }
