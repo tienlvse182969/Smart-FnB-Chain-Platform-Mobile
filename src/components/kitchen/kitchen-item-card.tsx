@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { durationSince } from '@/src/data/format';
 import type { KitchenTicketItem, OrderItemStatus } from '@/src/data/types';
+import { orderItemActionKey } from '@/src/i18n/labels';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { Txt } from '../ui/txt';
@@ -12,11 +14,11 @@ const SLA_COLOR = {
   trễ: { bg: '#FBDBD8', border: '#C0392B' },
 } as const;
 
-const ACTIONS: { status: OrderItemStatus; label: string }[] = [
-  { status: 'Trong hàng đợi', label: 'Chờ' },
-  { status: 'Đang làm', label: 'Đang làm' },
-  { status: 'Xong', label: 'Xong' },
-  { status: 'Hết món', label: 'Hết món' },
+const ACTIONS: { status: OrderItemStatus; labelKey: string }[] = [
+  { status: 'Trong hàng đợi', labelKey: orderItemActionKey['Trong hàng đợi'] },
+  { status: 'Đang làm', labelKey: orderItemActionKey['Đang làm'] },
+  { status: 'Xong', labelKey: orderItemActionKey.Xong },
+  { status: 'Hết món', labelKey: orderItemActionKey['Hết món'] },
 ];
 
 function BigButton({
@@ -56,6 +58,7 @@ export function KitchenItemCard({
   onSetStatus: (status: OrderItemStatus) => void;
 }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const sla = SLA_COLOR[ticket.sla];
 
   return (
@@ -95,7 +98,7 @@ export function KitchenItemCard({
         {ACTIONS.map((a) => (
           <BigButton
             key={a.status}
-            label={a.label}
+            label={t(a.labelKey)}
             active={ticket.status === a.status}
             danger={a.status === 'Hết món'}
             onPress={() => onSetStatus(a.status)}

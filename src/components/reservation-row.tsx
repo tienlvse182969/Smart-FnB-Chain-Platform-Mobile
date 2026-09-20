@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { clockAt, timeAgo } from '@/src/data/format';
@@ -9,6 +10,7 @@ import { Txt } from './ui/txt';
 
 export function ReservationRow({ reservation }: { reservation: Reservation }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
 
   return (
     <View
@@ -30,8 +32,10 @@ export function ReservationRow({ reservation }: { reservation: Reservation }) {
       <View style={styles.info}>
         <Txt variant="bodyStrong">{reservation.guestName}</Txt>
         <Txt variant="caption" muted>
-          {reservation.phone} · {reservation.partySize} khách
-          {reservation.tableName ? ` · bàn ${reservation.tableName}` : ''}
+          {t('reservationRow.partySize', { phone: reservation.phone, party: reservation.partySize })}
+          {reservation.tableName
+            ? t('reservationRow.tableSuffix', { table: reservation.tableName })
+            : ''}
         </Txt>
         {reservation.note ? (
           <View style={styles.noteRow}>

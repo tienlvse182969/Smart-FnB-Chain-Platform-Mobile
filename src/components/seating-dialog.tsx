@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { suggestSeating } from '@/src/data/seating';
 import type { Table, TableArea } from '@/src/data/types';
+import { tableAreaKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { EmptyState } from './empty-state';
 import { AppModal } from './ui/app-modal';
@@ -27,6 +29,8 @@ export function SeatingDialog({
   onOpen: (tableIds: string[], guests: number) => void;
 }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
+  const areaLabel = (a: TableArea | 'Tất cả') => (a === 'Tất cả' ? t('status.area.all') : t(tableAreaKey[a]));
   const [guests, setGuests] = useState(2);
   const [area, setArea] = useState<TableArea | 'Tất cả'>(defaultArea ?? 'Tất cả');
 
@@ -45,30 +49,30 @@ export function SeatingDialog({
   return (
     <AppModal
       visible={visible}
-      title="Mở bàn mới"
+      title={t('seatingDialog.title')}
       onClose={onDismiss}
       maxWidth={480}
-      actions={[{ text: 'Đóng', onPress: onDismiss }]}>
+      actions={[{ text: t('common.close'), onPress: onDismiss }]}>
       <View style={styles.guestRow}>
-        <Txt variant="bodyStrong">Số khách</Txt>
+        <Txt variant="bodyStrong">{t('seatingDialog.guestCount')}</Txt>
         <Stepper value={guests} onChange={setGuests} />
       </View>
 
       <View style={styles.areaRow}>
         {AREAS.map((a) => (
-          <Pill key={a} label={a} selected={area === a} onPress={() => setArea(a)} />
+          <Pill key={a} label={areaLabel(a)} selected={area === a} onPress={() => setArea(a)} />
         ))}
       </View>
 
       <Txt variant="label" muted style={styles.suggestLabel}>
-        Gợi ý xếp & ghép bàn — chọn 1 phương án
+        {t('seatingDialog.suggestLabel')}
       </Txt>
 
       {options.length === 0 ? (
         <EmptyState
           icon="unavailable"
-          title="Không đủ chỗ"
-          hint="Thử đổi khu vực hoặc giảm số khách."
+          title={t('seatingDialog.emptyTitle')}
+          hint={t('seatingDialog.emptyHint')}
         />
       ) : (
         <View style={styles.options}>
@@ -84,11 +88,17 @@ export function SeatingDialog({
               <View style={styles.optionText}>
                 <Txt variant="bodyStrong">{opt.tableNames.join(' + ')}</Txt>
                 <Txt variant="caption" muted>
-                  {opt.area} · {opt.totalSeats} ghế · thừa {opt.leftover}
-                  {opt.tableIds.length > 1 ? ` · ghép ${opt.tableIds.length} bàn` : ''}
+                  {t('seatingDialog.optionMeta', {
+                    area: t(tableAreaKey[opt.area]),
+                    seats: opt.totalSeats,
+                    leftover: opt.leftover,
+                  })}
+                  {opt.tableIds.length > 1
+                    ? t('seatingDialog.optionMergeSuffix', { count: opt.tableIds.length })
+                    : ''}
                 </Txt>
               </View>
-              <Btn label="Chọn" size="sm" onPress={() => onOpen(opt.tableIds, guests)} />
+              <Btn label={t('common.choose')} size="sm" onPress={() => onOpen(opt.tableIds, guests)} />
             </Pressable>
           ))}
         </View>

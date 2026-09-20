@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { KitchenNewItemBanner } from '@/src/components/kitchen/kitchen-new-item-banner';
@@ -6,17 +7,18 @@ import { NavRail, type NavDest } from '@/src/components/nav-rail';
 import { staffByRole } from '@/src/data/mock';
 import { useAppTheme } from '@/src/theme/use-theme';
 
-const DESTS: NavDest[] = [
-  { href: '/(kitchen)/queue', match: '/queue', label: 'Hàng đợi', icon: 'bell' },
-  { href: '/(kitchen)/menu', match: '/menu', label: 'Món ăn', icon: 'receipt' },
-  { href: '/(kitchen)/shift', match: '/shift', label: 'Ca làm', icon: 'shift' },
-];
-
 export default function KitchenLayout() {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const { width, height } = useWindowDimensions();
   const isPortrait = height >= width;
   const compact = isPortrait ? false : width < 820;
+
+  const DESTS: NavDest[] = [
+    { href: '/(kitchen)/queue', match: '/queue', label: t('nav.kitchen.queue'), icon: 'bell' },
+    { href: '/(kitchen)/menu', match: '/menu', label: t('nav.kitchen.menu'), icon: 'receipt' },
+    { href: '/(kitchen)/shift', match: '/shift', label: t('nav.kitchen.shift'), icon: 'shift' },
+  ];
 
   return (
     <View
@@ -30,7 +32,7 @@ export default function KitchenLayout() {
           edge="left"
           dests={DESTS}
           staffName={staffByRole['Bếp'].name}
-          staffHref="/(kitchen)/shift"
+          staffHref="/(kitchen)/account"
           size="lg"
         />
       ) : null}
@@ -49,7 +51,7 @@ export default function KitchenLayout() {
           edge="bottom"
           dests={DESTS}
           staffName={staffByRole['Bếp'].name}
-          staffHref="/(kitchen)/shift"
+          staffHref="/(kitchen)/account"
           size="lg"
         />
       ) : null}

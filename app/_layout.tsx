@@ -4,11 +4,13 @@ import { Provider as AntdProvider } from '@ant-design/react-native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { StoreProvider } from '@/src/data/store';
+import { loadStoredLanguage } from '@/src/i18n';
 import { harmonyFontMap } from '@/src/theme/harmony-fonts';
 import { AppThemeContext, appLightTheme } from '@/src/theme/use-theme';
 
@@ -22,8 +24,13 @@ export default function RootLayout() {
     antfill: require('@ant-design/icons-react-native/fonts/antfill.ttf'),
     ...harmonyFontMap,
   });
+  const [languageLoaded, setLanguageLoaded] = useState(false);
 
-  if (!fontsLoaded) return null;
+  useEffect(() => {
+    loadStoredLanguage().finally(() => setLanguageLoaded(true));
+  }, []);
+
+  if (!fontsLoaded || !languageLoaded) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

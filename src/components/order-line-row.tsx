@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { formatVnd } from '@/src/data/format';
@@ -23,6 +24,7 @@ export function OrderLineRow({
   onQty?: (qty: number) => void;
 }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const canEdit = editable && EDITABLE_ITEM_STATUSES.includes(item.status);
   const meta = [...item.optionLabels, item.note ? `“${item.note}”` : null, item.swapNote]
     .filter(Boolean)
@@ -64,7 +66,7 @@ export function OrderLineRow({
           <View style={styles.claim}>
             <Icon name="user" size={12} color={theme.color_text_caption} />
             <Txt variant="tiny" muted>
-              {item.claimedBy} đang bưng
+              {t('orderLineRow.carryingBy', { name: item.claimedBy })}
             </Txt>
           </View>
         ) : null}

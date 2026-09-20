@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, View } from 'react-native';
 
 import { mockAiSuggest } from '@/src/data/ai-suggest';
@@ -34,6 +35,7 @@ export function OrderEntryDialog({
   onSubmit: (cart: CartLine[]) => void;
 }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const [category, setCategory] = useState(categories[0].id);
   const [picking, setPicking] = useState<MenuItem | null>(null);
   const [cart, setCart] = useState<Line[]>([]);
@@ -71,13 +73,13 @@ export function OrderEntryDialog({
     <>
       <AppModal
         visible={visible}
-        title={`Ghi order · ${tableNames.join(' + ')}`}
+        title={t('orderEntryDialog.title', { tables: tableNames.join(' + ') })}
         onClose={onDismiss}
         maxWidth={640}
         actions={[
-          { text: 'Huỷ', onPress: onDismiss },
+          { text: t('common.cancel'), onPress: onDismiss },
           {
-            text: `Gửi bếp · ${formatVnd(total)}`,
+            text: t('orderEntryDialog.sendBtn', { total: formatVnd(total) }),
             primary: true,
             disabled: cart.length === 0,
             onPress: () => {
@@ -88,14 +90,14 @@ export function OrderEntryDialog({
         ]}>
         <View style={[styles.aiBox, { borderColor: theme.border_color_thin }]}>
           <Txt variant="label" muted>
-            Khách muốn gì? (AI gợi ý — mục 9)
+            {t('orderEntryDialog.aiLabel')}
           </Txt>
           <Field
-            placeholder='vd: "4 người, 400k, 1 người không ăn cay"'
+            placeholder={t('orderEntryDialog.aiPlaceholder')}
             value={aiQuery}
             onChangeText={setAiQuery}
           />
-          <Btn label="Hỏi AI gợi ý" size="sm" variant="ghost" onPress={askAi} />
+          <Btn label={t('orderEntryDialog.aiAskBtn')} size="sm" variant="ghost" onPress={askAi} />
           {aiResult ? (
             <View style={styles.aiResult}>
               <Txt variant="caption" muted>
@@ -103,7 +105,7 @@ export function OrderEntryDialog({
               </Txt>
               {aiResult.items.length === 0 ? (
                 <Txt variant="caption" muted>
-                  Không tìm được món phù hợp, thử mô tả khác.
+                  {t('orderEntryDialog.aiNoMatch')}
                 </Txt>
               ) : (
                 aiResult.items.map((mi) => (
@@ -111,7 +113,7 @@ export function OrderEntryDialog({
                     <Txt variant="caption" numberOfLines={1} style={styles.aiName}>
                       {mi.name} · {formatVnd(mi.price)}
                     </Txt>
-                    <Btn label="Thêm" size="sm" onPress={() => addLine(mi, 1, [], mi.price)} />
+                    <Btn label={t('common.add')} size="sm" onPress={() => addLine(mi, 1, [], mi.price)} />
                   </View>
                 ))
               )}
@@ -144,7 +146,7 @@ export function OrderEntryDialog({
         <View style={[styles.cart, { borderColor: theme.border_color_thin }]}>
           {cart.length === 0 ? (
             <Txt variant="caption" muted>
-              Chưa chọn món nào.
+              {t('orderEntryDialog.emptyCart')}
             </Txt>
           ) : (
             cart.map((l) => (

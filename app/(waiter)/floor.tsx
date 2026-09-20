@@ -1,5 +1,6 @@
 import { Toast } from '@ant-design/react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Animated,
   Easing,
@@ -25,6 +26,7 @@ import { clockAt } from '@/src/data/format';
 import { shiftInfo } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
 import type { Table, TableArea } from '@/src/data/types';
+import { tableAreaKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
 
 const AREAS: (TableArea | 'Tất cả')[] = ['Tất cả', 'Tầng 1', 'Sân vườn', 'VIP'];
@@ -34,9 +36,12 @@ const PANEL_MOTION = { duration: 550, easing: Easing.bezier(0.1, 0.9, 0.2, 1) };
 
 export default function FloorScreen() {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { state, sessionByTable, openSession } = useStore();
+
+  const areaLabel = (a: (typeof AREAS)[number]) => (a === 'Tất cả' ? t('status.area.all') : t(tableAreaKey[a]));
 
   const [area, setArea] = useState<(typeof AREAS)[number]>('Tất cả');
   const [seating, setSeating] = useState<{ area?: TableArea } | null>(null);
@@ -92,14 +97,14 @@ export default function FloorScreen() {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
-      Toast.info('Đã tải lại trạng thái bàn mới nhất.', 1.5);
+      Toast.info(t('floor.refreshToast'), 1.5);
     }, 600);
   };
 
   const confirmReserved = () => {
     if (!reservedDialog) return;
     openSession([reservedDialog.id], reservedDialog.reservedFor?.partySize ?? 2);
-    Toast.info(`Đã kích hoạt QR bàn ${reservedDialog.name}.`, 1.6);
+    Toast.info(t('floor.qrActivated', { name: reservedDialog.name }), 1.6);
     const id = reservedDialog.id;
     setReservedDialog(null);
     goSession(id);
@@ -109,8 +114,8 @@ export default function FloorScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
       <View style={styles.pad}>
         <ScreenHeader
-          title="Sơ đồ bàn"
-          subtitle={`${shiftInfo.branch} · khu ${shiftInfo.zone}`}
+          title={t('floor.title')}
+          subtitle={t('floor.subtitle', { branch: shiftInfo.branch, zone: shiftInfo.zone })}
           right={
             <>
               <View style={[styles.rtChip, { borderColor: theme.border_color_base }]}>
@@ -120,17 +125,17 @@ export default function FloorScreen() {
                   color={theme.color_text_caption}
                 />
                 <Txt variant="tiny" muted>
-                  {state.simulate ? 'Real-time: bật' : 'Real-time: tắt'}
+                  {state.simulate ? t('floor.realtimeOn') : t('floor.realtimeOff')}
                 </Txt>
               </View>
-              <Btn label="Mở bàn mới" icon="plus" size="sm" onPress={() => setSeating({})} />
+              <Btn label={t('floor.openTable')} icon="plus" size="sm" onPress={() => setSeating({})} />
             </>
           }
         />
 
         <View style={styles.filterRow}>
           {AREAS.map((a) => (
-            <Pill key={a} label={a} selected={area === a} onPress={() => setArea(a)} />
+            <Pill key={a} label={areaLabel(a)} selected={area === a} onPress={() => setArea(a)} />
           ))}
         </View>
 
@@ -171,38 +176,44 @@ export default function FloorScreen() {
         onOpen={(tableIds, guests) => {
           openSession(tableIds, guests);
           setSeating(null);
-          Toast.info(`Đã kích hoạt QR bàn ${tableIds.length > 1 ? 'ghép' : ''}.`, 1.6);
+          Toast.info(
+            tableIds.length > 1 ? t('floor.qrActivatedMerged') : t('floor.qrActivated', { name: '' }),
+            1.6,
+          );
           goSession(tableIds[0]);
         }}
       />
 
       <AppModal
         visible={!!reservedDialog}
-        title={`Bàn ${reservedDialog?.name ?? ''} — đã đặt trước`}
+        title={t('floor.reservedModalTitle', { name: reservedDialog?.name ?? '' })}
         icon="reserved"
         onClose={() => setReservedDialog(null)}
         maxWidth={380}
         actions={[
-          { text: 'Đóng', onPress: () => setReservedDialog(null) },
-          { text: 'Khách đã đến — mở phiên', primary: true, onPress: confirmReserved },
+          { text: t('common.close'), onPress: () => setReservedDialog(null) },
+          { text: t('floor.guestArrived'), primary: true, onPress: confirmReserved },
         ]}>
         <Txt variant="body" muted>
           {reservedDialog?.reservedFor
-            ? `${reservedDialog.reservedFor.name} · ${reservedDialog.reservedFor.partySize} khách · đặt lúc ${clockAt(reservedDialog.reservedFor.time)}`
+            ? t('floor.reservedInfo', {
+                name: reservedDialog.reservedFor.name,
+                party: reservedDialog.reservedFor.partySize,
+                time: clockAt(reservedDialog.reservedFor.time),
+              })
             : ''}
         </Txt>
       </AppModal>
 
       <AppModal
         visible={lockedToast}
-        title="Bàn tạm khoá"
+        title={t('floor.lockedTitle')}
         icon="lock"
         onClose={() => setLockedToast(false)}
         maxWidth={340}
-        actions={[{ text: 'Đã hiểu', onPress: () => setLockedToast(false) }]}>
+        actions={[{ text: t('common.gotIt'), onPress: () => setLockedToast(false) }]}>
         <Txt variant="body" muted>
-          Bàn đang tạm khoá (hỏng/bảo trì), không thể mở phiên. Liên hệ Branch Manager nếu cần mở
-          lại.
+          {t('floor.lockedBody')}
         </Txt>
       </AppModal>
 

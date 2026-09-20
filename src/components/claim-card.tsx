@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { staffByRole } from '@/src/data/mock';
 import { durationSince } from '@/src/data/format';
 import type { ClaimEntry } from '@/src/data/types';
+import { claimEscalationKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { Btn } from './ui/button';
 import { Icon } from './ui/icon';
@@ -18,6 +20,7 @@ export function ClaimCard({
   onServe: () => void;
 }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const mine = entry.claimedBy === staffByRole['Phục vụ'].name;
   const byOther = !!entry.claimedBy && !mine;
   const urgent = entry.escalation !== 'thường';
@@ -45,32 +48,32 @@ export function ClaimCard({
         <View style={styles.metaRow}>
           <Icon name="pin" size={12} color={theme.color_text_caption} />
           <Txt variant="label" muted>
-            {entry.categoryLabel} · chờ {durationSince(entry.waitingSince)}
+            {entry.categoryLabel} · {t('claimCard.waitingLabel', { duration: durationSince(entry.waitingSince) })}
           </Txt>
           {entry.escalation === 'khẩn' ? (
             <Txt variant="tiny" style={[styles.tag, { borderColor: theme.color_text_base }]}>
-              KHẨN
+              {t(claimEscalationKey.khẩn)}
             </Txt>
           ) : null}
           {entry.escalation === 'manager' ? (
             <Txt variant="tiny" style={[styles.tag, { borderColor: theme.color_text_base }]}>
-              BÁO MANAGER
+              {t(claimEscalationKey.manager)}
             </Txt>
           ) : null}
         </View>
       </View>
 
       {mine ? (
-        <Btn label="Đã phục vụ" icon="served" size="sm" onPress={onServe} />
+        <Btn label={t('claimCard.servedBtn')} icon="served" size="sm" onPress={onServe} />
       ) : byOther ? (
         <View style={styles.lockRow}>
           <Icon name="user" size={13} color={theme.color_text_caption} />
           <Txt variant="label" muted>
-            {entry.claimedBy} đang bưng
+            {t('claimCard.carryingBy', { name: entry.claimedBy })}
           </Txt>
         </View>
       ) : (
-        <Btn label="Nhận việc" icon="guestArrived" size="sm" variant="ghost" onPress={onClaim} />
+        <Btn label={t('claimCard.claimBtn')} icon="guestArrived" size="sm" variant="ghost" onPress={onClaim} />
       )}
     </View>
   );

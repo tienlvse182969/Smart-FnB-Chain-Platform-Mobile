@@ -1,3 +1,5 @@
+import i18n from '@/src/i18n';
+
 import type { MenuItem } from './types';
 
 /**
@@ -47,6 +49,10 @@ export function mockAiSuggest(
 
   return {
     items: picks.slice(0, 5),
-    note: `Gợi ý cho ~${people} người, ngân sách ~${budget.toLocaleString('vi-VN')}₫${noSpicy ? ', tránh món cay' : ''}.`,
+    note: i18n.t('aiSuggest.note', {
+      people,
+      budget: budget.toLocaleString('vi-VN'),
+      noSpicySuffix: noSpicy ? i18n.t('aiSuggest.noSpicySuffix') : '',
+    }),
   };
 }

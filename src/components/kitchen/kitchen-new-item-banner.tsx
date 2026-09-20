@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -17,6 +18,7 @@ type BannerEntry = { key: string; name: string; qty: number; tableNames: string[
 /** Món mới xuống bếp → hiện banner + phát âm thanh cho Kitchen Staff (mục 4.7.A). */
 export function KitchenNewItemBanner() {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { kitchenQueue } = useStore();
@@ -86,7 +88,7 @@ export function KitchenNewItemBanner() {
           </View>
           <View style={styles.textWrap}>
             <Txt variant="bodyStrong">
-              Món mới: {current.name} ×{current.qty}
+              {t('kitchenNewItemBanner.text', { name: current.name, qty: current.qty })}
             </Txt>
             <Txt variant="label" muted>
               {current.tableNames.join(' + ')}

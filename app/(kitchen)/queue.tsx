@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -12,18 +13,20 @@ import { Txt } from '@/src/components/ui/txt';
 import { categories } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
 import type { OrderItemStatus } from '@/src/data/types';
+import { orderItemStatusKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
 
 type StatusFilter = 'all' | OrderItemStatus;
 
-const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
-  { value: 'all', label: 'Tất cả' },
-  { value: 'Trong hàng đợi', label: 'Trong hàng đợi' },
-  { value: 'Đang làm', label: 'Đang làm' },
+const STATUS_FILTERS: { value: StatusFilter; labelKey: string }[] = [
+  { value: 'all', labelKey: 'kitchenQueue.statusFilterAll' },
+  { value: 'Trong hàng đợi', labelKey: orderItemStatusKey['Trong hàng đợi'] },
+  { value: 'Đang làm', labelKey: orderItemStatusKey['Đang làm'] },
 ];
 
 export default function KitchenQueueScreen() {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const { state, kitchenQueue, kitchenTickets, setItemStatus, setKitchenView, setKitchenStationCategories } =
     useStore();
 
@@ -47,8 +50,8 @@ export default function KitchenQueueScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
       <View style={styles.pad}>
         <ScreenHeader
-          title="Hàng đợi"
-          subtitle={`${filteredItems.length} món đang chờ/đang làm`}
+          title={t('kitchenQueue.title')}
+          subtitle={t('kitchenQueue.subtitle', { count: filteredItems.length })}
           right={
             <View style={[styles.viewToggle, { borderColor: theme.border_color_base }]}>
               <Pressable
@@ -62,7 +65,7 @@ export default function KitchenQueueScreen() {
                 <Txt
                   variant="bodyStrong"
                   color={state.kitchenView === 'item' ? theme.color_text_base_inverse : theme.color_text_base}>
-                  Item View
+                  {t('kitchenQueue.itemView')}
                 </Txt>
               </Pressable>
               <Pressable
@@ -76,7 +79,7 @@ export default function KitchenQueueScreen() {
                 <Txt
                   variant="bodyStrong"
                   color={state.kitchenView === 'ticket' ? theme.color_text_base_inverse : theme.color_text_base}>
-                  Ticket View
+                  {t('kitchenQueue.ticketView')}
                 </Txt>
               </Pressable>
             </View>
@@ -86,7 +89,11 @@ export default function KitchenQueueScreen() {
         {state.kitchenView === 'item' ? (
           <>
             <View style={styles.filterRow}>
-              <Pill label="Tất cả" selected={selectedCats.length === 0} onPress={() => setKitchenStationCategories([])} />
+              <Pill
+                label={t('kitchenQueue.filterAll')}
+                selected={selectedCats.length === 0}
+                onPress={() => setKitchenStationCategories([])}
+              />
               {categories.map((c) => (
                 <Pill key={c.id} label={c.label} selected={selectedCats.includes(c.id)} onPress={() => toggleCat(c.id)} />
               ))}
@@ -95,7 +102,7 @@ export default function KitchenQueueScreen() {
               {STATUS_FILTERS.map((s) => (
                 <Pill
                   key={s.value}
-                  label={s.label}
+                  label={t(s.labelKey)}
                   selected={statusFilter === s.value}
                   onPress={() => setStatusFilter(s.value)}
                 />
@@ -106,11 +113,11 @@ export default function KitchenQueueScreen() {
 
         {state.kitchenView === 'item' ? (
           filteredItems.length === 0 ? (
-            <EmptyState icon="bellOff" title="Không có món nào" hint="Hàng đợi trống trong bộ lọc hiện tại." />
+            <EmptyState icon="bellOff" title={t('kitchenQueue.emptyTitle')} hint={t('kitchenQueue.emptyHint')} />
           ) : (
             <FlatList
               data={filteredItems}
-              keyExtractor={(t) => t.itemId}
+              keyExtractor={(it) => it.itemId}
               contentContainerStyle={styles.list}
               renderItem={({ item }) => (
                 <KitchenItemCard
@@ -123,11 +130,11 @@ export default function KitchenQueueScreen() {
             />
           )
         ) : kitchenTickets.length === 0 ? (
-          <EmptyState icon="bellOff" title="Không có bill nào đang chờ" />
+          <EmptyState icon="bellOff" title={t('kitchenQueue.emptyBillTitle')} />
         ) : (
           <FlatList
             data={kitchenTickets}
-            keyExtractor={(t) => t.orderId}
+            keyExtractor={(tk) => tk.orderId}
             contentContainerStyle={styles.list}
             renderItem={({ item }) => <KitchenTicketCard ticket={item} />}
           />

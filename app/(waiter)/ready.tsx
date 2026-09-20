@@ -1,4 +1,5 @@
 import { Toast } from '@ant-design/react-native';
+import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,30 +14,31 @@ import { useAppTheme } from '@/src/theme/use-theme';
 
 export default function ReadyScreen() {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const { claimQueue, unclaimedCount, claimItem, serveItem, kitchenTick } = useStore();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
       <View style={styles.pad}>
         <ScreenHeader
-          title="Món chờ bưng"
-          subtitle="Bếp báo xong — nhận việc rồi bưng lên bàn (WT-04, W05)"
+          title={t('ready.title')}
+          subtitle={t('ready.subtitle')}
           right={
             <>
               <View style={[styles.chip, { borderColor: theme.border_color_base }]}>
                 <Icon name="bell" size={12} color={theme.color_text_caption} />
                 <Txt variant="tiny" muted>
-                  {unclaimedCount}/{claimQueue.length} chưa nhận
+                  {t('ready.unclaimed', { unclaimed: unclaimedCount, total: claimQueue.length })}
                 </Txt>
               </View>
               <Btn
-                label="Giả lập bếp"
+                label={t('ready.simulateKitchen')}
                 icon="stove"
                 size="sm"
                 variant="ghost"
                 onPress={() => {
                   kitchenTick();
-                  Toast.info('Giả lập bếp: đẩy 1 món tiến 1 bước.', 1.2);
+                  Toast.info(t('ready.simulateToast'), 1.2);
                 }}
               />
             </>
@@ -44,11 +46,7 @@ export default function ReadyScreen() {
         />
 
         {claimQueue.length === 0 ? (
-          <EmptyState
-            icon="bellOff"
-            title="Chưa có món chờ bưng"
-            hint="Khi bếp báo Xong, hệ thống bắn món ra đây theo chế độ ra món của từng danh mục."
-          />
+          <EmptyState icon="bellOff" title={t('ready.emptyTitle')} hint={t('ready.emptyHint')} />
         ) : (
           <FlatList
             data={claimQueue}
@@ -59,13 +57,13 @@ export default function ReadyScreen() {
                 entry={item}
                 onClaim={() => {
                   claimItem(item.itemId);
-                  Toast.info(`Bạn đã nhận bưng ${item.name} · ${item.tableName}.`, 1.4);
+                  Toast.info(t('ready.claimedToast', { name: item.name, table: item.tableName }), 1.4);
                 }}
                 onServe={() => {
                   serveItem(item.itemId);
                   Toast.show(
                     {
-                      content: `${item.tableName} · ${item.name} → đã phục vụ.`,
+                      content: t('ready.servedToast', { table: item.tableName, name: item.name }),
                       icon: (
                         <View style={styles.toastIcon}>
                           <Icon name="done" size={36} color={theme.color_text_base_inverse} />

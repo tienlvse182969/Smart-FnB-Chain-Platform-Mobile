@@ -1,5 +1,6 @@
 import { Switch } from '@ant-design/react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,10 +11,12 @@ import { Txt } from '@/src/components/ui/txt';
 import { clockAt, durationSince } from '@/src/data/format';
 import { shiftInfo, staffByRole } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
+import { staffRoleKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
 
 export default function ShiftScreen() {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const { state, checkOut, setSimulate } = useStore();
 
   const myTables = state.tables.filter((t) => t.status === 'Đang phục vụ');
@@ -29,23 +32,23 @@ export default function ShiftScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.pad}>
         <ScreenHeader
-          title="Ca làm việc"
-          subtitle={`${staffByRole['Phục vụ'].name} · ${staffByRole['Phục vụ'].role}`}
+          title={t('shift.title')}
+          subtitle={`${staffByRole['Phục vụ'].name} · ${t(staffRoleKey['Phục vụ'])}`}
         />
 
         <View style={cardStyle}>
           <View style={styles.shiftHead}>
             <Icon name="done" size={20} />
-            <Txt variant="title">{state.checkedInAt ? 'Đang trong ca' : 'Chưa check-in'}</Txt>
+            <Txt variant="title">{state.checkedInAt ? t('shift.inShift') : t('shift.notCheckedIn')}</Txt>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
-          <Row label="Chi nhánh" value={shiftInfo.branch} />
-          <Row label="Khu phụ trách" value={shiftInfo.zone} />
-          <Row label="Giờ check-in" value={state.checkedInAt ? clockAt(state.checkedInAt) : '—'} />
-          <Row label="Thời lượng" value={state.checkedInAt ? durationSince(state.checkedInAt) : '—'} />
-          <Row label="Phiên đang phục vụ" value={`${myTables.length} bàn`} />
+          <Row label={t('shift.branch')} value={shiftInfo.branch} />
+          <Row label={t('waiterShift.zone')} value={shiftInfo.zone} />
+          <Row label={t('shift.checkinTime')} value={state.checkedInAt ? clockAt(state.checkedInAt) : '—'} />
+          <Row label={t('shift.duration')} value={state.checkedInAt ? durationSince(state.checkedInAt) : '—'} />
+          <Row label={t('waiterShift.activeSessions')} value={t('waiterShift.tableCount', { count: myTables.length })} />
           <Btn
-            label="Check-out ca"
+            label={t('shift.checkout')}
             icon="logout"
             block
             style={styles.checkout}
@@ -57,21 +60,21 @@ export default function ShiftScreen() {
         </View>
 
         <Txt variant="bodyStrong" muted style={styles.sectionTitle}>
-          Bàn đang phụ trách
+          {t('waiterShift.assignedTables')}
         </Txt>
         <View style={[...cardStyle, styles.cardTight]}>
           {myTables.length === 0 ? (
             <Txt variant="body" muted style={styles.rowPad}>
-              Chưa phục vụ bàn nào
+              {t('waiterShift.noTables')}
             </Txt>
           ) : null}
-          {myTables.map((t, i) => {
-            const s = sessionOf(t.id);
+          {myTables.map((tb, i) => {
+            const s = sessionOf(tb.id);
             return (
               <Pressable
-                key={t.id}
+                key={tb.id}
                 onPress={() =>
-                  router.push({ pathname: '/(waiter)/table/[id]', params: { id: t.id } })
+                  router.push({ pathname: '/(waiter)/table/[id]', params: { id: tb.id } })
                 }
                 style={({ pressed }) => [
                   styles.tableRow,
@@ -84,11 +87,15 @@ export default function ShiftScreen() {
                 <Icon name="chair" size={18} color={theme.color_text_caption} />
                 <View style={styles.tableRowText}>
                   <Txt variant="bodyStrong">
-                    {t.name} · {t.area}
+                    {tb.name} · {tb.area}
                   </Txt>
                   {s ? (
                     <Txt variant="caption" muted>
-                      {s.guests} khách · {s.orders.length} order · {durationSince(s.openedAt)}
+                      {t('waiterShift.sessionMeta', {
+                        guests: s.guests,
+                        orders: s.orders.length,
+                        duration: durationSince(s.openedAt),
+                      })}
                     </Txt>
                   ) : null}
                 </View>
@@ -99,14 +106,14 @@ export default function ShiftScreen() {
         </View>
 
         <Txt variant="bodyStrong" muted style={styles.sectionTitle}>
-          Cài đặt
+          {t('shift.settings')}
         </Txt>
         <View style={cardStyle}>
           <View style={styles.switchRow}>
             <View style={styles.switchText}>
-              <Txt variant="body">Mô phỏng real-time</Txt>
+              <Txt variant="body">{t('shift.simulateRealtime')}</Txt>
               <Txt variant="tiny" muted>
-                Tự đẩy trạng thái món mỗi vài giây để xem hiệu ứng cập nhật.
+                {t('waiterShift.simulateHint')}
               </Txt>
             </View>
             <Switch checked={state.simulate} onChange={setSimulate} />

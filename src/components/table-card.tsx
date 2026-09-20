@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { clockAt, durationSince } from '@/src/data/format';
 import type { Table, TableSession } from '@/src/data/types';
+import { tableAreaKey } from '@/src/i18n/labels';
 import { TABLE_STATUS_COLORS } from '@/src/theme/status-colors';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
@@ -19,6 +21,7 @@ export function TableCard({
   onPress: () => void;
 }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const color = TABLE_STATUS_COLORS[table.status];
 
   const items = session ? session.orders.flatMap((o) => o.items) : [];
@@ -57,10 +60,10 @@ export function TableCard({
       <View style={styles.bottomRow}>
         <Txt variant="tiny" muted numberOfLines={1} style={styles.area}>
           {table.status === 'Đã đặt trước' && table.reservedFor
-            ? `${table.area} · đặt ${clockAt(table.reservedFor.time)}`
+            ? t('tableCard.reservedArea', { area: t(tableAreaKey[table.area]), time: clockAt(table.reservedFor.time) })
             : session
-              ? `${table.area} · ${durationSince(session.openedAt)}`
-              : table.area}
+              ? t('tableCard.sessionArea', { area: t(tableAreaKey[table.area]), duration: durationSince(session.openedAt) })
+              : t(tableAreaKey[table.area])}
         </Txt>
         {session && active > 0 ? (
           <View
@@ -77,7 +80,7 @@ export function TableCard({
               color={waiting ? color.on : theme.color_text_base}
             />
             <Txt variant="tiny" color={waiting ? color.on : theme.color_text_base}>
-              {waiting ? `${waiting} chờ bưng` : `${active} món`}
+              {waiting ? t('tableCard.waitingCount', { count: waiting }) : t('tableCard.activeCount', { count: active })}
             </Txt>
           </View>
         ) : null}

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,6 +11,7 @@ import { clockAt } from '@/src/data/format';
 import { useStore } from '@/src/data/store';
 
 export default function ReservationsScreen() {
+  const { t } = useTranslation();
   const { state } = useStore();
 
   const list = useMemo(
@@ -24,15 +26,18 @@ export default function ReservationsScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
       <View style={styles.pad}>
         <ScreenHeader
-          title="Đặt trước sắp tới"
-          subtitle={`${list.length} lượt · ${clockAt(new Date().toISOString())}`}
+          title={t('reservations.title')}
+          subtitle={t('reservations.countLabel', {
+            count: list.length,
+            time: clockAt(new Date().toISOString()),
+          })}
         />
         <Txt variant="caption" muted style={styles.note}>
-          Danh sách chỉ xem — khách quét QR bàn khi tới, phục vụ mở phiên ở màn Sơ đồ bàn.
+          {t('reservations.note')}
         </Txt>
 
         {list.length === 0 ? (
-          <EmptyState icon="reservations" title="Không có đặt trước" />
+          <EmptyState icon="reservations" title={t('reservations.emptyTitle')} />
         ) : (
           <FlatList
             data={list}

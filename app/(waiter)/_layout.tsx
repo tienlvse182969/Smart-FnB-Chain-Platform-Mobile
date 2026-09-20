@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { KitchenReadyBanner } from '@/src/components/kitchen-ready-banner';
@@ -9,28 +10,29 @@ import { useAppTheme } from '@/src/theme/use-theme';
 
 export default function WaiterLayout() {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const { width, height } = useWindowDimensions();
   const isPortrait = height >= width;
   const compact = isPortrait ? false : width < 820;
   const { state, unclaimedCount } = useStore();
 
   const dests: NavDest[] = [
-    { href: '/(waiter)/floor', match: '/floor', label: 'Sơ đồ bàn', icon: 'grid' },
+    { href: '/(waiter)/floor', match: '/floor', label: t('nav.waiter.floor'), icon: 'grid' },
     {
       href: '/(waiter)/ready',
       match: '/ready',
-      label: 'Món chờ bưng',
+      label: t('nav.waiter.ready'),
       icon: 'bell',
       badgeCount: unclaimedCount,
     },
     {
       href: '/(waiter)/reservations',
       match: '/reservations',
-      label: 'Đặt trước',
+      label: t('nav.waiter.reservations'),
       icon: 'reservations',
       badgeCount: state.reservations.length,
     },
-    { href: '/(waiter)/shift', match: '/shift', label: 'Ca làm', icon: 'shift' },
+    { href: '/(waiter)/shift', match: '/shift', label: t('nav.waiter.shift'), icon: 'shift' },
   ];
 
   return (
@@ -45,7 +47,7 @@ export default function WaiterLayout() {
           edge="left"
           dests={dests}
           staffName={staffByRole['Phục vụ'].name}
-          staffHref="/(waiter)/shift"
+          staffHref="/(waiter)/account"
         />
       ) : null}
       <View style={styles.content}>
@@ -63,7 +65,7 @@ export default function WaiterLayout() {
           edge="bottom"
           dests={dests}
           staffName={staffByRole['Phục vụ'].name}
-          staffHref="/(waiter)/shift"
+          staffHref="/(waiter)/account"
         />
       ) : null}
     </View>

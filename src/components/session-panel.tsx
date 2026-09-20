@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { clockAt, durationSince, formatVnd } from '@/src/data/format';
 import { sessionTotal } from '@/src/data/store';
 import type { OrderItem, Table, TableSession } from '@/src/data/types';
+import { checkoutMethodKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { fontFamily } from '@/src/theme/typography';
 import { EmptyState } from './empty-state';
@@ -43,6 +45,7 @@ export function SessionPanel({
   onQtyItem: (item: OrderItem, qty: number) => void;
 }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const payment = session.payment;
   const awaitingConfirm = !!payment && !payment.confirmedAt;
 
@@ -54,11 +57,14 @@ export function SessionPanel({
       ]}>
       <View style={styles.header}>
         <Txt variant="h2" style={styles.title}>
-          Phiên · {tableNames.join(' + ')}
+          {t('sessionPanel.title', { names: tableNames.join(' + ') })}
         </Txt>
         <Txt variant="caption" muted>
-          {session.guests} khách · mở {clockAt(session.openedAt)} · ngồi{' '}
-          {durationSince(session.openedAt)}
+          {t('sessionPanel.meta', {
+            guests: session.guests,
+            opened: clockAt(session.openedAt),
+            duration: durationSince(session.openedAt),
+          })}
         </Txt>
       </View>
       <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
@@ -69,17 +75,20 @@ export function SessionPanel({
           <View style={styles.bannerText}>
             <Txt variant="bodyStrong">
               {payment!.method === 'Tiền mặt' && payment!.collectedBy
-                ? `Đã thu tiền mặt (bởi ${payment!.collectedBy}) — chờ Quản lý xác nhận`
-                : 'Đang chờ Quản lý chi nhánh xác nhận thanh toán'}
+                ? t('sessionPanel.awaitingCashConfirm', { name: payment!.collectedBy })
+                : t('sessionPanel.awaitingConfirm')}
             </Txt>
             <Txt variant="caption" muted>
-              Phương thức: {payment!.method} · yêu cầu lúc {clockAt(payment!.requestedAt)}
+              {t('sessionPanel.methodRequested', {
+                method: t(checkoutMethodKey[payment!.method]),
+                time: clockAt(payment!.requestedAt),
+              })}
             </Txt>
           </View>
           {payment!.method === 'Chuyển khoản QR' ? (
-            <Btn label="Xem mã QR" size="sm" onPress={onViewQr} />
+            <Btn label={t('sessionPanel.viewQr')} size="sm" onPress={onViewQr} />
           ) : !payment!.collectedBy ? (
-            <Btn label="Tôi đã thu tiền mặt" size="sm" onPress={onCollectCash} />
+            <Btn label={t('sessionPanel.collectedCash')} size="sm" onPress={onCollectCash} />
           ) : null}
         </View>
       ) : null}
@@ -87,8 +96,8 @@ export function SessionPanel({
       {session.orders.length === 0 ? (
         <EmptyState
           icon="receipt"
-          title="Chưa có order"
-          hint="Mang tablet ra bàn, bấm “Ghi order” để ghi món cho khách."
+          title={t('sessionPanel.noOrdersTitle')}
+          hint={t('sessionPanel.noOrdersHint')}
         />
       ) : (
         <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
@@ -108,30 +117,29 @@ export function SessionPanel({
       <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
       <View style={styles.footer}>
         <View style={styles.summaryRow}>
-          <Txt variant="body">{session.orders.length} order</Txt>
+          <Txt variant="body">{t('sessionPanel.orderCount', { count: session.orders.length })}</Txt>
           <Txt variant="title" style={{ fontFamily: fontFamily.bold, fontSize: 20, lineHeight: 26 }}>
             {formatVnd(sessionTotal(session))}
           </Txt>
         </View>
         <View style={styles.actions}>
-          <Btn label="Ghi order" icon="plus" size="sm" onPress={onNewOrder} />
-          <Btn label="Đổi bàn" icon="moveTable" size="sm" variant="ghost" onPress={onMove} />
-          <Btn label="Gộp bàn" icon="merge" size="sm" variant="ghost" onPress={onMerge} />
+          <Btn label={t('sessionPanel.newOrderBtn')} icon="plus" size="sm" onPress={onNewOrder} />
+          <Btn label={t('sessionPanel.moveBtn')} icon="moveTable" size="sm" variant="ghost" onPress={onMove} />
+          <Btn label={t('sessionPanel.mergeBtn')} icon="merge" size="sm" variant="ghost" onPress={onMerge} />
           {outOfStockCount > 0 ? (
             <Btn
-              label={`Xử lý hết món (${outOfStockCount})`}
+              label={t('sessionPanel.resolveStockBtn', { count: outOfStockCount })}
               icon="unavailable"
               size="sm"
               onPress={onResolveStock}
             />
           ) : null}
           {!payment ? (
-            <Btn label="Yêu cầu tính tiền" icon="receipt" size="sm" onPress={onRequestCheckout} />
+            <Btn label={t('sessionPanel.requestCheckoutBtn')} icon="receipt" size="sm" onPress={onRequestCheckout} />
           ) : null}
         </View>
         <Txt variant="tiny" muted style={styles.hint}>
-          Bấm “Ghi order” là xuống bếp ngay (BR-05) — không có bước duyệt. Chỉ Quản lý chi nhánh
-          mới sinh mã QR và xác nhận thanh toán (BR-13).
+          {t('sessionPanel.footerHint')}
         </Txt>
       </View>
     </View>

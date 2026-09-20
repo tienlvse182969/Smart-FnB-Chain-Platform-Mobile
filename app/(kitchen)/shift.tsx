@@ -1,5 +1,6 @@
 import { Switch } from '@ant-design/react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,11 +12,13 @@ import { Txt } from '@/src/components/ui/txt';
 import { clockAt, durationSince } from '@/src/data/format';
 import { categories, shiftInfo, staffByRole } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
+import { staffRoleKey } from '@/src/i18n/labels';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 
 export default function KitchenShiftScreen() {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const { state, checkOut, setSimulate, setKitchenStationCategories } = useStore();
   const selectedCats = state.kitchenStationCategories;
 
@@ -33,25 +36,24 @@ export default function KitchenShiftScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.pad}>
         <ScreenHeader
-          title="Ca làm việc"
-          subtitle={`${staffByRole['Bếp'].name} · ${staffByRole['Bếp'].role}`}
+          title={t('shift.title')}
+          subtitle={`${staffByRole['Bếp'].name} · ${t(staffRoleKey['Bếp'])}`}
         />
 
         <View style={cardStyle}>
           <View style={styles.shiftHead}>
             <Icon name="done" size={22} />
-            <Txt style={styles.big}>{state.checkedInAt ? 'Đang trong ca' : 'Chưa check-in'}</Txt>
+            <Txt style={styles.big}>{state.checkedInAt ? t('shift.inShift') : t('shift.notCheckedIn')}</Txt>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
-          <Row label="Chi nhánh" value={shiftInfo.branch} />
-          <Row label="Giờ check-in" value={state.checkedInAt ? clockAt(state.checkedInAt) : '—'} />
-          <Row label="Thời lượng" value={state.checkedInAt ? durationSince(state.checkedInAt) : '—'} />
+          <Row label={t('shift.branch')} value={shiftInfo.branch} />
+          <Row label={t('shift.checkinTime')} value={state.checkedInAt ? clockAt(state.checkedInAt) : '—'} />
+          <Row label={t('shift.duration')} value={state.checkedInAt ? durationSince(state.checkedInAt) : '—'} />
           <Txt variant="caption" muted style={styles.checkoutNote}>
-            Thực tế: Quản lý chi nhánh sẽ check-out cho bạn khi hết ca. Nút dưới đây chỉ để đổi
-            vai trò khi mô phỏng.
+            {t('kitchenShift.checkoutNote')}
           </Txt>
           <Btn
-            label="Check-out ca (demo)"
+            label={t('kitchenShift.checkoutDemo')}
             icon="logout"
             block
             variant="ghost"
@@ -64,7 +66,7 @@ export default function KitchenShiftScreen() {
         </View>
 
         <Txt variant="bodyStrong" muted style={styles.sectionTitle}>
-          Danh mục phụ trách
+          {t('kitchenShift.categoriesTitle')}
         </Txt>
         <View style={cardStyle}>
           <View style={styles.catRow}>
@@ -73,19 +75,19 @@ export default function KitchenShiftScreen() {
             ))}
           </View>
           <Txt variant="caption" muted style={styles.catHint}>
-            Dùng làm bộ lọc mặc định ở Hàng đợi — vẫn đổi được ở đó.
+            {t('kitchenShift.categoriesHint')}
           </Txt>
         </View>
 
         <Txt variant="bodyStrong" muted style={styles.sectionTitle}>
-          Cài đặt
+          {t('shift.settings')}
         </Txt>
         <View style={cardStyle}>
           <View style={styles.switchRow}>
             <View style={styles.switchText}>
-              <Txt variant="body">Mô phỏng real-time</Txt>
+              <Txt variant="body">{t('shift.simulateRealtime')}</Txt>
               <Txt variant="tiny" muted>
-                Tự đẩy order mới nhận qua các trạng thái để xem hiệu ứng cập nhật.
+                {t('kitchenShift.simulateHint')}
               </Txt>
             </View>
             <Switch checked={state.simulate} onChange={setSimulate} />

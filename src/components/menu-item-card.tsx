@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { formatVnd } from '@/src/data/format';
 import type { MenuItem } from '@/src/data/types';
+import { orderItemStatusKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { Icon } from './ui/icon';
 import { Txt } from './ui/txt';
@@ -20,6 +22,7 @@ export function MenuItemCard({
   onPress: () => void;
 }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const off = !available || remainingPortions === 0;
   const low = !off && remainingPortions !== undefined && remainingPortions <= 5;
 
@@ -46,7 +49,11 @@ export function MenuItemCard({
         <View style={styles.meta}>
           <Icon name="pin" size={12} color={theme.color_text_caption} />
           <Txt variant="tiny" muted>
-            {off ? 'Hết món' : low ? `còn ${remainingPortions} suất` : categoryLabel}
+            {off
+              ? t(orderItemStatusKey['Hết món'])
+              : low
+                ? t('menuItemCard.lowStock', { count: remainingPortions })
+                : categoryLabel}
           </Txt>
         </View>
       </View>

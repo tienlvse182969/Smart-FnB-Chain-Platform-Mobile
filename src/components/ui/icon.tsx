@@ -20,6 +20,7 @@ import {
   Link2,
   ListFilter,
   Loader,
+  Languages,
   Lock,
   LogIn,
   LogOut,
@@ -93,6 +94,7 @@ export const Icons = {
   ticketView: LayoutList,
   timer: Timer,
   close: X,
+  language: Languages,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof Icons;

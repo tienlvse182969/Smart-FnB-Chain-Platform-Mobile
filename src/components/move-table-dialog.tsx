@@ -1,6 +1,8 @@
+import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import type { Table } from '@/src/data/types';
+import { tableAreaKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { AppModal } from './ui/app-modal';
 import { Icon } from './ui/icon';
@@ -22,28 +24,29 @@ export function MoveTableDialog({
   onPick: (tableId: string) => void;
 }) {
   const theme = useAppTheme();
-  const fromLabel = fromTables.map((t) => t.name).join(' + ');
-  const title = mode === 'move' ? `Đổi bàn từ ${fromLabel}` : `Gộp thêm bàn vào ${fromLabel}`;
-  const hint =
+  const { t } = useTranslation();
+  const fromLabel = fromTables.map((tb) => tb.name).join(' + ');
+  const title =
     mode === 'move'
-      ? 'Chuyển toàn bộ phiên sang bàn mới, giữ nguyên order và trạng thái món.'
-      : 'Thêm 1 bàn trống liền kề vào phiên đang hoạt động — dùng khi nhóm khách đông hơn dự kiến.';
+      ? t('moveTableDialog.moveTitle', { from: fromLabel })
+      : t('moveTableDialog.mergeTitle', { from: fromLabel });
+  const hint = mode === 'move' ? t('moveTableDialog.moveHint') : t('moveTableDialog.mergeHint');
 
   return (
-    <AppModal visible={visible} title={title} onClose={onDismiss} actions={[{ text: 'Huỷ', onPress: onDismiss }]}>
+    <AppModal visible={visible} title={title} onClose={onDismiss} actions={[{ text: t('common.cancel'), onPress: onDismiss }]}>
       <Txt variant="caption" muted>
         {hint}
       </Txt>
       {candidates.length === 0 ? (
         <Txt variant="body" muted style={styles.empty}>
-          Không có bàn trống phù hợp.
+          {t('moveTableDialog.noneAvailable')}
         </Txt>
       ) : (
         <ScrollView style={styles.list}>
-          {candidates.map((t) => (
+          {candidates.map((tb) => (
             <Pressable
-              key={t.id}
-              onPress={() => onPick(t.id)}
+              key={tb.id}
+              onPress={() => onPick(tb.id)}
               style={({ pressed }) => [
                 styles.item,
                 { borderColor: theme.border_color_thin },
@@ -52,10 +55,10 @@ export function MoveTableDialog({
               <Icon name="chair" size={18} color={theme.color_text_caption} />
               <View style={styles.itemText}>
                 <Txt variant="bodyStrong">
-                  {t.name} · {t.seats} chỗ
+                  {t('moveTableDialog.seatsLabel', { name: tb.name, seats: tb.seats })}
                 </Txt>
                 <Txt variant="caption" muted>
-                  {t.area}
+                  {t(tableAreaKey[tb.area])}
                 </Txt>
               </View>
             </Pressable>

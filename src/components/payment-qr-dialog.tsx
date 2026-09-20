@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import QRCode from 'react-native-qrcode-svg';
 import { StyleSheet, View } from 'react-native';
 
@@ -16,21 +17,22 @@ export function PaymentQrDialog({
   onDismiss: () => void;
 }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
 
   return (
     <AppModal
       visible={visible}
-      title="Mã QR thanh toán"
+      title={t('paymentQrDialog.title')}
       onClose={onDismiss}
       maxWidth={320}
-      actions={[{ text: 'Đóng', onPress: onDismiss }]}>
+      actions={[{ text: t('common.close'), onPress: onDismiss }]}>
       <View style={styles.wrap}>
         {value ? <QRCode value={value} size={200} /> : null}
         <Txt variant="caption" muted style={styles.code}>
-          Mã hoá đơn: {value}
+          {t('paymentQrDialog.invoiceCode', { code: value })}
         </Txt>
         <Txt variant="caption" muted style={{ color: theme.color_text_caption }}>
-          Đưa tablet cho khách quét mã để chuyển khoản.
+          {t('paymentQrDialog.hint')}
         </Txt>
       </View>
     </AppModal>

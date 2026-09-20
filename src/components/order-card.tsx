@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { clockAt, formatVnd } from '@/src/data/format';
@@ -21,11 +22,12 @@ export function OrderCard({
   onQtyItem?: (item: OrderItem, qty: number) => void;
 }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
 
   return (
     <View style={[styles.card, { borderColor: theme.border_color_thin }]}>
       <Txt variant="label" muted style={styles.header}>
-        Order #{index + 1} · {clockAt(order.createdAt)}
+        {t('orderCard.header', { index: index + 1, time: clockAt(order.createdAt) })}
       </Txt>
 
       {order.items.map((item) => (
@@ -41,7 +43,7 @@ export function OrderCard({
 
       <View style={styles.totalRow}>
         <Txt variant="caption" muted>
-          Tổng order
+          {t('orderCard.total')}
         </Txt>
         <Txt variant="bodyStrong">{formatVnd(orderTotal(order))}</Txt>
       </View>

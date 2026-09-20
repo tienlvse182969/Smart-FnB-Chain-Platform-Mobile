@@ -1,0 +1,301 @@
+{
+  "common": {
+    "cancel": "Huỷ",
+    "close": "Đóng",
+    "back": "Quay lại",
+    "choose": "Chọn",
+    "add": "Thêm",
+    "gotIt": "Đã hiểu"
+  },
+  "account": {
+    "screenTitle": "Tài khoản",
+    "settingsSection": "Cài đặt thiết bị",
+    "language": {
+      "label": "Ngôn ngữ",
+      "description": "Chọn ngôn ngữ hiển thị cho ứng dụng",
+      "vi": "Tiếng Việt",
+      "en": "English"
+    }
+  },
+  "status": {
+    "table": {
+      "empty": "Trống",
+      "reserved": "Đã đặt trước",
+      "occupied": "Đang phục vụ",
+      "locked": "Tạm khoá"
+    },
+    "item": {
+      "queued": "Trong hàng đợi",
+      "preparing": "Đang làm",
+      "done": "Xong",
+      "waitingPickup": "Chờ bưng",
+      "served": "Đã phục vụ",
+      "outOfStock": "Hết món",
+      "cancelled": "Đã huỷ"
+    },
+    "itemAction": {
+      "queued": "Chờ",
+      "preparing": "Đang làm",
+      "done": "Xong",
+      "waitingPickup": "Chờ bưng",
+      "served": "Đã phục vụ",
+      "outOfStock": "Hết món",
+      "cancelled": "Huỷ"
+    },
+    "session": {
+      "active": "Đang hoạt động",
+      "closed": "Đã đóng",
+      "cancelled": "Huỷ"
+    },
+    "role": {
+      "waiter": "Phục vụ",
+      "kitchen": "Bếp"
+    },
+    "course": {
+      "starter": "Khai vị & đồ uống",
+      "main": "Món chính"
+    },
+    "checkout": {
+      "qr": "Chuyển khoản QR",
+      "cash": "Tiền mặt"
+    },
+    "area": {
+      "all": "Tất cả",
+      "floor1": "Tầng 1",
+      "garden": "Sân vườn",
+      "vip": "VIP"
+    },
+    "escalation": {
+      "normal": "thường",
+      "urgent": "KHẨN",
+      "manager": "BÁO MANAGER"
+    }
+  },
+  "format": {
+    "justNow": "vừa xong",
+    "rightNow": "ngay bây giờ",
+    "minutesShort": "{{count}} phút",
+    "hoursShort": "{{count}} giờ",
+    "hoursMinutesShort": "{{h}}g {{m}}p",
+    "ago": "{{label}} trước",
+    "in": "sau {{label}}"
+  },
+  "nav": {
+    "waiter": {
+      "floor": "Sơ đồ bàn",
+      "ready": "Món chờ bưng",
+      "reservations": "Đặt trước",
+      "shift": "Ca làm"
+    },
+    "kitchen": {
+      "queue": "Hàng đợi",
+      "menu": "Món ăn",
+      "shift": "Ca làm"
+    }
+  },
+  "login": {
+    "checkinSubtitle": "Check-in ca tại {{branch}}",
+    "roleLabel": "Vai trò",
+    "emailLabel": "Email nhân viên",
+    "pinLabel": "Mã PIN",
+    "submit": "Đăng nhập & Check-in ca ({{role}})",
+    "hint": "Bản phác thảo — bấm để vào thẳng, chưa nối hệ thống thật."
+  },
+  "floor": {
+    "title": "Sơ đồ bàn",
+    "subtitle": "{{branch}} · khu {{zone}}",
+    "realtimeOn": "Real-time: bật",
+    "realtimeOff": "Real-time: tắt",
+    "openTable": "Mở bàn mới",
+    "refreshToast": "Đã tải lại trạng thái bàn mới nhất.",
+    "qrActivated": "Đã kích hoạt QR bàn {{name}}.",
+    "qrActivatedMerged": "Đã kích hoạt QR bàn ghép.",
+    "reservedModalTitle": "Bàn {{name}} — đã đặt trước",
+    "reservedInfo": "{{name}} · {{party}} khách · đặt lúc {{time}}",
+    "guestArrived": "Khách đã đến — mở phiên",
+    "lockedTitle": "Bàn tạm khoá",
+    "lockedBody": "Bàn đang tạm khoá (hỏng/bảo trì), không thể mở phiên. Liên hệ Branch Manager nếu cần mở lại."
+  },
+  "ready": {
+    "title": "Món chờ bưng",
+    "subtitle": "Bếp báo xong — nhận việc rồi bưng lên bàn (WT-04, W05)",
+    "unclaimed": "{{unclaimed}}/{{total}} chưa nhận",
+    "simulateKitchen": "Giả lập bếp",
+    "simulateToast": "Giả lập bếp: đẩy 1 món tiến 1 bước.",
+    "emptyTitle": "Chưa có món chờ bưng",
+    "emptyHint": "Khi bếp báo Xong, hệ thống bắn món ra đây theo chế độ ra món của từng danh mục.",
+    "claimedToast": "Bạn đã nhận bưng {{name}} · {{table}}.",
+    "servedToast": "{{table}} · {{name}} → đã phục vụ."
+  },
+  "claimCard": {
+    "waitingLabel": "chờ {{duration}}",
+    "servedBtn": "Đã phục vụ",
+    "claimBtn": "Nhận việc",
+    "carryingBy": "{{name}} đang bưng"
+  },
+  "reservations": {
+    "title": "Đặt trước sắp tới",
+    "countLabel": "{{count}} lượt · {{time}}",
+    "note": "Danh sách chỉ xem — khách quét QR bàn khi tới, phục vụ mở phiên ở màn Sơ đồ bàn.",
+    "emptyTitle": "Không có đặt trước"
+  },
+  "reservationRow": {
+    "partySize": "{{phone}} · {{party}} khách",
+    "tableSuffix": " · bàn {{table}}"
+  },
+  "shift": {
+    "title": "Ca làm việc",
+    "inShift": "Đang trong ca",
+    "notCheckedIn": "Chưa check-in",
+    "branch": "Chi nhánh",
+    "checkinTime": "Giờ check-in",
+    "duration": "Thời lượng",
+    "settings": "Cài đặt",
+    "simulateRealtime": "Mô phỏng real-time",
+    "checkout": "Check-out ca"
+  },
+  "waiterShift": {
+    "zone": "Khu phụ trách",
+    "activeSessions": "Phiên đang phục vụ",
+    "tableCount": "{{count}} bàn",
+    "assignedTables": "Bàn đang phụ trách",
+    "noTables": "Chưa phục vụ bàn nào",
+    "sessionMeta": "{{guests}} khách · {{orders}} order · {{duration}}",
+    "simulateHint": "Tự đẩy trạng thái món mỗi vài giây để xem hiệu ứng cập nhật."
+  },
+  "kitchenShift": {
+    "checkoutDemo": "Check-out ca (demo)",
+    "checkoutNote": "Thực tế: Quản lý chi nhánh sẽ check-out cho bạn khi hết ca. Nút dưới đây chỉ để đổi vai trò khi mô phỏng.",
+    "categoriesTitle": "Danh mục phụ trách",
+    "categoriesHint": "Dùng làm bộ lọc mặc định ở Hàng đợi — vẫn đổi được ở đó.",
+    "simulateHint": "Tự đẩy order mới nhận qua các trạng thái để xem hiệu ứng cập nhật."
+  },
+  "kitchenMenu": {
+    "title": "Món ăn",
+    "subtitle": "Bật/tắt & cập nhật số suất còn lại (BR-06, BR-07)",
+    "remaining": "Còn lại"
+  },
+  "kitchenQueue": {
+    "title": "Hàng đợi",
+    "subtitle": "{{count}} món đang chờ/đang làm",
+    "itemView": "Item View",
+    "ticketView": "Ticket View",
+    "filterAll": "Tất cả",
+    "emptyTitle": "Không có món nào",
+    "emptyHint": "Hàng đợi trống trong bộ lọc hiện tại.",
+    "emptyBillTitle": "Không có bill nào đang chờ",
+    "statusFilterAll": "Tất cả"
+  },
+  "kitchenTicketCard": {
+    "doneProgress": "{{done}}/{{total}} món xong",
+    "sentAgo": "gửi {{duration}}"
+  },
+  "kitchenReadyBanner": {
+    "text": "Bếp đã xong: {{name}} ×{{qty}}",
+    "sub": "{{table}} · Sẵn sàng bưng lên"
+  },
+  "kitchenNewItemBanner": {
+    "text": "Món mới: {{name}} ×{{qty}}"
+  },
+  "tableDetail": {
+    "notFound": "Không tìm thấy bàn",
+    "titlePrefix": "Bàn {{names}}",
+    "guestsSuffix": " · {{guests}} khách",
+    "simulateKitchenToast": "Giả lập bếp: đẩy 1 món tiến 1 bước.",
+    "paidToastConfirmed": "Quản lý đã xác nhận thanh toán — bàn {{names}} về Trống.",
+    "emptyTitle": "Bàn chưa có phiên",
+    "emptyHint": "Về sơ đồ bàn, bấm “Mở bàn mới” hoặc chọn bàn trống để mở phiên.",
+    "backToFloor": "Về sơ đồ bàn",
+    "requestCheckoutToastQr": "Đã báo Quản lý chi nhánh yêu cầu tính tiền. Mang tablet có mã QR ra bàn.",
+    "requestCheckoutToastCash": "Đã báo Quản lý chi nhánh yêu cầu tính tiền. Thu tiền mặt và mang lên quầy.",
+    "orderSentToast": "Đã gửi bếp — món vào hàng đợi ngay (BR-05).",
+    "mergedToast": "Đã gộp bàn {{name}} vào phiên.",
+    "swappedToast": "Đã đổi món — chờ bếp làm lại.",
+    "droppedToast": "Đã bỏ món khỏi hoá đơn.",
+    "checkoutTitle": "Yêu cầu tính tiền",
+    "checkoutBody": "Chọn phương thức khách dùng để trả. Chỉ Quản lý chi nhánh mới sinh mã QR và xác nhận thanh toán (BR-13).",
+    "cancelSessionBtn": "Khách bỏ về — huỷ phiên"
+  },
+  "sessionPanel": {
+    "title": "Phiên · {{names}}",
+    "meta": "{{guests}} khách · mở {{opened}} · ngồi {{duration}}",
+    "awaitingCashConfirm": "Đã thu tiền mặt (bởi {{name}}) — chờ Quản lý xác nhận",
+    "awaitingConfirm": "Đang chờ Quản lý chi nhánh xác nhận thanh toán",
+    "methodRequested": "Phương thức: {{method}} · yêu cầu lúc {{time}}",
+    "viewQr": "Xem mã QR",
+    "collectedCash": "Tôi đã thu tiền mặt",
+    "noOrdersTitle": "Chưa có order",
+    "noOrdersHint": "Mang tablet ra bàn, bấm “Ghi order” để ghi món cho khách.",
+    "orderCount": "{{count}} order",
+    "newOrderBtn": "Ghi order",
+    "moveBtn": "Đổi bàn",
+    "mergeBtn": "Gộp bàn",
+    "resolveStockBtn": "Xử lý hết món ({{count}})",
+    "requestCheckoutBtn": "Yêu cầu tính tiền",
+    "footerHint": "Bấm “Ghi order” là xuống bếp ngay (BR-05) — không có bước duyệt. Chỉ Quản lý chi nhánh mới sinh mã QR và xác nhận thanh toán (BR-13)."
+  },
+  "orderCard": {
+    "header": "Order #{{index}} · {{time}}",
+    "total": "Tổng order"
+  },
+  "orderLineRow": {
+    "carryingBy": "{{name}} đang bưng"
+  },
+  "orderEntryDialog": {
+    "title": "Ghi order · {{tables}}",
+    "sendBtn": "Gửi bếp · {{total}}",
+    "aiLabel": "Khách muốn gì? (AI gợi ý — mục 9)",
+    "aiPlaceholder": "vd: \"4 người, 400k, 1 người không ăn cay\"",
+    "aiAskBtn": "Hỏi AI gợi ý",
+    "aiNoMatch": "Không tìm được món phù hợp, thử mô tả khác.",
+    "emptyCart": "Chưa chọn món nào."
+  },
+  "itemOptionsDialog": {
+    "qtyLabel": "Số lượng",
+    "noteLabel": "Ghi chú cho bếp",
+    "notePlaceholder": "Ít đá, không đường…",
+    "addBtn": "Thêm · {{total}}"
+  },
+  "outOfStockDialog": {
+    "title": "Hết món · {{name}} ×{{qty}}",
+    "chooseBody": "Bếp báo hết. Chưa thu tiền nên không phát sinh hoàn tiền — ra bàn xin lỗi rồi chọn cách xử lý (mục 6.4).",
+    "swapBtn": "Đổi món",
+    "dropBtn": "Bỏ món khỏi hoá đơn",
+    "swapBody": "Chọn món thay cho khách."
+  },
+  "moveTableDialog": {
+    "moveTitle": "Đổi bàn từ {{from}}",
+    "mergeTitle": "Gộp thêm bàn vào {{from}}",
+    "moveHint": "Chuyển toàn bộ phiên sang bàn mới, giữ nguyên order và trạng thái món.",
+    "mergeHint": "Thêm 1 bàn trống liền kề vào phiên đang hoạt động — dùng khi nhóm khách đông hơn dự kiến.",
+    "noneAvailable": "Không có bàn trống phù hợp.",
+    "seatsLabel": "{{name}} · {{seats}} chỗ"
+  },
+  "paymentQrDialog": {
+    "title": "Mã QR thanh toán",
+    "invoiceCode": "Mã hoá đơn: {{code}}",
+    "hint": "Đưa tablet cho khách quét mã để chuyển khoản."
+  },
+  "menuItemCard": {
+    "lowStock": "còn {{count}} suất"
+  },
+  "aiSuggest": {
+    "note": "Gợi ý cho ~{{people}} người, ngân sách ~{{budget}}₫{{noSpicySuffix}}.",
+    "noSpicySuffix": ", tránh món cay"
+  },
+  "tableCard": {
+    "reservedArea": "{{area}} · đặt {{time}}",
+    "sessionArea": "{{area}} · {{duration}}",
+    "waitingCount": "{{count}} chờ bưng",
+    "activeCount": "{{count}} món"
+  },
+  "seatingDialog": {
+    "title": "Mở bàn mới",
+    "guestCount": "Số khách",
+    "suggestLabel": "Gợi ý xếp & ghép bàn — chọn 1 phương án",
+    "emptyTitle": "Không đủ chỗ",
+    "emptyHint": "Thử đổi khu vực hoặc giảm số khách.",
+    "optionMeta": "{{area}} · {{seats}} ghế · thừa {{leftover}}",
+    "optionMergeSuffix": " · ghép {{count}} bàn"
+  }
+}

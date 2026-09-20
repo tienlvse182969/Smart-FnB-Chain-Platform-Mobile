@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -17,6 +18,7 @@ type BannerEntry = { key: string; name: string; qty: number; tableName: string }
 /** Bếp báo Xong → hiện banner + phát âm thanh cho waiter, dùng trên mọi màn hình (WT-04). */
 export function KitchenReadyBanner() {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { claimQueue } = useStore();
@@ -86,10 +88,10 @@ export function KitchenReadyBanner() {
           </View>
           <View style={styles.textWrap}>
             <Txt variant="bodyStrong">
-              Bếp đã xong: {current.name} ×{current.qty}
+              {t('kitchenReadyBanner.text', { name: current.name, qty: current.qty })}
             </Txt>
             <Txt variant="label" muted>
-              {current.tableName} · Sẵn sàng bưng lên
+              {t('kitchenReadyBanner.sub', { table: current.tableName })}
             </Txt>
           </View>
           <Pressable hitSlop={8} onPress={dismiss}>

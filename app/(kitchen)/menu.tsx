@@ -1,4 +1,5 @@
 import { Switch } from '@ant-design/react-native';
+import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -12,12 +13,13 @@ import { useAppTheme } from '@/src/theme/use-theme';
 
 export default function KitchenMenuScreen() {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const { isMenuAvailable, remainingPortionsOf, setMenuAvailability, setRemainingPortions } = useStore();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
       <View style={styles.pad}>
-        <ScreenHeader title="Món ăn" subtitle="Bật/tắt & cập nhật số suất còn lại (BR-06, BR-07)" />
+        <ScreenHeader title={t('kitchenMenu.title')} subtitle={t('kitchenMenu.subtitle')} />
         <FlatList
           data={menu}
           keyExtractor={(m) => m.id}
@@ -42,7 +44,7 @@ export default function KitchenMenuScreen() {
                 {portions !== undefined ? (
                   <View style={styles.portions}>
                     <Txt variant="label" muted>
-                      Còn lại
+                      {t('kitchenMenu.remaining')}
                     </Txt>
                     <Stepper
                       value={portions}

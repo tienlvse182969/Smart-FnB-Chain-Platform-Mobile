@@ -1,13 +1,15 @@
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import type { OrderItemStatus, TableStatus } from '@/src/data/types';
+import { orderItemStatusKey, tableStatusKey } from '@/src/i18n/labels';
 import { TABLE_STATUS_COLORS } from '@/src/theme/status-colors';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { Icon, type IconName } from './ui/icon';
 import { Txt } from './ui/txt';
 
 type Variant = 'solid' | 'outline' | 'dashed' | 'muted' | 'hatch';
-type Visual = { label: string; icon: IconName; variant: Variant };
+type Visual = { labelKey: string; icon: IconName; variant: Variant };
 
 const TABLE_STATUS_ICON: Record<TableStatus, IconName> = {
   Trống: 'available',
@@ -17,13 +19,13 @@ const TABLE_STATUS_ICON: Record<TableStatus, IconName> = {
 };
 
 const ITEM_STATUS_VISUAL: Record<OrderItemStatus, Visual> = {
-  'Trong hàng đợi': { label: 'Trong hàng đợi', icon: 'send', variant: 'outline' },
-  'Đang làm': { label: 'Đang làm', icon: 'preparing', variant: 'solid' },
-  Xong: { label: 'Xong', icon: 'check', variant: 'outline' },
-  'Chờ bưng': { label: 'Chờ bưng', icon: 'bell', variant: 'solid' },
-  'Đã phục vụ': { label: 'Đã phục vụ', icon: 'served', variant: 'muted' },
-  'Hết món': { label: 'Hết món', icon: 'unavailable', variant: 'hatch' },
-  Huỷ: { label: 'Đã huỷ', icon: 'unavailable', variant: 'muted' },
+  'Trong hàng đợi': { labelKey: orderItemStatusKey['Trong hàng đợi'], icon: 'send', variant: 'outline' },
+  'Đang làm': { labelKey: orderItemStatusKey['Đang làm'], icon: 'preparing', variant: 'solid' },
+  Xong: { labelKey: orderItemStatusKey.Xong, icon: 'check', variant: 'outline' },
+  'Chờ bưng': { labelKey: orderItemStatusKey['Chờ bưng'], icon: 'bell', variant: 'solid' },
+  'Đã phục vụ': { labelKey: orderItemStatusKey['Đã phục vụ'], icon: 'served', variant: 'muted' },
+  'Hết món': { labelKey: orderItemStatusKey['Hết món'], icon: 'unavailable', variant: 'hatch' },
+  Huỷ: { labelKey: orderItemStatusKey.Huỷ, icon: 'unavailable', variant: 'muted' },
 };
 
 function Hatch({ color }: { color: string }) {
@@ -50,6 +52,7 @@ function Hatch({ color }: { color: string }) {
 
 function Badge({ visual, size = 'md' }: { visual: Visual; size?: 'sm' | 'md' }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const solid = visual.variant === 'solid' || visual.variant === 'hatch';
   const muted = visual.variant === 'muted';
   const fg = solid ? theme.color_text_base_inverse : theme.color_text_base;
@@ -74,13 +77,14 @@ function Badge({ visual, size = 'md' }: { visual: Visual; size?: 'sm' | 'md' }) 
       {visual.variant === 'hatch' && <Hatch color={theme.color_text_base_inverse} />}
       <Icon name={visual.icon} size={size === 'sm' ? 12 : 14} color={fg} strokeWidth={2.2} />
       <Txt variant={size === 'sm' ? 'tiny' : 'label'} color={fg} numberOfLines={1}>
-        {visual.label}
+        {t(visual.labelKey)}
       </Txt>
     </View>
   );
 }
 
 export function TableStatusBadge({ status, size }: { status: TableStatus; size?: 'sm' | 'md' }) {
+  const { t } = useTranslation();
   const c = TABLE_STATUS_COLORS[status];
   return (
     <View
@@ -91,7 +95,7 @@ export function TableStatusBadge({ status, size }: { status: TableStatus; size?:
       ]}>
       <Icon name={TABLE_STATUS_ICON[status]} size={size === 'sm' ? 12 : 14} color={c.on} strokeWidth={2.2} />
       <Txt variant={size === 'sm' ? 'tiny' : 'label'} color={c.on} numberOfLines={1}>
-        {status}
+        {t(tableStatusKey[status])}
       </Txt>
     </View>
   );

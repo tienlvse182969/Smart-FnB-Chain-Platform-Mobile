@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,15 +11,17 @@ import { Txt } from '@/src/components/ui/txt';
 import { shiftInfo } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
 import type { StaffRole } from '@/src/data/types';
+import { staffRoleKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
 
-const ROLES: { value: StaffRole; label: string; icon: IconName }[] = [
-  { value: 'Phục vụ', label: 'Phục vụ', icon: 'guestArrived' },
-  { value: 'Bếp', label: 'Bếp', icon: 'chefHat' },
+const ROLES: { value: StaffRole; icon: IconName }[] = [
+  { value: 'Phục vụ', icon: 'guestArrived' },
+  { value: 'Bếp', icon: 'chefHat' },
 ];
 
 export default function LoginScreen() {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const { checkIn } = useStore();
 
   const [email, setEmail] = useState('tien@smartfnb.vn');
@@ -52,12 +55,12 @@ export default function LoginScreen() {
             />
           </View>
           <Txt variant="body" muted style={styles.subtitle}>
-            Check-in ca tại {shiftInfo.branch}
+            {t('login.checkinSubtitle', { branch: shiftInfo.branch })}
           </Txt>
 
           <View>
             <Txt variant="label" muted style={styles.fieldLabel}>
-              Vai trò
+              {t('login.roleLabel')}
             </Txt>
             <View style={styles.roleRow}>
               {ROLES.map((r) => {
@@ -81,7 +84,7 @@ export default function LoginScreen() {
                     <Txt
                       variant="bodyStrong"
                       color={active ? theme.color_text_base_inverse : theme.color_text_base}>
-                      {r.label}
+                      {t(staffRoleKey[r.value])}
                     </Txt>
                   </Pressable>
                 );
@@ -90,7 +93,7 @@ export default function LoginScreen() {
           </View>
 
           <Field
-            label="Email nhân viên"
+            label={t('login.emailLabel')}
             autoCapitalize="none"
             keyboardType="email-address"
             value={email}
@@ -98,7 +101,7 @@ export default function LoginScreen() {
             left={<Icon name="user" size={16} color={theme.color_text_caption} />}
           />
           <Field
-            label="Mã PIN"
+            label={t('login.pinLabel')}
             value={pin}
             onChangeText={setPin}
             keyboardType="number-pad"
@@ -107,14 +110,14 @@ export default function LoginScreen() {
           />
 
           <Btn
-            label={`Đăng nhập & Check-in ca (${role})`}
+            label={t('login.submit', { role: t(staffRoleKey[role]) })}
             icon="login"
             block
             onPress={submit}
             style={styles.cta}
           />
           <Txt variant="tiny" muted style={styles.hint}>
-            Bản phác thảo — bấm để vào thẳng, chưa nối hệ thống thật.
+            {t('login.hint')}
           </Txt>
         </View>
       </KeyboardAvoidingView>

@@ -1,10 +1,12 @@
 import { Toast } from '@ant-design/react-native';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { menuById } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
 import type { CheckoutMethod, OrderItem } from '@/src/data/types';
+import { checkoutMethodKey, tableAreaKey } from '@/src/i18n/labels';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { EmptyState } from './empty-state';
@@ -36,6 +38,7 @@ export function TableDetailPanel({
   embedded?: boolean;
 }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const {
     state,
@@ -77,7 +80,7 @@ export function TableDetailPanel({
   useEffect(() => {
     if (prevTableStatusRef.current === 'Đang phục vụ' && table?.status === 'Trống') {
       Toast.success(
-        `Quản lý đã xác nhận thanh toán — bàn ${tableNamesRef.current.join(' + ')} về Trống.`,
+        t('tableDetail.paidToastConfirmed', { names: tableNamesRef.current.join(' + ') }),
         1.8,
       );
       onClose();
@@ -92,7 +95,7 @@ export function TableDetailPanel({
   if (!table) {
     return (
       <View style={styles.safe}>
-        <EmptyState icon="unavailable" title="Không tìm thấy bàn" />
+        <EmptyState icon="unavailable" title={t('tableDetail.notFound')} />
       </View>
     );
   }
@@ -121,8 +124,8 @@ export function TableDetailPanel({
     setCheckoutOpen(false);
     Toast.info(
       method === 'Chuyển khoản QR'
-        ? 'Đã báo Quản lý chi nhánh yêu cầu tính tiền. Mang tablet có mã QR ra bàn.'
-        : 'Đã báo Quản lý chi nhánh yêu cầu tính tiền. Thu tiền mặt và mang lên quầy.',
+        ? t('tableDetail.requestCheckoutToastQr')
+        : t('tableDetail.requestCheckoutToastCash'),
       1.8,
     );
   };
@@ -133,13 +136,13 @@ export function TableDetailPanel({
         <IconButton name="close" onPress={onClose} />
         <View style={styles.headTitle}>
           <Txt variant="h2" style={styles.title}>
-            Bàn {tableNames.join(' + ')}
+            {t('tableDetail.titlePrefix', { names: tableNames.join(' + ') })}
           </Txt>
           <View style={styles.headMeta}>
             <TableStatusBadge status={table.status} size="sm" />
             <Txt variant="label" muted>
-              {table.area}
-              {session ? ` · ${session.guests} khách` : ''}
+              {t(tableAreaKey[table.area])}
+              {session ? t('tableDetail.guestsSuffix', { guests: session.guests }) : ''}
             </Txt>
           </View>
         </View>
@@ -148,7 +151,7 @@ export function TableDetailPanel({
           variant="outlined"
           onPress={() => {
             kitchenTick();
-            Toast.info('Giả lập bếp: đẩy 1 món tiến 1 bước.', 1.2);
+            Toast.info(t('tableDetail.simulateKitchenToast'), 1.2);
           }}
         />
       </View>
@@ -175,10 +178,10 @@ export function TableDetailPanel({
           <View style={styles.emptyWrap}>
             <EmptyState
               icon="receipt"
-              title="Bàn chưa có phiên"
-              hint="Về sơ đồ bàn, bấm “Mở bàn mới” hoặc chọn bàn trống để mở phiên."
+              title={t('tableDetail.emptyTitle')}
+              hint={t('tableDetail.emptyHint')}
             />
-            <Btn label="Về sơ đồ bàn" icon="back" onPress={onClose} />
+            <Btn label={t('tableDetail.backToFloor')} icon="back" onPress={onClose} />
           </View>
         )}
       </View>
@@ -194,7 +197,7 @@ export function TableDetailPanel({
             onSubmit={(cart) => {
               submitOrder(session.id, cart);
               setOrderOpen(false);
-              Toast.success('Đã gửi bếp — món vào hàng đợi ngay (BR-05).', 2);
+              Toast.success(t('tableDetail.orderSentToast'), 2);
             }}
           />
           <MoveTableDialog
@@ -218,7 +221,7 @@ export function TableDetailPanel({
             onPick={(toId) => {
               mergeTableIntoSession(session.id, toId);
               setMergeOpen(false);
-              Toast.success(`Đã gộp bàn ${tableById(toId)?.name} vào phiên.`, 1.6);
+              Toast.success(t('tableDetail.mergedToast', { name: tableById(toId)?.name }), 1.6);
             }}
           />
           <OutOfStockDialog
@@ -228,11 +231,11 @@ export function TableDetailPanel({
             onDismiss={() => setStockItem(null)}
             onSwap={(newId) => {
               if (stockItem) resolveSwap(stockItem.id, newId);
-              Toast.success('Đã đổi món — chờ bếp làm lại.', 1.8);
+              Toast.success(t('tableDetail.swappedToast'), 1.8);
             }}
             onDrop={() => {
               if (stockItem) dropOutOfStockItem(stockItem.id);
-              Toast.success('Đã bỏ món khỏi hoá đơn.', 1.6);
+              Toast.success(t('tableDetail.droppedToast'), 1.6);
             }}
           />
           <ItemOptionsDialog
@@ -265,22 +268,21 @@ export function TableDetailPanel({
 
           <AppModal
             visible={checkoutOpen}
-            title="Yêu cầu tính tiền"
+            title={t('tableDetail.checkoutTitle')}
             onClose={() => setCheckoutOpen(false)}
             maxWidth={360}
-            actions={[{ text: 'Huỷ', onPress: () => setCheckoutOpen(false) }]}>
+            actions={[{ text: t('common.cancel'), onPress: () => setCheckoutOpen(false) }]}>
             <Txt variant="body" muted>
-              Chọn phương thức khách dùng để trả. Chỉ Quản lý chi nhánh mới sinh mã QR và xác nhận
-              thanh toán (BR-13).
+              {t('tableDetail.checkoutBody')}
             </Txt>
             <View style={styles.checkoutActions}>
               <Btn
-                label="Chuyển khoản QR"
+                label={t(checkoutMethodKey['Chuyển khoản QR'])}
                 block
                 onPress={() => requestCheckoutMethod('Chuyển khoản QR')}
               />
               <Btn
-                label="Tiền mặt"
+                label={t(checkoutMethodKey['Tiền mặt'])}
                 block
                 variant="ghost"
                 onPress={() => requestCheckoutMethod('Tiền mặt')}
@@ -293,7 +295,7 @@ export function TableDetailPanel({
       {session && session.orders.length === 0 ? (
         <View style={styles.cancelBar}>
           <Btn
-            label="Khách bỏ về — huỷ phiên"
+            label={t('tableDetail.cancelSessionBtn')}
             variant="plain"
             size="sm"
             onPress={() => {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { formatVnd } from '@/src/data/format';
@@ -25,6 +26,7 @@ export function OutOfStockDialog({
   onDrop: () => void;
 }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const [mode, setMode] = useState<'choose' | 'swap'>('choose');
 
   const close = () => {
@@ -39,23 +41,22 @@ export function OutOfStockDialog({
   return (
     <AppModal
       visible={visible}
-      title={`Hết món · ${item.name} ×${item.qty}`}
+      title={t('outOfStockDialog.title', { name: item.name, qty: item.qty })}
       onClose={close}
       actions={
         mode === 'choose'
-          ? [{ text: 'Đóng', onPress: close }]
-          : [{ text: 'Quay lại', onPress: () => setMode('choose') }]
+          ? [{ text: t('common.close'), onPress: close }]
+          : [{ text: t('common.back'), onPress: () => setMode('choose') }]
       }>
       {mode === 'choose' ? (
         <>
           <Txt variant="caption" muted>
-            Bếp báo hết. Chưa thu tiền nên không phát sinh hoàn tiền — ra bàn xin lỗi rồi chọn
-            cách xử lý (mục 6.4).
+            {t('outOfStockDialog.chooseBody')}
           </Txt>
           <View style={styles.choiceRow}>
-            <Btn label="Đổi món" icon="edit" onPress={() => setMode('swap')} />
+            <Btn label={t('outOfStockDialog.swapBtn')} icon="edit" onPress={() => setMode('swap')} />
             <Btn
-              label="Bỏ món khỏi hoá đơn"
+              label={t('outOfStockDialog.dropBtn')}
               icon="remove"
               variant="ghost"
               onPress={() => {
@@ -70,7 +71,7 @@ export function OutOfStockDialog({
       {mode === 'swap' ? (
         <>
           <Txt variant="caption" muted>
-            Chọn món thay cho khách.
+            {t('outOfStockDialog.swapBody')}
           </Txt>
           <ScrollView style={styles.list}>
             {options.map((m) => (

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { durationSince } from '@/src/data/format';
@@ -10,6 +11,7 @@ import { Txt } from '../ui/txt';
 /** Góc nhìn hỗ trợ bếp căn giờ ra đồng loạt cho 1 bàn — không đổi lúc nào waiter được báo. */
 export function KitchenTicketCard({ ticket }: { ticket: KitchenTicket }) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const complete = ticket.doneCount >= ticket.totalCount;
 
   return (
@@ -27,11 +29,11 @@ export function KitchenTicketCard({ ticket }: { ticket: KitchenTicket }) {
           {ticket.tableNames.join(', ')}
         </Txt>
         <Txt style={styles.progress}>
-          {ticket.doneCount}/{ticket.totalCount} món xong
+          {t('kitchenTicketCard.doneProgress', { done: ticket.doneCount, total: ticket.totalCount })}
         </Txt>
       </View>
       <Txt variant="label" muted>
-        gửi {durationSince(ticket.earliestQueuedAt)}
+        {t('kitchenTicketCard.sentAgo', { duration: durationSince(ticket.earliestQueuedAt) })}
       </Txt>
 
       <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />

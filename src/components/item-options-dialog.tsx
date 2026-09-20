@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { formatVnd } from '@/src/data/format';
@@ -60,6 +61,7 @@ export function ItemOptionsDialog({
   onDismiss: () => void;
   onConfirm: (draft: ItemDraft) => void;
 }) {
+  const { t } = useTranslation();
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState('');
   const [selected, setSelected] = useState<Record<string, string[]>>({});
@@ -121,9 +123,9 @@ export function ItemOptionsDialog({
       title={item.name}
       onClose={onDismiss}
       actions={[
-        { text: 'Huỷ', onPress: onDismiss },
+        { text: t('common.cancel'), onPress: onDismiss },
         {
-          text: `Thêm · ${formatVnd(unitPrice * qty)}`,
+          text: t('itemOptionsDialog.addBtn', { total: formatVnd(unitPrice * qty) }),
           onPress: () => onConfirm({ qty, note: note.trim(), optionLabels: labels, unitPrice }),
           primary: true,
           disabled: !valid,
@@ -149,13 +151,13 @@ export function ItemOptionsDialog({
         ))}
 
         <View style={styles.qtyRow}>
-          <Txt variant="bodyStrong">Số lượng</Txt>
+          <Txt variant="bodyStrong">{t('itemOptionsDialog.qtyLabel')}</Txt>
           <Stepper value={qty} onChange={setQty} />
         </View>
 
         <Field
-          label="Ghi chú cho bếp"
-          placeholder="Ít đá, không đường…"
+          label={t('itemOptionsDialog.noteLabel')}
+          placeholder={t('itemOptionsDialog.notePlaceholder')}
           value={note}
           onChangeText={setNote}
         />
