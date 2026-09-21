@@ -19,6 +19,26 @@ pnpm start        # rồi bấm a / i / w
 pnpm web
 ```
 
+### Cài Expo Go v54 trên Android (qua APKMirror)
+
+Dự án dùng **Expo SDK 54**, nên máy Android test cần đúng bản **Expo Go 54** để quét
+QR từ `pnpm start` chạy được. Nếu Play Store chỉ cho tải bản Expo Go mới hơn/khác SDK,
+cài thủ công từ APKMirror như sau:
+
+1. **Cài Universal Installer** (app hỗ trợ cài file `.apkm`/bundle từ APKMirror) từ Play Store:
+   https://play.google.com/store/apps/details?id=app.pwhs.universalinstaller
+2. Trên máy/máy ảo Android, mở link Expo Go 54.0.8 trên APKMirror và tải file `.apkm`:
+   https://www.apkmirror.com/apk/expo-project/expo-go/expo-go-54-0-8-release/expo-go-54-0-8-android-apk-download/
+3. Vì APKMirror trả về file `.apkm` (bundle nhiều APK theo kiến trúc CPU/ngôn ngữ, không cài
+   trực tiếp như `.apk` thường), mở file `.apkm` vừa tải **bằng app Universal Installer** ở
+   bước 1 (chọn Universal Installer trong hộp thoại "Open with" hoặc mở từ trong app) để nó
+   giải nén và cài đúng bộ APK phù hợp với máy.
+4. Cho phép "Cài ứng dụng không rõ nguồn gốc" (Install unknown apps) nếu Android yêu cầu.
+5. Sau khi cài xong, mở Expo Go, quét QR hiển thị ở terminal khi chạy `pnpm start`.
+
+> Lưu ý: chỉ tải APK/APKM từ nguồn chính chủ (APKMirror) và kiểm tra đúng version
+> `54.0.8` khớp SDK 54 của dự án để tránh lỗi không tương thích khi load bundle.
+
 ## Màn hình (use case Waiter v2)
 
 | Route                           | Use case          | Nội dung                                                                                            |
