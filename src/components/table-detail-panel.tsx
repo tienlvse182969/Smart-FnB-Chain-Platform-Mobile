@@ -12,7 +12,7 @@ import { useAppTheme } from '@/src/theme/use-theme';
 import { EmptyState } from './empty-state';
 import { ItemOptionsDialog } from './item-options-dialog';
 import { MoveTableDialog } from './move-table-dialog';
-import { OrderEntryDialog } from './order-entry-dialog';
+import { useOrderPanel } from './order-panel-overlay';
 import { OutOfStockDialog } from './out-of-stock-dialog';
 import { PaymentQrDialog } from './payment-qr-dialog';
 import { SessionPanel } from './session-panel';
@@ -45,7 +45,6 @@ export function TableDetailPanel({
     tableById,
     sessionByTable,
     outOfStockFor,
-    submitOrder,
     patchItem,
     removeItem,
     mergeTableIntoSession,
@@ -57,8 +56,8 @@ export function TableDetailPanel({
     cancelSession,
     kitchenTick,
     isMenuAvailable,
-    remainingPortionsOf,
   } = useStore();
+  const { openOrderPanel } = useOrderPanel();
 
   const table = tableById(id);
   const session = sessionByTable(id);
@@ -66,7 +65,6 @@ export function TableDetailPanel({
   const sessionTableIds = session?.tableIds ?? [id];
   const tableNames = sessionTableIds.map((tid) => tableById(tid)?.name ?? tid);
 
-  const [orderOpen, setOrderOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [mergeOpen, setMergeOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -163,7 +161,7 @@ export function TableDetailPanel({
             table={table}
             session={session}
             outOfStockCount={oos.length}
-            onNewOrder={() => setOrderOpen(true)}
+            onNewOrder={() => openOrderPanel(id)}
             onMove={() => setMoveOpen(true)}
             onMerge={() => setMergeOpen(true)}
             onResolveStock={() => setStockItem(stockItemObj(oos[0].itemId))}
@@ -188,18 +186,6 @@ export function TableDetailPanel({
 
       {session ? (
         <>
-          <OrderEntryDialog
-            visible={orderOpen}
-            tableNames={tableNames}
-            isMenuAvailable={isMenuAvailable}
-            remainingPortionsOf={remainingPortionsOf}
-            onDismiss={() => setOrderOpen(false)}
-            onSubmit={(cart) => {
-              submitOrder(session.id, cart);
-              setOrderOpen(false);
-              Toast.success(t('tableDetail.orderSentToast'), 2);
-            }}
-          />
           <MoveTableDialog
             visible={moveOpen}
             mode="move"

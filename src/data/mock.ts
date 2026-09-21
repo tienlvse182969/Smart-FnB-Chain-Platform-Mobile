@@ -67,31 +67,34 @@ const toppingGroup = {
   ],
 };
 
+/** Ảnh minh hoạ chỉ để demo giao diện (mock data), seed theo id món cho ổn định. */
+const img = (seed: string) => `https://picsum.photos/seed/${seed}/400/400`;
+
 export const menu: MenuItem[] = [
-  { id: 'm1', name: 'Cà phê đen đá', categoryId: 'coffee', price: 29000, available: true, options: [sizeGroup] },
-  { id: 'm2', name: 'Bạc xỉu', categoryId: 'coffee', price: 39000, available: true, options: [sizeGroup] },
-  { id: 'm3', name: 'Cà phê sữa đá', categoryId: 'coffee', price: 35000, available: true, options: [sizeGroup] },
-  { id: 'm4', name: 'Cold brew', categoryId: 'coffee', price: 49000, available: false, options: [sizeGroup] },
+  { id: 'm1', name: 'Cà phê đen đá', categoryId: 'coffee', price: 29000, available: true, image: img('m1-caphedenda'), options: [sizeGroup] },
+  { id: 'm2', name: 'Bạc xỉu', categoryId: 'coffee', price: 39000, available: true, image: img('m2-bacxiu'), options: [sizeGroup] },
+  { id: 'm3', name: 'Cà phê sữa đá', categoryId: 'coffee', price: 35000, available: true, image: img('m3-caphesuada'), options: [sizeGroup] },
+  { id: 'm4', name: 'Cold brew', categoryId: 'coffee', price: 49000, available: false, image: img('m4-coldbrew'), options: [sizeGroup] },
 
-  { id: 'm5', name: 'Trà đào cam sả', categoryId: 'tea', price: 45000, available: true, options: [sizeGroup, toppingGroup] },
-  { id: 'm6', name: 'Trà tắc', categoryId: 'tea', price: 32000, available: true, options: [sizeGroup] },
-  { id: 'm7', name: 'Trà sữa trân châu', categoryId: 'tea', price: 42000, available: true, options: [sizeGroup, toppingGroup] },
-  { id: 'm8', name: 'Nước cam ép', categoryId: 'tea', price: 38000, available: true, options: [] },
+  { id: 'm5', name: 'Trà đào cam sả', categoryId: 'tea', price: 45000, available: true, image: img('m5-tradaocamsa'), options: [sizeGroup, toppingGroup] },
+  { id: 'm6', name: 'Trà tắc', categoryId: 'tea', price: 32000, available: true, image: img('m6-tratac'), options: [sizeGroup] },
+  { id: 'm7', name: 'Trà sữa trân châu', categoryId: 'tea', price: 42000, available: true, image: img('m7-trasuatranchau'), options: [sizeGroup, toppingGroup] },
+  { id: 'm8', name: 'Nước cam ép', categoryId: 'tea', price: 38000, available: true, image: img('m8-nuoccamep'), options: [] },
 
-  { id: 'm9', name: 'Cơm gà xối mỡ', categoryId: 'main', price: 55000, available: true, remainingPortions: 8, options: [] },
-  { id: 'm10', name: 'Cơm sườn bì chả', categoryId: 'main', price: 59000, available: true, options: [] },
-  { id: 'm11', name: 'Cơm bò lúc lắc', categoryId: 'main', price: 79000, available: true, remainingPortions: 3, options: [] },
-  { id: 'm12', name: 'Bún chả Hà Nội', categoryId: 'main', price: 65000, available: true, options: [] },
-  { id: 'm13', name: 'Phở bò tái', categoryId: 'main', price: 60000, available: true, options: [] },
+  { id: 'm9', name: 'Cơm gà xối mỡ', categoryId: 'main', price: 55000, available: true, remainingPortions: 8, image: img('m9-comgaxoimo'), options: [] },
+  { id: 'm10', name: 'Cơm sườn bì chả', categoryId: 'main', price: 59000, available: true, image: img('m10-comsuonbicha'), options: [] },
+  { id: 'm11', name: 'Cơm bò lúc lắc', categoryId: 'main', price: 79000, available: true, remainingPortions: 3, image: img('m11-combolucla'), options: [] },
+  { id: 'm12', name: 'Bún chả Hà Nội', categoryId: 'main', price: 65000, available: true, image: img('m12-bunchahanoi'), options: [] },
+  { id: 'm13', name: 'Phở bò tái', categoryId: 'main', price: 60000, available: true, image: img('m13-phobotai'), options: [] },
 
-  { id: 'm14', name: 'Khoai tây chiên', categoryId: 'side', price: 39000, available: true, options: [] },
-  { id: 'm15', name: 'Gỏi cuốn tôm thịt', categoryId: 'side', price: 45000, available: true, remainingPortions: 4, options: [] },
-  { id: 'm16', name: 'Chả giò', categoryId: 'side', price: 42000, available: true, options: [] },
-  { id: 'm17', name: 'Canh chua cá', categoryId: 'side', price: 49000, available: true, options: [] },
+  { id: 'm14', name: 'Khoai tây chiên', categoryId: 'side', price: 39000, available: true, image: img('m14-khoaitaychien'), options: [] },
+  { id: 'm15', name: 'Gỏi cuốn tôm thịt', categoryId: 'side', price: 45000, available: true, remainingPortions: 4, image: img('m15-goicuontomthit'), options: [] },
+  { id: 'm16', name: 'Chả giò', categoryId: 'side', price: 42000, available: true, image: img('m16-chagio'), options: [] },
+  { id: 'm17', name: 'Canh chua cá', categoryId: 'side', price: 49000, available: true, image: img('m17-canhchuaca'), options: [] },
 
-  { id: 'm18', name: 'Bánh flan', categoryId: 'dessert', price: 22000, available: true, options: [] },
-  { id: 'm19', name: 'Chè khúc bạch', categoryId: 'dessert', price: 32000, available: true, options: [] },
-  { id: 'm20', name: 'Rau câu dừa', categoryId: 'dessert', price: 25000, available: true, options: [] },
+  { id: 'm18', name: 'Bánh flan', categoryId: 'dessert', price: 22000, available: true, image: img('m18-banhflan'), options: [] },
+  { id: 'm19', name: 'Chè khúc bạch', categoryId: 'dessert', price: 32000, available: true, image: img('m19-chekhucbach'), options: [] },
+  { id: 'm20', name: 'Rau câu dừa', categoryId: 'dessert', price: 25000, available: true, image: img('m20-raucaudua'), options: [] },
 ];
 
 export const menuById = Object.fromEntries(menu.map((m) => [m.id, m]));

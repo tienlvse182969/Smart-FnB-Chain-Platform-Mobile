@@ -244,11 +244,10 @@
   "orderEntryDialog": {
     "title": "Take order · {{tables}}",
     "sendBtn": "Send to kitchen · {{total}}",
-    "aiLabel": "What does the guest want? (AI suggestion — section 9)",
-    "aiPlaceholder": "e.g. \"4 people, 400k, 1 person no spicy food\"",
-    "aiAskBtn": "Ask AI for suggestions",
-    "aiNoMatch": "No matching items found, try a different description.",
-    "emptyCart": "No items selected yet."
+    "cartTitle": "Items added",
+    "cartCount": "{{count}} items",
+    "emptyCartTitle": "No items yet",
+    "emptyCart": "Pick items on the left to add them to this order."
   },
   "itemOptionsDialog": {
     "qtyLabel": "Quantity",
@@ -278,10 +277,6 @@
   },
   "menuItemCard": {
     "lowStock": "{{count}} left"
-  },
-  "aiSuggest": {
-    "note": "Suggested for ~{{people}} people, budget ~{{budget}}₫{{noSpicySuffix}}.",
-    "noSpicySuffix": ", avoiding spicy dishes"
   },
   "tableCard": {
     "reservedArea": "{{area}} · booked {{time}}",

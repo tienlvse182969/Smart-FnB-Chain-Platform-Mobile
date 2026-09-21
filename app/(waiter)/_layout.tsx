@@ -4,6 +4,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { KitchenReadyBanner } from '@/src/components/kitchen-ready-banner';
 import { NavRail, type NavDest } from '@/src/components/nav-rail';
+import { OrderPanelOverlay } from '@/src/components/order-panel-overlay';
 import { TablePanelOverlay } from '@/src/components/table-panel-overlay';
 import { staffByRole } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
@@ -42,35 +43,37 @@ export default function WaiterLayout() {
         styles.shell,
         { backgroundColor: theme.fill_body, flexDirection: isPortrait ? 'column' : 'row' },
       ]}>
-      <TablePanelOverlay railWidth={compact ? 68 : 116}>
-        {!isPortrait ? (
-          <NavRail
-            compact={compact}
-            edge="left"
-            dests={dests}
-            staffName={staffByRole['Phục vụ'].name}
-            staffHref="/(waiter)/account"
-          />
-        ) : null}
-        <View style={styles.content}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: theme.fill_body },
-            }}
-          />
-          <KitchenReadyBanner />
-        </View>
-        {isPortrait ? (
-          <NavRail
-            compact={compact}
-            edge="bottom"
-            dests={dests}
-            staffName={staffByRole['Phục vụ'].name}
-            staffHref="/(waiter)/account"
-          />
-        ) : null}
-      </TablePanelOverlay>
+      <OrderPanelOverlay>
+        <TablePanelOverlay railWidth={compact ? 68 : 116}>
+          {!isPortrait ? (
+            <NavRail
+              compact={compact}
+              edge="left"
+              dests={dests}
+              staffName={staffByRole['Phục vụ'].name}
+              staffHref="/(waiter)/account"
+            />
+          ) : null}
+          <View style={styles.content}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: theme.fill_body },
+              }}
+            />
+            <KitchenReadyBanner />
+          </View>
+          {isPortrait ? (
+            <NavRail
+              compact={compact}
+              edge="bottom"
+              dests={dests}
+              staffName={staffByRole['Phục vụ'].name}
+              staffHref="/(waiter)/account"
+            />
+          ) : null}
+        </TablePanelOverlay>
+      </OrderPanelOverlay>
     </View>
   );
 }

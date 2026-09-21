@@ -33,6 +33,8 @@ export type MenuItem = {
   /** số suất còn lại trong ngày; undefined = không giới hạn (BR-06, BR-07, BR-08) */
   remainingPortions?: number;
   description?: string;
+  /** ảnh minh hoạ món, hiển thị trên card ở màn hình ghi order */
+  image: string;
   options: MenuOptionGroup[];
 };
 

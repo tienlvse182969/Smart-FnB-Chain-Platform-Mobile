@@ -244,11 +244,10 @@
   "orderEntryDialog": {
     "title": "Ghi order · {{tables}}",
     "sendBtn": "Gửi bếp · {{total}}",
-    "aiLabel": "Khách muốn gì? (AI gợi ý — mục 9)",
-    "aiPlaceholder": "vd: \"4 người, 400k, 1 người không ăn cay\"",
-    "aiAskBtn": "Hỏi AI gợi ý",
-    "aiNoMatch": "Không tìm được món phù hợp, thử mô tả khác.",
-    "emptyCart": "Chưa chọn món nào."
+    "cartTitle": "Món đã thêm",
+    "cartCount": "{{count}} món",
+    "emptyCartTitle": "Chưa có món nào",
+    "emptyCart": "Chọn món ở bên trái để thêm vào order."
   },
   "itemOptionsDialog": {
     "qtyLabel": "Số lượng",
@@ -278,10 +277,6 @@
   },
   "menuItemCard": {
     "lowStock": "còn {{count}} suất"
-  },
-  "aiSuggest": {
-    "note": "Gợi ý cho ~{{people}} người, ngân sách ~{{budget}}₫{{noSpicySuffix}}.",
-    "noSpicySuffix": ", tránh món cay"
   },
   "tableCard": {
     "reservedArea": "{{area}} · đặt {{time}}",
