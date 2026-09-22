@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAuth } from '@/src/auth/auth-context';
 import { ScreenHeader } from '@/src/components/screen-header';
 import { Btn } from '@/src/components/ui/button';
 import { Icon } from '@/src/components/ui/icon';
@@ -18,6 +19,7 @@ export default function ShiftScreen() {
   const theme = useAppTheme();
   const { t } = useTranslation();
   const { state, checkOut, setSimulate } = useStore();
+  const { logout } = useAuth();
 
   const myTables = state.tables.filter((t) => t.status === 'Đang phục vụ');
   const sessionOf = (tableId: string) =>
@@ -33,7 +35,7 @@ export default function ShiftScreen() {
       <ScrollView contentContainerStyle={styles.pad}>
         <ScreenHeader
           title={t('shift.title')}
-          subtitle={`${staffByRole['Phục vụ'].name} · ${t(staffRoleKey['Phục vụ'])}`}
+          subtitle={`${state.currentUser?.name ?? staffByRole['Phục vụ'].name} · ${t(staffRoleKey['Phục vụ'])}`}
         />
 
         <View style={cardStyle}>
@@ -53,6 +55,7 @@ export default function ShiftScreen() {
             block
             style={styles.checkout}
             onPress={() => {
+              logout().catch(() => {});
               checkOut();
               router.replace('/login');
             }}

@@ -5,13 +5,38 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { suggestSeating } from '@/src/data/seating';
 import type { Table, TableArea } from '@/src/data/types';
 import { tableAreaKey } from '@/src/i18n/labels';
+import { TABLE_STATUS_COLORS } from '@/src/theme/status-colors';
+import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { EmptyState } from './empty-state';
+import { TableStatusBadge } from './status-badge';
 import { AppModal } from './ui/app-modal';
 import { Btn } from './ui/button';
+import { Icon } from './ui/icon';
 import { Pill } from './ui/pill';
 import { Stepper } from './ui/stepper';
 import { Txt } from './ui/txt';
+
+/** Ô bàn nhỏ — cùng ngôn ngữ hình ảnh với TableCard ở sơ đồ bàn (viền/nền/badge theo màu trạng thái). */
+function SuggestionTile({ table }: { table: Table }) {
+  const theme = useAppTheme();
+  const color = TABLE_STATUS_COLORS.Trống;
+  return (
+    <View style={[styles.tile, { backgroundColor: color.tint, borderColor: color.fill }]}>
+      <View style={[styles.tileAccent, { backgroundColor: color.fill }]} />
+      <Txt variant="bodyStrong" style={styles.tileName} numberOfLines={1}>
+        {table.name}
+      </Txt>
+      <View style={styles.tileSeats}>
+        <Icon name="user" size={12} color={theme.color_text_caption} />
+        <Txt variant="label" muted>
+          {table.seats}
+        </Txt>
+      </View>
+      <TableStatusBadge status="Trống" size="sm" />
+    </View>
+  );
+}
 
 const AREAS: (TableArea | 'Tất cả')[] = ['Tất cả', 'Tầng 1', 'Sân vườn', 'VIP'];
 
@@ -45,6 +70,7 @@ export function SeatingDialog({
     () => suggestSeating(tables, guests, area === 'Tất cả' ? undefined : area),
     [tables, guests, area],
   );
+  const tableById = useMemo(() => new Map(tables.map((tb) => [tb.id, tb])), [tables]);
 
   return (
     <AppModal
@@ -76,7 +102,7 @@ export function SeatingDialog({
         />
       ) : (
         <View style={styles.options}>
-          {options.map((opt) => (
+          {options.map((opt, index) => (
             <Pressable
               key={opt.tableIds.join(',')}
               onPress={() => onOpen(opt.tableIds, guests)}
@@ -85,9 +111,21 @@ export function SeatingDialog({
                 { borderColor: theme.border_color_thin },
                 pressed && { backgroundColor: theme.fill_tap },
               ]}>
-              <View style={styles.optionText}>
-                <Txt variant="bodyStrong">{opt.tableNames.join(' + ')}</Txt>
-                <Txt variant="caption" muted>
+              {index === 0 && options.length > 1 ? (
+                <Txt variant="tiny" muted style={styles.bestTag}>
+                  {t('seatingDialog.bestOption')}
+                </Txt>
+              ) : null}
+
+              <View style={styles.tileGrid}>
+                {opt.tableIds.map((id) => {
+                  const tb = tableById.get(id);
+                  return tb ? <SuggestionTile key={id} table={tb} /> : null;
+                })}
+              </View>
+
+              <View style={styles.optionFooter}>
+                <Txt variant="caption" muted style={styles.optionText}>
                   {t('seatingDialog.optionMeta', {
                     area: t(tableAreaKey[opt.area]),
                     seats: opt.totalSeats,
@@ -97,8 +135,8 @@ export function SeatingDialog({
                     ? t('seatingDialog.optionMergeSuffix', { count: opt.tableIds.length })
                     : ''}
                 </Txt>
+                <Btn label={t('common.choose')} size="sm" onPress={() => onOpen(opt.tableIds, guests)} />
               </View>
-              <Btn label={t('common.choose')} size="sm" onPress={() => onOpen(opt.tableIds, guests)} />
             </Pressable>
           ))}
         </View>
@@ -111,15 +149,30 @@ const styles = StyleSheet.create({
   guestRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   areaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   suggestLabel: { marginTop: 4 },
-  options: { gap: 8 },
+  options: { gap: 10 },
   option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     gap: 10,
     borderWidth: 1,
-    borderRadius: 2,
+    borderRadius: 10,
     padding: 10,
   },
+  bestTag: { textTransform: 'uppercase', letterSpacing: 0.4 },
+  tileGrid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 8, rowGap: 8 },
+  tile: {
+    width: '31%',
+    minHeight: 78,
+    borderWidth: 1.5,
+    borderRadius: 10,
+    padding: 8,
+    paddingTop: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    overflow: 'hidden',
+  },
+  tileAccent: { position: 'absolute', left: 0, right: 0, top: 0, height: 4 },
+  tileName: { fontFamily: fontFamily.semibold },
+  tileSeats: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  optionFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   optionText: { flex: 1, gap: 2 },
 });

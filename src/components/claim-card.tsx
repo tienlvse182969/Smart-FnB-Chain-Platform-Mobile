@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { staffByRole } from '@/src/data/mock';
 import { durationSince } from '@/src/data/format';
+import { useStore } from '@/src/data/store';
 import type { ClaimEntry } from '@/src/data/types';
 import { claimEscalationKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
@@ -21,7 +22,8 @@ export function ClaimCard({
 }) {
   const theme = useAppTheme();
   const { t } = useTranslation();
-  const mine = entry.claimedBy === staffByRole['Phục vụ'].name;
+  const { state } = useStore();
+  const mine = entry.claimedBy === (state.currentUser?.name ?? staffByRole['Phục vụ'].name);
   const byOther = !!entry.claimedBy && !mine;
   const urgent = entry.escalation !== 'thường';
 

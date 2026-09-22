@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAuth } from '@/src/auth/auth-context';
 import { ScreenHeader } from '@/src/components/screen-header';
 import { Btn } from '@/src/components/ui/button';
 import { Icon } from '@/src/components/ui/icon';
@@ -20,6 +21,7 @@ export default function KitchenShiftScreen() {
   const theme = useAppTheme();
   const { t } = useTranslation();
   const { state, checkOut, setSimulate, setKitchenStationCategories } = useStore();
+  const { logout } = useAuth();
   const selectedCats = state.kitchenStationCategories;
 
   const toggleCat = (id: string) =>
@@ -37,7 +39,7 @@ export default function KitchenShiftScreen() {
       <ScrollView contentContainerStyle={styles.pad}>
         <ScreenHeader
           title={t('shift.title')}
-          subtitle={`${staffByRole['Bếp'].name} · ${t(staffRoleKey['Bếp'])}`}
+          subtitle={`${state.currentUser?.name ?? staffByRole['Bếp'].name} · ${t(staffRoleKey['Bếp'])}`}
         />
 
         <View style={cardStyle}>
@@ -59,6 +61,7 @@ export default function KitchenShiftScreen() {
             variant="ghost"
             style={styles.checkout}
             onPress={() => {
+              logout().catch(() => {});
               checkOut();
               router.replace('/login');
             }}

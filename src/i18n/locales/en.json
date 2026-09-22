@@ -95,11 +95,22 @@
   },
   "login": {
     "checkinSubtitle": "Check in for shift at {{branch}}",
-    "roleLabel": "Role",
     "emailLabel": "Staff email",
-    "pinLabel": "PIN code",
-    "submit": "Log in & check in ({{role}})",
-    "hint": "Prototype — tap to jump straight in, not yet wired to a real backend."
+    "passwordLabel": "Password",
+    "submit": "Log in & check in",
+    "chooseAccount": "Choose an account",
+    "useAnotherAccount": "Another account",
+    "backToAccounts": "Back to saved accounts",
+    "notYouChooseAnother": "Not you? Choose another account",
+    "forgetAccountConfirmTitle": "Remove this account?",
+    "forgetAccountConfirmMessage": "\"{{name}}\" will no longer show up on the login screen. You can log in with it again anytime.",
+    "forgetAccountConfirmButton": "Remove",
+    "errors": {
+      "invalidCredentials": "Incorrect email or password.",
+      "inactiveAccount": "This account is locked or inactive. Please contact your manager.",
+      "unsupportedRole": "This account's role isn't supported on this app.",
+      "network": "Couldn't reach the server. Check your connection and try again."
+    }
   },
   "floor": {
     "title": "Table map",
@@ -288,6 +299,7 @@
     "title": "Open new table",
     "guestCount": "Guest count",
     "suggestLabel": "Seating suggestions — pick one option",
+    "bestOption": "Best match",
     "emptyTitle": "Not enough seats",
     "emptyHint": "Try a different area or fewer guests.",
     "optionMeta": "{{area}} · {{seats}} seats · {{leftover}} spare",

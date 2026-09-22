@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
+import { AuthProvider } from '@/src/auth/auth-context';
 import { StoreProvider } from '@/src/data/store';
 import { loadStoredLanguage } from '@/src/i18n';
 import { harmonyFontMap } from '@/src/theme/harmony-fonts';
@@ -37,19 +38,21 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <AppThemeContext.Provider value={appLightTheme}>
           <AntdProvider theme={appLightTheme}>
-            <StoreProvider>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: appLightTheme.fill_body },
-                }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="login" />
-                <Stack.Screen name="(waiter)" />
-                <Stack.Screen name="(kitchen)" />
-              </Stack>
-              <StatusBar style="dark" />
-            </StoreProvider>
+            <AuthProvider>
+              <StoreProvider>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: appLightTheme.fill_body },
+                  }}>
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="login" />
+                  <Stack.Screen name="(waiter)" />
+                  <Stack.Screen name="(kitchen)" />
+                </Stack>
+                <StatusBar style="dark" />
+              </StoreProvider>
+            </AuthProvider>
           </AntdProvider>
         </AppThemeContext.Provider>
       </SafeAreaProvider>

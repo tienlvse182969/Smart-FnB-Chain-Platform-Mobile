@@ -5,6 +5,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { KitchenNewItemBanner } from '@/src/components/kitchen/kitchen-new-item-banner';
 import { NavRail, type NavDest } from '@/src/components/nav-rail';
 import { staffByRole } from '@/src/data/mock';
+import { useStore } from '@/src/data/store';
 import { useAppTheme } from '@/src/theme/use-theme';
 
 export default function KitchenLayout() {
@@ -13,6 +14,7 @@ export default function KitchenLayout() {
   const { width, height } = useWindowDimensions();
   const isPortrait = height >= width;
   const compact = isPortrait ? false : width < 820;
+  const { state } = useStore();
 
   const DESTS: NavDest[] = [
     { href: '/(kitchen)/queue', match: '/queue', label: t('nav.kitchen.queue'), icon: 'bell' },
@@ -31,7 +33,7 @@ export default function KitchenLayout() {
           compact={compact}
           edge="left"
           dests={DESTS}
-          staffName={staffByRole['Bếp'].name}
+          staffName={state.currentUser?.name ?? staffByRole['Bếp'].name}
           staffHref="/(kitchen)/account"
           size="lg"
         />
@@ -50,7 +52,7 @@ export default function KitchenLayout() {
           compact={compact}
           edge="bottom"
           dests={DESTS}
-          staffName={staffByRole['Bếp'].name}
+          staffName={state.currentUser?.name ?? staffByRole['Bếp'].name}
           staffHref="/(kitchen)/account"
           size="lg"
         />

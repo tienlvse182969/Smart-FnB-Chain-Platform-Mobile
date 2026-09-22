@@ -29,8 +29,15 @@ import type {
   TableSession,
 } from './types';
 
+export type CurrentUser = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 type State = {
   role: StaffRole | null;
+  currentUser: CurrentUser | null;
   tables: Table[];
   sessions: TableSession[];
   reservations: Reservation[];
@@ -50,6 +57,7 @@ const minsSince = (t?: string) => (t ? Math.max(0, Math.floor((Date.now() - new 
 function initState(): State {
   return {
     role: null,
+    currentUser: null,
     tables: clone(seedTables),
     sessions: clone(seedSessions),
     reservations: clone(seedReservations),
@@ -73,7 +81,7 @@ export type CartLine = {
 };
 
 type Action =
-  | { type: 'checkIn'; role: StaffRole }
+  | { type: 'checkIn'; role: StaffRole; user?: CurrentUser }
   | { type: 'checkOut' }
   | { type: 'setSimulate'; value: boolean }
   | { type: 'setKitchenStationCategories'; categoryIds: string[] }
@@ -150,9 +158,9 @@ function promote(state: State): State {
 function baseReducer(state: State, action: Action): State {
   switch (action.type) {
     case 'checkIn':
-      return { ...state, checkedInAt: iso(), role: action.role };
+      return { ...state, checkedInAt: iso(), role: action.role, currentUser: action.user ?? null };
     case 'checkOut':
-      return { ...state, checkedInAt: null, role: null };
+      return { ...state, checkedInAt: null, role: null, currentUser: null };
     case 'setSimulate':
       return { ...state, simulate: action.value };
     case 'setKitchenStationCategories':
@@ -299,19 +307,19 @@ function baseReducer(state: State, action: Action): State {
     }
 
     case 'claimItem': {
-      const me = staffByRole['Phục vụ'].name;
+      const me = state.currentUser?.name ?? staffByRole['Phục vụ'].name;
       return mapItem(state, action.itemId, (i) =>
         i.status === 'Chờ bưng' && !i.claimedBy ? { ...i, claimedBy: me } : i,
       );
     }
 
     case 'unclaimItem': {
-      const me = staffByRole['Phục vụ'].name;
+      const me = state.currentUser?.name ?? staffByRole['Phục vụ'].name;
       return mapItem(state, action.itemId, (i) => (i.claimedBy === me ? { ...i, claimedBy: undefined } : i));
     }
 
     case 'serveItem': {
-      const me = staffByRole['Phục vụ'].name;
+      const me = state.currentUser?.name ?? staffByRole['Phục vụ'].name;
       return mapItem(state, action.itemId, (i) =>
         i.status === 'Chờ bưng' && i.claimedBy === me ? { ...i, status: 'Đã phục vụ' } : i,
       );
@@ -372,7 +380,7 @@ function baseReducer(state: State, action: Action): State {
     case 'collectCash': {
       const s = state.sessions.find((x) => x.id === action.sessionId);
       if (!s || !s.payment || s.payment.method !== 'Tiền mặt' || s.payment.collectedBy) return state;
-      const me = staffByRole['Phục vụ'].name;
+      const me = state.currentUser?.name ?? staffByRole['Phục vụ'].name;
       return {
         ...state,
         sessions: state.sessions.map((x) =>
@@ -609,7 +617,7 @@ type StoreValue = {
   outOfStock: OutOfStock[];
   kitchenQueue: KitchenTicketItem[];
   kitchenTickets: KitchenTicket[];
-  checkIn: (role: StaffRole) => void;
+  checkIn: (role: StaffRole, user?: CurrentUser) => void;
   checkOut: () => void;
   setSimulate: (v: boolean) => void;
   setKitchenStationCategories: (categoryIds: string[]) => void;
@@ -664,7 +672,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       outOfStock,
       kitchenQueue: buildKitchenQueue(state),
       kitchenTickets: buildKitchenTickets(state),
-      checkIn: (role) => dispatch({ type: 'checkIn', role }),
+      checkIn: (role, user) => dispatch({ type: 'checkIn', role, user }),
       checkOut: () => dispatch({ type: 'checkOut' }),
       setSimulate: (value) => dispatch({ type: 'setSimulate', value }),
       setKitchenStationCategories: (categoryIds) =>

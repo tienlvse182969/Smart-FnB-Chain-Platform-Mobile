@@ -7,6 +7,7 @@ import { Icon } from '@/src/components/ui/icon';
 import { Segmented } from '@/src/components/ui/segmented';
 import { Txt } from '@/src/components/ui/txt';
 import { staffByRole } from '@/src/data/mock';
+import { useStore } from '@/src/data/store';
 import type { StaffRole } from '@/src/data/types';
 import { setAppLanguage, type AppLanguage } from '@/src/i18n';
 import { staffRoleKey } from '@/src/i18n/labels';
@@ -19,7 +20,9 @@ const initials = (name: string) =>
 export function AccountScreen({ role }: { role: StaffRole }) {
   const theme = useAppTheme();
   const { t, i18n } = useTranslation();
+  const { state } = useStore();
   const staff = staffByRole[role];
+  const displayName = state.currentUser?.name ?? staff.name;
 
   const cardStyle = [
     styles.card,
@@ -37,10 +40,10 @@ export function AccountScreen({ role }: { role: StaffRole }) {
               styles.avatar,
               { borderColor: theme.border_color_base, backgroundColor: theme.fill_body },
             ]}>
-            <Txt variant="title">{initials(staff.name)}</Txt>
+            <Txt variant="title">{initials(displayName)}</Txt>
           </View>
           <Txt variant="h1" numberOfLines={1} style={styles.profileName}>
-            {staff.name}
+            {displayName}
           </Txt>
           <Txt variant="body" muted>
             {t(staffRoleKey[role])} · {staff.branch}

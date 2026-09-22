@@ -95,11 +95,22 @@
   },
   "login": {
     "checkinSubtitle": "Check-in ca tại {{branch}}",
-    "roleLabel": "Vai trò",
     "emailLabel": "Email nhân viên",
-    "pinLabel": "Mã PIN",
-    "submit": "Đăng nhập & Check-in ca ({{role}})",
-    "hint": "Bản phác thảo — bấm để vào thẳng, chưa nối hệ thống thật."
+    "passwordLabel": "Mật khẩu",
+    "submit": "Đăng nhập & Check-in ca",
+    "chooseAccount": "Chọn tài khoản",
+    "useAnotherAccount": "Tài khoản khác",
+    "backToAccounts": "Quay lại danh sách tài khoản",
+    "notYouChooseAnother": "Không phải bạn? Chọn tài khoản khác",
+    "forgetAccountConfirmTitle": "Xoá tài khoản này?",
+    "forgetAccountConfirmMessage": "\"{{name}}\" sẽ không còn hiện trên màn hình đăng nhập nữa. Bạn vẫn có thể đăng nhập lại bằng tài khoản này bất cứ lúc nào.",
+    "forgetAccountConfirmButton": "Xoá",
+    "errors": {
+      "invalidCredentials": "Sai email hoặc mật khẩu.",
+      "inactiveAccount": "Tài khoản đang bị khoá hoặc không hoạt động. Vui lòng liên hệ quản lý.",
+      "unsupportedRole": "Vai trò của tài khoản này chưa được hỗ trợ trên ứng dụng.",
+      "network": "Không kết nối được máy chủ. Vui lòng kiểm tra mạng và thử lại."
+    }
   },
   "floor": {
     "title": "Sơ đồ bàn",
@@ -288,6 +299,7 @@
     "title": "Mở bàn mới",
     "guestCount": "Số khách",
     "suggestLabel": "Gợi ý xếp & ghép bàn — chọn 1 phương án",
+    "bestOption": "Đề xuất tốt nhất",
     "emptyTitle": "Không đủ chỗ",
     "emptyHint": "Thử đổi khu vực hoặc giảm số khách.",
     "optionMeta": "{{area}} · {{seats}} ghế · thừa {{leftover}}",

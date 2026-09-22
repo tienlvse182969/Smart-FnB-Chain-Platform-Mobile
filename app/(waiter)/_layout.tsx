@@ -50,7 +50,7 @@ export default function WaiterLayout() {
               compact={compact}
               edge="left"
               dests={dests}
-              staffName={staffByRole['Phục vụ'].name}
+              staffName={state.currentUser?.name ?? staffByRole['Phục vụ'].name}
               staffHref="/(waiter)/account"
             />
           ) : null}
@@ -68,7 +68,7 @@ export default function WaiterLayout() {
               compact={compact}
               edge="bottom"
               dests={dests}
-              staffName={staffByRole['Phục vụ'].name}
+              staffName={state.currentUser?.name ?? staffByRole['Phục vụ'].name}
               staffHref="/(waiter)/account"
             />
           ) : null}
