@@ -6,7 +6,7 @@ import { orderTotal } from '@/src/data/store';
 import type { OrderItem, SessionOrder } from '@/src/data/types';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { OrderLineRow } from './order-line-row';
-import { Txt } from './ui/txt';
+import { Txt } from '../ui/txt';
 
 export function OrderCard({
   order,

@@ -5,8 +5,8 @@ import { clockAt, timeAgo } from '@/src/data/format';
 import type { Reservation } from '@/src/data/types';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
-import { Icon } from './ui/icon';
-import { Txt } from './ui/txt';
+import { Icon } from '../ui/icon';
+import { Txt } from '../ui/txt';
 
 export function ReservationRow({ reservation }: { reservation: Reservation }) {
   const theme = useAppTheme();

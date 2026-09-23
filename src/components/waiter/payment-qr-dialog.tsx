@@ -3,8 +3,8 @@ import QRCode from 'react-native-qrcode-svg';
 import { StyleSheet, View } from 'react-native';
 
 import { useAppTheme } from '@/src/theme/use-theme';
-import { AppModal } from './ui/app-modal';
-import { Txt } from './ui/txt';
+import { AppModal } from '../ui/app-modal';
+import { Txt } from '../ui/txt';
 
 /** Mã QR thật để khách quét tại bàn — mã hoá đơn duy nhất, không đối soát chỉ bằng số tiền (BR-16). */
 export function PaymentQrDialog({

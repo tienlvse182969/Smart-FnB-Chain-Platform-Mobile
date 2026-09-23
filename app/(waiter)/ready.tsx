@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ClaimCard } from '@/src/components/claim-card';
+import { ClaimCard } from '@/src/components/waiter/claim-card';
 import { EmptyState } from '@/src/components/empty-state';
 import { ScreenHeader } from '@/src/components/screen-header';
 import { Btn } from '@/src/components/ui/button';

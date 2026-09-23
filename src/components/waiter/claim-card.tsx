@@ -7,9 +7,9 @@ import { useStore } from '@/src/data/store';
 import type { ClaimEntry } from '@/src/data/types';
 import { claimEscalationKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
-import { Btn } from './ui/button';
-import { Icon } from './ui/icon';
-import { Txt } from './ui/txt';
+import { Btn } from '../ui/button';
+import { Icon } from '../ui/icon';
+import { Txt } from '../ui/txt';
 
 export function ClaimCard({
   entry,

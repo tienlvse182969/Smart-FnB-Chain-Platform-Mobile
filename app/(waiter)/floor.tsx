@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LegendBar } from '@/src/components/legend-bar';
+import { LegendBar } from '@/src/components/waiter/legend-bar';
 import { ScreenHeader } from '@/src/components/screen-header';
-import { SeatingDialog } from '@/src/components/seating-dialog';
-import { TableCard } from '@/src/components/table-card';
-import { useTablePanel } from '@/src/components/table-panel-overlay';
+import { SeatingDialog } from '@/src/components/waiter/seating-dialog';
+import { TableCard } from '@/src/components/waiter/table-card';
+import { useTablePanel } from '@/src/components/waiter/table-panel-overlay';
 import { AppModal } from '@/src/components/ui/app-modal';
 import { Btn } from '@/src/components/ui/button';
 import { Icon } from '@/src/components/ui/icon';

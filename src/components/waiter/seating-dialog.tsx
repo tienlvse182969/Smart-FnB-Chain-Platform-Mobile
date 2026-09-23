@@ -8,14 +8,14 @@ import { tableAreaKey } from '@/src/i18n/labels';
 import { TABLE_STATUS_COLORS } from '@/src/theme/status-colors';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
-import { EmptyState } from './empty-state';
-import { TableStatusBadge } from './status-badge';
-import { AppModal } from './ui/app-modal';
-import { Btn } from './ui/button';
-import { Icon } from './ui/icon';
-import { Pill } from './ui/pill';
-import { Stepper } from './ui/stepper';
-import { Txt } from './ui/txt';
+import { EmptyState } from '../empty-state';
+import { TableStatusBadge } from '../status-badge';
+import { AppModal } from '../ui/app-modal';
+import { Btn } from '../ui/button';
+import { Icon } from '../ui/icon';
+import { Pill } from '../ui/pill';
+import { Stepper } from '../ui/stepper';
+import { Txt } from '../ui/txt';
 
 /** Ô bàn nhỏ — cùng ngôn ngữ hình ảnh với TableCard ở sơ đồ bàn (viền/nền/badge theo màu trạng thái). */
 function SuggestionTile({ table }: { table: Table }) {

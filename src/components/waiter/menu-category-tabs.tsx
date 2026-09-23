@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet } from 'react-native';
 
 import type { MenuCategory } from '@/src/data/types';
-import { Pill } from './ui/pill';
+import { Pill } from '../ui/pill';
 
 export function MenuCategoryTabs({
   categories,

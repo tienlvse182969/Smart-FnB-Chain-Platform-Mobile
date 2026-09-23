@@ -9,18 +9,18 @@ import type { CheckoutMethod, OrderItem } from '@/src/data/types';
 import { checkoutMethodKey, tableAreaKey } from '@/src/i18n/labels';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
-import { EmptyState } from './empty-state';
+import { EmptyState } from '../empty-state';
 import { ItemOptionsDialog } from './item-options-dialog';
 import { MoveTableDialog } from './move-table-dialog';
 import { useOrderPanel } from './order-panel-overlay';
 import { OutOfStockDialog } from './out-of-stock-dialog';
 import { PaymentQrDialog } from './payment-qr-dialog';
 import { SessionPanel } from './session-panel';
-import { TableStatusBadge } from './status-badge';
-import { AppModal } from './ui/app-modal';
-import { Btn } from './ui/button';
-import { IconButton } from './ui/icon';
-import { Txt } from './ui/txt';
+import { TableStatusBadge } from '../status-badge';
+import { AppModal } from '../ui/app-modal';
+import { Btn } from '../ui/button';
+import { IconButton } from '../ui/icon';
+import { Txt } from '../ui/txt';
 
 /**
  * Nội dung chi tiết bàn/phiên — dùng chung cho màn hình đầy đủ (app/(waiter)/table/[id].tsx)

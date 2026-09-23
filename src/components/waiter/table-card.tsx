@@ -7,9 +7,9 @@ import { tableAreaKey } from '@/src/i18n/labels';
 import { TABLE_STATUS_COLORS } from '@/src/theme/status-colors';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
-import { TableStatusBadge } from './status-badge';
-import { Icon } from './ui/icon';
-import { Txt } from './ui/txt';
+import { TableStatusBadge } from '../status-badge';
+import { Icon } from '../ui/icon';
+import { Txt } from '../ui/txt';
 
 export function TableCard({
   table,

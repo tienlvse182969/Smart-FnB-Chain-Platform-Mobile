@@ -7,11 +7,11 @@ import type { OrderItem, Table, TableSession } from '@/src/data/types';
 import { checkoutMethodKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { fontFamily } from '@/src/theme/typography';
-import { EmptyState } from './empty-state';
+import { EmptyState } from '../empty-state';
 import { OrderCard } from './order-card';
-import { Btn } from './ui/button';
-import { Icon } from './ui/icon';
-import { Txt } from './ui/txt';
+import { Btn } from '../ui/button';
+import { Icon } from '../ui/icon';
+import { Txt } from '../ui/txt';
 
 export function SessionPanel({
   tableNames,

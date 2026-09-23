@@ -4,9 +4,9 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import type { Table } from '@/src/data/types';
 import { tableAreaKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
-import { AppModal } from './ui/app-modal';
-import { Icon } from './ui/icon';
-import { Txt } from './ui/txt';
+import { AppModal } from '../ui/app-modal';
+import { Icon } from '../ui/icon';
+import { Txt } from '../ui/txt';
 
 export function MoveTableDialog({
   visible,

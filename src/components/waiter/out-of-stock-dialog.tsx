@@ -6,9 +6,9 @@ import { formatVnd } from '@/src/data/format';
 import { categoryById, menu } from '@/src/data/mock';
 import type { OrderItem } from '@/src/data/types';
 import { useAppTheme } from '@/src/theme/use-theme';
-import { AppModal } from './ui/app-modal';
-import { Btn } from './ui/button';
-import { Txt } from './ui/txt';
+import { AppModal } from '../ui/app-modal';
+import { Btn } from '../ui/button';
+import { Txt } from '../ui/txt';
 
 export function OutOfStockDialog({
   visible,

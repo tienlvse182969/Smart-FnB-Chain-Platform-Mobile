@@ -5,10 +5,10 @@ import { formatVnd } from '@/src/data/format';
 import { EDITABLE_ITEM_STATUSES } from '@/src/data/store';
 import type { OrderItem } from '@/src/data/types';
 import { useAppTheme } from '@/src/theme/use-theme';
-import { ItemStatusBadge } from './status-badge';
-import { Icon, IconButton } from './ui/icon';
-import { Stepper } from './ui/stepper';
-import { Txt } from './ui/txt';
+import { ItemStatusBadge } from '../status-badge';
+import { Icon, IconButton } from '../ui/icon';
+import { Stepper } from '../ui/stepper';
+import { Txt } from '../ui/txt';
 
 export function OrderLineRow({
   item,

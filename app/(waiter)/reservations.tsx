@@ -4,7 +4,7 @@ import { FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/src/components/empty-state';
-import { ReservationRow } from '@/src/components/reservation-row';
+import { ReservationRow } from '@/src/components/waiter/reservation-row';
 import { ScreenHeader } from '@/src/components/screen-header';
 import { Txt } from '@/src/components/ui/txt';
 import { clockAt } from '@/src/data/format';

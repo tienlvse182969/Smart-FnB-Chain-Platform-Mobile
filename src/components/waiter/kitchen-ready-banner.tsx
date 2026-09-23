@@ -7,8 +7,8 @@ import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
 
 import { useStore } from '@/src/data/store';
 import { useAppTheme } from '@/src/theme/use-theme';
-import { Icon } from './ui/icon';
-import { Txt } from './ui/txt';
+import { Icon } from '../ui/icon';
+import { Txt } from '../ui/txt';
 
 const notificationSound = require('@/assets/sounds/notification.mp3');
 const VISIBLE_MS = 4500;

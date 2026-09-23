@@ -5,11 +5,11 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { formatVnd } from '@/src/data/format';
 import type { MenuItem } from '@/src/data/types';
 import { useAppTheme } from '@/src/theme/use-theme';
-import { AppModal } from './ui/app-modal';
-import { Field } from './ui/field';
-import { Icon } from './ui/icon';
-import { Stepper } from './ui/stepper';
-import { Txt } from './ui/txt';
+import { AppModal } from '../ui/app-modal';
+import { Field } from '../ui/field';
+import { Icon } from '../ui/icon';
+import { Stepper } from '../ui/stepper';
+import { Txt } from '../ui/txt';
 
 export type ItemDraft = {
   qty: number;

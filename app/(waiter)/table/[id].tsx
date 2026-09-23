@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { TableDetailPanel } from '@/src/components/table-detail-panel';
+import { TableDetailPanel } from '@/src/components/waiter/table-detail-panel';
 
 export default function SessionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
