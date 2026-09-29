@@ -9,14 +9,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
-import { AuthProvider } from '@/src/auth/auth-context';
 import { StoreProvider } from '@/src/data/store';
 import { loadStoredLanguage } from '@/src/i18n';
 import { harmonyFontMap } from '@/src/theme/harmony-fonts';
 import { AppThemeContext, appLightTheme } from '@/src/theme/use-theme';
 
 export const unstable_settings = {
-  anchor: '(waiter)',
+  anchor: 'login',
 };
 
 export default function RootLayout() {
@@ -38,21 +37,19 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <AppThemeContext.Provider value={appLightTheme}>
           <AntdProvider theme={appLightTheme}>
-            <AuthProvider>
-              <StoreProvider>
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: appLightTheme.fill_body },
-                  }}>
-                  <Stack.Screen name="index" />
-                  <Stack.Screen name="login" />
-                  <Stack.Screen name="(waiter)" />
-                  <Stack.Screen name="(kitchen)" />
-                </Stack>
-                <StatusBar style="dark" />
-              </StoreProvider>
-            </AuthProvider>
+            <StoreProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: appLightTheme.fill_body },
+                }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="login" />
+                <Stack.Screen name="(cashier)" />
+                <Stack.Screen name="(barista)" />
+              </Stack>
+              <StatusBar style="dark" />
+            </StoreProvider>
           </AntdProvider>
         </AppThemeContext.Provider>
       </SafeAreaProvider>

@@ -1,14 +1,18 @@
-# Smart F&B Chain Platform — App Phục vụ (Waiter)
+# Smart F&B Chain Platform — App tại quầy (Cashier + Barista)
 
-Bản phác thảo giao diện **tablet** cho actor **Phục vụ (Waiter)** trong đồ án
-_Smart F&B Chain Platform (SP26SE123)_ — bám **Phân tích nghiệp vụ v2**
-(bỏ app khách, thanh toán trước qua QR, khái niệm **Table Session**, cơ chế **nhận việc bưng món**).
+Bản phác thảo giao diện **tablet** cho hai actor vận hành tại quầy trong đồ án
+_Smart F&B Chain Platform (SP26SE123)_ — bám **Đặc tả v8.1**: chuỗi F&B **gọi món và trả tiền
+trước tại quầy** (cà phê, trà sữa, đồ ăn nhanh), món xuống quầy pha chế sau khi thanh toán, gọi số
+để khách nhận.
 
+- **Cashier (Thu ngân)** — POS: tạo đơn có tuỳ chọn món, thu tiền mặt / QR, in bill + phiếu số, lịch sử đơn.
+- **Barista (Pha chế)** — hàng đợi **gom mẻ**, cập nhật trạng thái, gọi số, báo hết món/topping.
 - **Stack:** Expo SDK 54 · React Native · TypeScript · expo-router
 - **UI:** `@ant-design/react-native` (ant-design-mobile-rn), theme **trắng–đen** (nền sáng, chỉ 1 chế độ)
 - **Icon:** `lucide-react-native` (gom ở `src/components/ui/icon.tsx`)
 - **Font:** HarmonyOS Sans — file `.ttf` trong `assets/fonts/`, phủ toàn cục qua `src/theme/global-font.ts`
-- **Dữ liệu:** hoàn toàn **mock** trong `src/data/` (chưa nối backend / Socket.IO)
+- **HTTP client:** `axios` còn trong dependencies nhưng **chưa dùng** — mọi API cũ đã gỡ.
+- **Dữ liệu:** hoàn toàn **mock** trong `src/data/` (chưa nối backend / Socket.IO / PayOS)
 
 ## Chạy thử
 
@@ -39,29 +43,32 @@ cài thủ công từ APKMirror như sau:
 > Lưu ý: chỉ tải APK/APKM từ nguồn chính chủ (APKMirror) và kiểm tra đúng version
 > `54.0.8` khớp SDK 54 của dự án để tránh lỗi không tương thích khi load bundle.
 
-## Màn hình (use case Waiter v2)
+## Màn hình
 
-| Route                           | Use case          | Nội dung                                                                                            |
-| ------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------- |
-| `app/login.tsx`                 | WT-01             | Đăng nhập + check-in ca tại chi nhánh                                                               |
-| `app/(waiter)/floor.tsx`        | WT-02, W03        | Sơ đồ bàn real-time; tap bàn Trống → mở phiên + kích hoạt QR; bàn Cần dọn → báo đã dọn              |
-| `app/(waiter)/table/[id].tsx`   | WT-03,05,06,07,08 | Chi tiết **phiên bàn**: danh sách order (đọc), order thay khách, xử lý hết món, đổi bàn, đóng phiên |
-| `app/(waiter)/ready.tsx`        | WT-04, W05        | Món **chờ bưng** — nhận việc (ai bấm trước thắng) rồi "Đã phục vụ"; leo thang khi chờ quá lâu       |
-| `app/(waiter)/reservations.tsx` | backlog           | Danh sách đặt trước — **chỉ xem**                                                                   |
-| `app/(waiter)/shift.tsx`        | WT-01             | Thông tin ca, phiên đang phụ trách, check-out                                                       |
+| Route                     | Use case      | Nội dung                                                                                         |
+| ------------------------- | ------------- | ------------------------------------------------------------------------------------------------ |
+| `app/login.tsx`           | CM-01         | Đăng nhập **mô phỏng**: chọn tài khoản mẫu Thu ngân / Pha chế (chưa có backend)                    |
+| `app/(cashier)/pos.tsx`   | CS-01…CS-04   | POS: chọn món + tuỳ chọn (size/đường/đá/topping), giỏ, thanh toán tiền mặt (xác nhận đã thu) hoặc QR; lọc "Tất cả" + tìm món |
+| `app/(cashier)/orders.tsx`| CS-05         | Lịch sử đơn trong ngày, xem lại và in lại bill/phiếu số                                           |
+| `app/(barista)/queue.tsx` | BA-01, BA-02  | Hàng đợi gom mẻ, Bắt đầu / Xong, gọi số, "Sẵn sàng nhận" → Đã giao                                |
+| `app/(barista)/menu.tsx`  | BA-03         | Bật/tắt món và topping (hết hàng) — POS chặn bán ngay                                             |
+| `app/(*)/account.tsx`     | CM-02         | Tài khoản, ngôn ngữ, đăng xuất                                                                    |
 
 Điều hướng: **Navigation Rail** dọc bên trái (`src/components/nav-rail.tsx`),
 thu gọn icon-only khi bề rộng < 820. Layout co giãn cho cả ngang lẫn dọc.
 
 ## Ghi chú
 
-- **Sơ đồ bàn** tô màu theo 4 trạng thái bàn để nhận diện nhanh — xanh lá (Trống), vàng (Đã đặt
-  trước), xanh dương (Đang phục vụ), đỏ (Cần dọn) — bảng màu ở `src/theme/status-colors.ts`.
-  Trạng thái món và phần còn lại của app vẫn đơn sắc trắng–đen (`src/components/status-badge.tsx`).
-- `src/data/store.tsx` — mọi luồng nghiệp vụ v2 chạy trên mock: phiên bàn, order tự "xuống bếp"
-  khi thanh toán (BR-03), backend sinh trạng thái "Chờ bưng" theo _chế độ ra món_ của danh mục
-  (BR-07), khoá "nhận việc" theo waiter (BR-08), leo thang 3'/5' (BR-09). Mô phỏng bếp mỗi ~9s,
-  tắt ở màn **Ca làm**.
+- **Thuật toán gom món** ở `src/data/batching.ts` (mục 8 đặc tả): cùng món + size, trong cửa sổ 5 phút,
+  tối đa 4 ly một mẻ, mẻ đầu hàng đợi luôn chứa ly chờ lâu nhất. Hàm thuần, không phụ thuộc UI.
+- `src/data/store.tsx` — toàn bộ luồng chạy trên mock: giỏ, chốt đơn (chụp giá lúc bán), thanh toán
+  (tiền mặt / QR có đếm ngược, hết hạn thì huỷ đơn), cấp số gọi theo ngày, hàng đợi pha chế. Đơn và menu
+  **giữ nguyên khi đăng xuất** để demo Cashier → đăng xuất → Barista trên cùng một máy.
+- **In bill / phiếu số (CS-04, BR-21):** chưa in thật. Bản có backend dựng bill thành ảnh rồi gửi ESC/POS tới máy in nhiệt
+  (Bluetooth/WiFi). App mô phỏng trạng thái in: in lỗi **không chặn** thanh toán và đơn vẫn xuống pha chế; POS hiện
+  cảnh báo **In thất bại** + nút **In lại**, lịch sử đơn có nhãn. Bật công tắc **Giả lập: máy in lỗi** ở Tài khoản (Thu ngân) để thử.
+- QR ở POS là mã giả (`SMARTFNB|mã đơn|số tiền`); nút **"Giả lập: khách đã chuyển khoản"** thay cho webhook PayOS.
+- Chưa làm: màn hình phía khách, màn hình gọi số, ghép thiết bị, Socket.IO, Manager/Owner.
 - Font HarmonyOS Sans được phủ lên **mọi** `<Text>` (kể cả bên trong component antd)
   bằng patch `Text.render` trong `src/theme/global-font.ts`.
 - Lớp UI dùng chung ở `src/components/ui/` (`Btn`, `IconButton`, `Pill`, `Segmented`,

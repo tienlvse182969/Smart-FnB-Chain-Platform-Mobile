@@ -21,9 +21,9 @@ const initials = (name: string) =>
   name.split(' ').slice(-2).map((w) => w[0]).join('').toUpperCase();
 
 /**
- * Nav rail dùng chung cho mọi actor (Waiter, Kitchen…) — logo, badge, avatar cuối rail
- * đồng nhất. `size="lg"` phóng to icon/chữ/khoảng chạm cho Kitchen (mục 4.7: đọc lướt,
- * tay bẩn, đứng xa) mà không tách component riêng.
+ * Nav rail dùng chung cho mọi actor (Cashier, Barista…) — logo, badge, avatar cuối rail
+ * đồng nhất. `size="lg"` phóng to icon/chữ/khoảng chạm cho Barista (mục 4.7: đọc lướt,
+ * tay ướt) mà không tách component riêng.
  */
 export function NavRail({
   compact,

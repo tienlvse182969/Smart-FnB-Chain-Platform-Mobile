@@ -1,108 +1,77 @@
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import type { OrderItemStatus, TableStatus } from '@/src/data/types';
-import { orderItemStatusKey, tableStatusKey } from '@/src/i18n/labels';
-import { TABLE_STATUS_COLORS } from '@/src/theme/status-colors';
+import type { LineStatus, OrderStatus } from '@/src/data/types';
+import { lineStatusKey, orderStatusKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { Icon, type IconName } from './ui/icon';
 import { Txt } from './ui/txt';
 
-type Variant = 'solid' | 'outline' | 'dashed' | 'muted' | 'hatch';
+type Variant = 'solid' | 'outline' | 'muted' | 'danger';
 type Visual = { labelKey: string; icon: IconName; variant: Variant };
 
-const TABLE_STATUS_ICON: Record<TableStatus, IconName> = {
-  Trống: 'available',
-  'Đã đặt trước': 'reserved',
-  'Đang phục vụ': 'occupied',
-  'Tạm khoá': 'lock',
+const ORDER_VISUAL: Record<OrderStatus, Visual> = {
+  'Chờ thanh toán': { labelKey: orderStatusKey['Chờ thanh toán'], icon: 'timer', variant: 'outline' },
+  'Đã thanh toán': { labelKey: orderStatusKey['Đã thanh toán'], icon: 'payment', variant: 'outline' },
+  'Đang pha': { labelKey: orderStatusKey['Đang pha'], icon: 'preparing', variant: 'solid' },
+  'Sẵn sàng': { labelKey: orderStatusKey['Sẵn sàng'], icon: 'bell', variant: 'solid' },
+  'Hoàn tất': { labelKey: orderStatusKey['Hoàn tất'], icon: 'served', variant: 'muted' },
+  'Đã huỷ': { labelKey: orderStatusKey['Đã huỷ'], icon: 'unavailable', variant: 'muted' },
 };
 
-const ITEM_STATUS_VISUAL: Record<OrderItemStatus, Visual> = {
-  'Trong hàng đợi': { labelKey: orderItemStatusKey['Trong hàng đợi'], icon: 'send', variant: 'outline' },
-  'Đang làm': { labelKey: orderItemStatusKey['Đang làm'], icon: 'preparing', variant: 'solid' },
-  Xong: { labelKey: orderItemStatusKey.Xong, icon: 'check', variant: 'outline' },
-  'Chờ bưng': { labelKey: orderItemStatusKey['Chờ bưng'], icon: 'bell', variant: 'solid' },
-  'Đã phục vụ': { labelKey: orderItemStatusKey['Đã phục vụ'], icon: 'served', variant: 'muted' },
-  'Hết món': { labelKey: orderItemStatusKey['Hết món'], icon: 'unavailable', variant: 'hatch' },
-  Huỷ: { labelKey: orderItemStatusKey.Huỷ, icon: 'unavailable', variant: 'muted' },
+const LINE_VISUAL: Record<LineStatus, Visual> = {
+  'Chờ pha': { labelKey: lineStatusKey['Chờ pha'], icon: 'timer', variant: 'outline' },
+  'Đang pha': { labelKey: lineStatusKey['Đang pha'], icon: 'preparing', variant: 'solid' },
+  Xong: { labelKey: lineStatusKey.Xong, icon: 'check', variant: 'outline' },
+  'Hết món': { labelKey: lineStatusKey['Hết món'], icon: 'unavailable', variant: 'danger' },
+  Huỷ: { labelKey: lineStatusKey.Huỷ, icon: 'unavailable', variant: 'muted' },
 };
 
-function Hatch({ color }: { color: string }) {
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-        <View
-          key={i}
-          style={{
-            position: 'absolute',
-            width: 1.5,
-            height: 64,
-            backgroundColor: color,
-            opacity: 0.45,
-            left: i * 9 - 12,
-            top: -20,
-            transform: [{ rotate: '45deg' }],
-          }}
-        />
-      ))}
-    </View>
-  );
-}
+const PRINT_FAILED_VISUAL: Visual = { labelKey: 'status.print.failed', icon: 'print', variant: 'danger' };
 
-function Badge({ visual, size = 'md' }: { visual: Visual; size?: 'sm' | 'md' }) {
+function Badge({ visual, size }: { visual: Visual; size: 'sm' | 'md' }) {
   const theme = useAppTheme();
   const { t } = useTranslation();
-  const solid = visual.variant === 'solid' || visual.variant === 'hatch';
-  const muted = visual.variant === 'muted';
-  const fg = solid ? theme.color_text_base_inverse : theme.color_text_base;
+  const small = size === 'sm';
+
+  const danger = '#C0392B';
+  const solid = visual.variant === 'solid';
+  const fg = solid
+    ? theme.color_text_base_inverse
+    : visual.variant === 'danger'
+      ? danger
+      : theme.color_text_base;
 
   return (
     <View
       style={[
         styles.badge,
-        size === 'sm' && styles.badgeSm,
+        small && styles.badgeSm,
         {
-          backgroundColor: solid
-            ? theme.brand_primary
-            : muted
-              ? theme.fill_grey
-              : 'transparent',
-          borderColor: theme.border_color_base,
-          borderWidth: solid ? 0 : 1,
-          borderStyle: visual.variant === 'dashed' ? 'dashed' : 'solid',
-          opacity: muted ? 0.75 : 1,
+          backgroundColor: solid ? theme.brand_primary : 'transparent',
+          borderColor: visual.variant === 'danger' ? danger : theme.border_color_base,
+          opacity: visual.variant === 'muted' ? 0.6 : 1,
         },
       ]}>
-      {visual.variant === 'hatch' && <Hatch color={theme.color_text_base_inverse} />}
-      <Icon name={visual.icon} size={size === 'sm' ? 12 : 14} color={fg} strokeWidth={2.2} />
-      <Txt variant={size === 'sm' ? 'tiny' : 'label'} color={fg} numberOfLines={1}>
+      <Icon name={visual.icon} size={small ? 11 : 13} color={fg} />
+      <Txt variant={small ? 'tiny' : 'label'} color={fg}>
         {t(visual.labelKey)}
       </Txt>
     </View>
   );
 }
 
-export function TableStatusBadge({ status, size }: { status: TableStatus; size?: 'sm' | 'md' }) {
-  const { t } = useTranslation();
-  const c = TABLE_STATUS_COLORS[status];
-  return (
-    <View
-      style={[
-        styles.badge,
-        size === 'sm' && styles.badgeSm,
-        { backgroundColor: c.fill },
-      ]}>
-      <Icon name={TABLE_STATUS_ICON[status]} size={size === 'sm' ? 12 : 14} color={c.on} strokeWidth={2.2} />
-      <Txt variant={size === 'sm' ? 'tiny' : 'label'} color={c.on} numberOfLines={1}>
-        {t(tableStatusKey[status])}
-      </Txt>
-    </View>
-  );
+export function OrderStatusBadge({ status, size = 'md' }: { status: OrderStatus; size?: 'sm' | 'md' }) {
+  return <Badge visual={ORDER_VISUAL[status]} size={size} />;
 }
 
-export function ItemStatusBadge({ status, size }: { status: OrderItemStatus; size?: 'sm' | 'md' }) {
-  return <Badge visual={ITEM_STATUS_VISUAL[status]} size={size} />;
+export function LineStatusBadge({ status, size = 'md' }: { status: LineStatus; size?: 'sm' | 'md' }) {
+  return <Badge visual={LINE_VISUAL[status]} size={size} />;
+}
+
+/** Nhãn đỏ khi in bill/phiếu số thất bại (BR-21) — chỉ hiện khi lỗi, in thành công thì không cần nhãn. */
+export function PrintFailedBadge({ size = 'md' }: { size?: 'sm' | 'md' }) {
+  return <Badge visual={PRINT_FAILED_VISUAL} size={size} />;
 }
 
 const styles = StyleSheet.create({
@@ -110,11 +79,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
     alignSelf: 'flex-start',
-    overflow: 'hidden',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
   },
-  badgeSm: { paddingHorizontal: 6, paddingVertical: 2, gap: 3 },
+  badgeSm: { paddingHorizontal: 7, paddingVertical: 2, gap: 4 },
 });

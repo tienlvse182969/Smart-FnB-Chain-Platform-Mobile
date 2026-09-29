@@ -5,304 +5,172 @@
     "back": "Back",
     "choose": "Choose",
     "add": "Add",
-    "gotIt": "Got it"
+    "gotIt": "Got it",
+    "retry": "Retry"
   },
   "account": {
     "screenTitle": "Account",
     "settingsSection": "Device settings",
+    "logout": "Sign out",
     "language": {
       "label": "Language",
-      "description": "Choose the app's display language",
+      "description": "Choose the display language for the app",
       "vi": "Tiếng Việt",
       "en": "English"
-    }
+    },
+    "simulatePrinterFail": "Simulate: printer error",
+    "simulatePrinterFailHint": "Orders paid while this is on show Print failed (nothing is really printed)."
   },
   "status": {
-    "table": {
-      "empty": "Empty",
-      "reserved": "Reserved",
-      "occupied": "Occupied",
-      "locked": "Locked"
-    },
-    "item": {
-      "queued": "Queued",
+    "line": {
+      "queued": "Waiting",
       "preparing": "Preparing",
       "done": "Done",
-      "waitingPickup": "Ready to serve",
-      "served": "Served",
       "outOfStock": "Out of stock",
       "cancelled": "Cancelled"
     },
-    "itemAction": {
-      "queued": "Wait",
+    "order": {
+      "pendingPayment": "Awaiting payment",
+      "paid": "Paid",
       "preparing": "Preparing",
-      "done": "Done",
-      "waitingPickup": "Ready",
-      "served": "Served",
-      "outOfStock": "Out of stock",
-      "cancelled": "Cancel"
-    },
-    "session": {
-      "active": "Active",
-      "closed": "Closed",
+      "ready": "Ready",
+      "completed": "Completed",
       "cancelled": "Cancelled"
+    },
+    "payment": {
+      "cash": "Cash",
+      "qr": "QR transfer"
     },
     "role": {
-      "waiter": "Waiter",
-      "kitchen": "Kitchen"
+      "cashier": "Cashier",
+      "barista": "Barista"
     },
-    "course": {
-      "starter": "Starters & drinks",
-      "main": "Main dishes"
-    },
-    "checkout": {
-      "qr": "QR transfer",
-      "cash": "Cash"
-    },
-    "area": {
-      "all": "All",
-      "floor1": "Floor 1",
-      "garden": "Garden",
-      "vip": "VIP"
-    },
-    "escalation": {
-      "normal": "normal",
-      "urgent": "URGENT",
-      "manager": "NOTIFY MANAGER"
+    "print": {
+      "failed": "Print failed"
     }
   },
   "format": {
     "justNow": "just now",
     "rightNow": "right now",
     "minutesShort": "{{count}} min",
-    "hoursShort": "{{count}} hr",
+    "hoursShort": "{{count}} h",
     "hoursMinutesShort": "{{h}}h {{m}}m",
     "ago": "{{label}} ago",
     "in": "in {{label}}"
   },
   "nav": {
-    "waiter": {
-      "floor": "Table map",
-      "ready": "Ready to serve",
-      "reservations": "Reservations",
-      "shift": "Shift"
+    "cashier": {
+      "pos": "Sales",
+      "orders": "Today's orders"
     },
-    "kitchen": {
+    "barista": {
       "queue": "Queue",
-      "menu": "Menu",
-      "shift": "Shift"
+      "menu": "Items & toppings"
     }
   },
   "login": {
-    "checkinSubtitle": "Check in for shift at {{branch}}",
-    "emailLabel": "Staff email",
-    "passwordLabel": "Password",
-    "submit": "Log in & check in",
+    "subtitle": "Sign in at {{branch}}",
     "chooseAccount": "Choose an account",
-    "useAnotherAccount": "Another account",
-    "backToAccounts": "Back to saved accounts",
-    "notYouChooseAnother": "Not you? Choose another account",
-    "forgetAccountConfirmTitle": "Remove this account?",
-    "forgetAccountConfirmMessage": "\"{{name}}\" will no longer show up on the login screen. You can log in with it again anytime.",
-    "forgetAccountConfirmButton": "Remove",
-    "errors": {
-      "invalidCredentials": "Incorrect email or password.",
-      "inactiveAccount": "This account is locked or inactive. Please contact your manager.",
-      "unsupportedRole": "This account's role isn't supported on this app.",
-      "network": "Couldn't reach the server. Check your connection and try again."
-    }
+    "cashierHint": "Create orders, take payment, print bills",
+    "baristaHint": "Preparation queue, call numbers",
+    "demoNote": "Demo build: not connected to a server; data only lives on this device."
   },
-  "floor": {
-    "title": "Table map",
-    "subtitle": "{{branch}} · {{zone}} zone",
-    "realtimeOn": "Real-time: on",
-    "realtimeOff": "Real-time: off",
-    "openTable": "Open new table",
-    "refreshToast": "Table statuses refreshed.",
-    "qrActivated": "QR activated for table {{name}}.",
-    "qrActivatedMerged": "QR activated for the merged table.",
-    "reservedModalTitle": "Table {{name}} — reserved",
-    "reservedInfo": "{{name}} · {{party}} guests · booked at {{time}}",
-    "guestArrived": "Guest has arrived — open session",
-    "lockedTitle": "Table locked",
-    "lockedBody": "This table is temporarily locked (broken/under maintenance) and can't open a session. Contact the Branch Manager if it needs to be reopened."
-  },
-  "ready": {
-    "title": "Ready to serve",
-    "subtitle": "Kitchen marked it done — claim it, then serve the table (WT-04, W05)",
-    "unclaimed": "{{unclaimed}}/{{total}} unclaimed",
-    "simulateKitchen": "Simulate kitchen",
-    "simulateToast": "Kitchen simulation: advanced 1 item by one step.",
-    "emptyTitle": "Nothing ready to serve yet",
-    "emptyHint": "Once the kitchen marks an item Done, it shows up here based on each category's serve mode.",
-    "claimedToast": "You claimed {{name}} · {{table}}.",
-    "servedToast": "{{table}} · {{name}} → served."
-  },
-  "claimCard": {
-    "waitingLabel": "waiting {{duration}}",
-    "servedBtn": "Served",
-    "claimBtn": "Claim",
-    "carryingBy": "{{name}} is serving this"
-  },
-  "reservations": {
-    "title": "Upcoming reservations",
-    "countLabel": "{{count}} bookings · {{time}}",
-    "note": "View-only list — guests scan the table QR on arrival; waiters open sessions from the Table map screen.",
-    "emptyTitle": "No reservations"
-  },
-  "reservationRow": {
-    "partySize": "{{phone}} · {{party}} guests",
-    "tableSuffix": " · table {{table}}"
-  },
-  "shift": {
-    "title": "Shift",
-    "inShift": "On shift",
-    "notCheckedIn": "Not checked in",
-    "branch": "Branch",
-    "checkinTime": "Check-in time",
-    "duration": "Duration",
-    "settings": "Settings",
-    "simulateRealtime": "Real-time simulation",
-    "checkout": "Check out"
-  },
-  "waiterShift": {
-    "zone": "Assigned zone",
-    "activeSessions": "Active sessions",
-    "tableCount": "{{count}} tables",
-    "assignedTables": "Assigned tables",
-    "noTables": "No tables served yet",
-    "sessionMeta": "{{guests}} guests · {{orders}} orders · {{duration}}",
-    "simulateHint": "Automatically advances item statuses every few seconds to preview live updates."
-  },
-  "kitchenShift": {
-    "checkoutDemo": "Check out (demo)",
-    "checkoutNote": "In production, the Branch Manager checks you out at the end of your shift. This button is only for switching roles while prototyping.",
-    "categoriesTitle": "Assigned categories",
-    "categoriesHint": "Used as the default filter in Queue — you can still change it there.",
-    "simulateHint": "Automatically advances newly received orders through statuses to preview live updates."
-  },
-  "kitchenMenu": {
-    "title": "Menu",
-    "subtitle": "Toggle availability & update remaining portions (BR-06, BR-07)",
-    "remaining": "Remaining"
-  },
-  "kitchenQueue": {
-    "title": "Queue",
-    "subtitle": "{{count}} items queued/preparing",
-    "itemView": "Item View",
-    "ticketView": "Ticket View",
-    "filterAll": "All",
-    "emptyTitle": "No items",
-    "emptyHint": "The queue is empty for this filter.",
-    "emptyBillTitle": "No bills waiting",
-    "statusFilterAll": "All"
-  },
-  "kitchenTicketCard": {
-    "doneProgress": "{{done}}/{{total}} items done",
-    "sentAgo": "sent {{duration}}"
-  },
-  "kitchenReadyBanner": {
-    "text": "Kitchen is done: {{name}} ×{{qty}}",
-    "sub": "{{table}} · Ready to serve"
-  },
-  "kitchenNewItemBanner": {
-    "text": "New item: {{name}} ×{{qty}}"
-  },
-  "tableDetail": {
-    "notFound": "Table not found",
-    "titlePrefix": "Table {{names}}",
-    "guestsSuffix": " · {{guests}} guests",
-    "simulateKitchenToast": "Kitchen simulation: advanced 1 item by one step.",
-    "paidToastConfirmed": "The manager has confirmed payment — table {{names}} is now empty.",
-    "emptyTitle": "No active session",
-    "emptyHint": "Go back to the table map, tap “Open new table” or pick an empty table to start a session.",
-    "backToFloor": "Back to table map",
-    "requestCheckoutToastQr": "The Branch Manager has been notified of the checkout request. Bring the tablet with the QR code to the table.",
-    "requestCheckoutToastCash": "The Branch Manager has been notified of the checkout request. Collect the cash and bring it to the counter.",
-    "orderSentToast": "Sent to the kitchen — items are queued immediately (BR-05).",
-    "mergedToast": "Merged table {{name}} into the session.",
-    "swappedToast": "Item swapped — waiting for the kitchen to remake it.",
-    "droppedToast": "Item removed from the bill.",
-    "checkoutTitle": "Request checkout",
-    "checkoutBody": "Choose how the guest will pay. Only the Branch Manager can generate the QR code and confirm payment (BR-13).",
-    "cancelSessionBtn": "Guest left — cancel session"
-  },
-  "sessionPanel": {
-    "title": "Session · {{names}}",
-    "meta": "{{guests}} guests · opened {{opened}} · seated {{duration}}",
-    "awaitingCashConfirm": "Cash collected (by {{name}}) — awaiting manager confirmation",
-    "awaitingConfirm": "Awaiting Branch Manager payment confirmation",
-    "methodRequested": "Method: {{method}} · requested at {{time}}",
-    "viewQr": "View QR code",
-    "collectedCash": "I collected the cash",
-    "noOrdersTitle": "No orders yet",
-    "noOrdersHint": "Bring the tablet to the table and tap “Take order” to add items for the guest.",
-    "orderCount": "{{count}} orders",
-    "newOrderBtn": "Take order",
-    "moveBtn": "Move table",
-    "mergeBtn": "Merge table",
-    "resolveStockBtn": "Resolve out-of-stock ({{count}})",
-    "requestCheckoutBtn": "Request checkout",
-    "footerHint": "Tapping “Take order” sends it to the kitchen immediately (BR-05) — no approval step. Only the Branch Manager can generate the QR code and confirm payment (BR-13)."
-  },
-  "orderCard": {
-    "header": "Order #{{index}} · {{time}}",
-    "total": "Order total"
-  },
-  "orderLineRow": {
-    "carryingBy": "{{name}} is serving this"
-  },
-  "orderEntryDialog": {
-    "title": "Take order · {{tables}}",
-    "sendBtn": "Send to kitchen · {{total}}",
-    "cartTitle": "Items added",
+  "pos": {
+    "cartTitle": "Current order",
     "cartCount": "{{count}} items",
     "emptyCartTitle": "No items yet",
-    "emptyCart": "Pick items on the left to add them to this order."
+    "emptyCart": "Pick items on the left to add them to the order.",
+    "emptyMenu": "This category has no items.",
+    "checkoutBtn": "Pay · {{total}}",
+    "errors": {
+      "unavailable": "Some items or toppings just ran out: {{names}}. Remove them from the order and try again."
+    },
+    "allCategories": "All",
+    "searchPlaceholder": "Search items…",
+    "noResultsTitle": "No items found",
+    "noResultsHint": "Try another keyword or pick \"All\"."
   },
   "itemOptionsDialog": {
     "qtyLabel": "Quantity",
-    "noteLabel": "Note for the kitchen",
-    "notePlaceholder": "Less ice, no sugar…",
-    "addBtn": "Add · {{total}}"
+    "noteLabel": "Note for the barista",
+    "notePlaceholder": "Second cup less sweet…",
+    "addBtn": "Add · {{total}}",
+    "required": "Required",
+    "maxHint": "Choose up to {{max}}",
+    "soldOut": "Out"
   },
-  "outOfStockDialog": {
-    "title": "Out of stock · {{name}} ×{{qty}}",
-    "chooseBody": "The kitchen reported it's out. No payment was taken yet so no refund is needed — apologize at the table and choose how to handle it (section 6.4).",
-    "swapBtn": "Swap item",
-    "dropBtn": "Remove from bill",
-    "swapBody": "Choose a replacement for the guest."
+  "checkout": {
+    "title": "Payment · Order #{{code}}",
+    "totalLabel": "Total",
+    "tabCash": "Cash",
+    "tabQr": "QR transfer",
+    "confirmCash": "Confirm received",
+    "qrHint": "Let the customer scan with any banking app.",
+    "countdown": "Code expires in {{time}}",
+    "recheck": "Check again",
+    "recheckNone": "No payment received yet. If the customer just transferred, wait a few seconds and check again.",
+    "simulatePaid": "Simulate: customer has transferred",
+    "switchCash": "Switch to cash",
+    "editOrder": "Cancel QR and edit order",
+    "backToEdit": "Back to edit order",
+    "startQr": "Create QR code",
+    "paidTitle": "Payment successful",
+    "callNumber": "Call number",
+    "printed": "Bill and number slip printed",
+    "newOrder": "New order",
+    "expired": "The QR code expired and the order was cancelled.",
+    "cancelled": "The order was cancelled.",
+    "printFailedTitle": "Print failed",
+    "printFailedHint": "The order is still paid and sent to the bar. Check the printer, then reprint.",
+    "reprint": "Reprint"
   },
-  "moveTableDialog": {
-    "moveTitle": "Move from {{from}}",
-    "mergeTitle": "Add table to {{from}}",
-    "moveHint": "Move the whole session to a new table, keeping orders and item statuses.",
-    "mergeHint": "Add an adjacent empty table to the active session — use this when the group is bigger than expected.",
-    "noneAvailable": "No suitable empty tables.",
-    "seatsLabel": "{{name}} · {{seats}} seats"
+  "orders": {
+    "title": "Today's orders",
+    "subtitle": "{{count}} orders",
+    "emptyTitle": "No orders yet",
+    "emptyHint": "Orders created on the Sales screen will show up here.",
+    "orderCode": "Order #{{code}}",
+    "detailTitle": "Order #{{code}}",
+    "cashier": "Cashier",
+    "method": "Method",
+    "total": "Total",
+    "reprint": "Reprint bill and number slip",
+    "reprinted": "Reprinted (time {{count}})",
+    "cancelledReason": "Reason: {{reason}}",
+    "managerOnlyNote": "Only the branch manager can cancel a paid order.",
+    "printFailedToast": "Print failed, check the printer"
   },
-  "paymentQrDialog": {
-    "title": "Payment QR code",
-    "invoiceCode": "Invoice code: {{code}}",
-    "hint": "Hand the tablet to the guest to scan and transfer."
+  "receipt": {
+    "callNumberSlip": "Number slip",
+    "showToPickup": "Show this slip to pick up your order when the number is called."
   },
-  "menuItemCard": {
-    "lowStock": "{{count}} left"
+  "baristaQueue": {
+    "title": "Preparation queue",
+    "subtitle": "{{batches}} batches · {{cups}} cups",
+    "filterAll": "All",
+    "filterDrink": "Drinks",
+    "filterFood": "Food",
+    "emptyTitle": "No batches",
+    "emptyHint": "Orders show up here once they are paid.",
+    "cupCount": "{{count}} cups",
+    "defaultOptions": "Default",
+    "waited": "Waiting {{duration}}",
+    "startBatch": "Start batch",
+    "finishBatch": "Finish batch",
+    "finishCup": "Done",
+    "inProgress": "In progress",
+    "readyTitle": "Ready for pickup",
+    "readyEmpty": "No orders waiting for pickup.",
+    "handOver": "Handed over",
+    "outOfStockTitle": "Paid but out of stock — tell the manager",
+    "outOfStockItem": "#{{call}} · {{name}}",
+    "newOrderBanner": "New order #{{call}}",
+    "newOrderMore": "+{{count}} more"
   },
-  "tableCard": {
-    "reservedArea": "{{area}} · booked {{time}}",
-    "sessionArea": "{{area}} · {{duration}}",
-    "waitingCount": "{{count}} ready",
-    "activeCount": "{{count}} items"
-  },
-  "seatingDialog": {
-    "title": "Open new table",
-    "guestCount": "Guest count",
-    "suggestLabel": "Seating suggestions — pick one option",
-    "bestOption": "Best match",
-    "emptyTitle": "Not enough seats",
-    "emptyHint": "Try a different area or fewer guests.",
-    "optionMeta": "{{area}} · {{seats}} seats · {{leftover}} spare",
-    "optionMergeSuffix": " · merges {{count}} tables"
+  "baristaMenu": {
+    "title": "Items & toppings",
+    "subtitle": "Mark items or toppings as out of stock — the cashier can no longer sell them.",
+    "itemsSection": "Items",
+    "optionsSection": "Options"
   }
 }

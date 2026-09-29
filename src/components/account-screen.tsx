@@ -1,8 +1,11 @@
+import { Switch } from '@ant-design/react-native';
+import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/src/components/screen-header';
+import { Btn } from '@/src/components/ui/button';
 import { Icon } from '@/src/components/ui/icon';
 import { Segmented } from '@/src/components/ui/segmented';
 import { Txt } from '@/src/components/ui/txt';
@@ -16,11 +19,11 @@ import { useAppTheme } from '@/src/theme/use-theme';
 const initials = (name: string) =>
   name.split(' ').slice(-2).map((w) => w[0]).join('').toUpperCase();
 
-/** Màn hình tài khoản dùng chung cho mọi actor — mở khi bấm avatar ở NavRail. */
+/** Màn hình tài khoản dùng chung cho Cashier và Barista — mở khi bấm avatar ở NavRail. */
 export function AccountScreen({ role }: { role: StaffRole }) {
   const theme = useAppTheme();
   const { t, i18n } = useTranslation();
-  const { state } = useStore();
+  const { state, checkOut, setPrinterOffline } = useStore();
   const staff = staffByRole[role];
   const displayName = state.currentUser?.name ?? staff.name;
 
@@ -73,6 +76,33 @@ export function AccountScreen({ role }: { role: StaffRole }) {
             style={styles.languageSegmented}
           />
         </View>
+
+        {role === 'Thu ngân' ? (
+          <View style={cardStyle}>
+            <View style={styles.settingRow}>
+              <Icon name="print" size={18} color={theme.color_text_caption} />
+              <View style={styles.settingText}>
+                <Txt variant="body">{t('account.simulatePrinterFail')}</Txt>
+                <Txt variant="tiny" muted>
+                  {t('account.simulatePrinterFailHint')}
+                </Txt>
+              </View>
+              <Switch checked={state.printerOffline} onChange={setPrinterOffline} />
+            </View>
+          </View>
+        ) : null}
+
+        <Btn
+          label={t('account.logout')}
+          icon="logout"
+          block
+          variant="ghost"
+          style={styles.logout}
+          onPress={() => {
+            checkOut();
+            router.replace('/login');
+          }}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -97,4 +127,5 @@ const styles = StyleSheet.create({
   settingRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   settingText: { flex: 1, gap: 2 },
   languageSegmented: { marginTop: 12 },
+  logout: { marginTop: 12 },
 });
