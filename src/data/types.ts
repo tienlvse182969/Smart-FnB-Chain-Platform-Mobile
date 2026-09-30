@@ -23,6 +23,7 @@ export type MenuOptionChoice = {
   /** giá cộng thêm, ≥ 0 (mục 12.2) */
   priceDelta: number;
   isDefault?: boolean;
+  available?: boolean;
 };
 
 /** BR-14: bắt buộc hay không, số chọn tối thiểu, số chọn tối đa. */
