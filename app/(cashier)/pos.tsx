@@ -1,11 +1,11 @@
 import { Toast } from '@ant-design/react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/src/components/empty-state';
-import { CheckoutDialog } from '@/src/components/pos/checkout-dialog';
+import { ServerCheckoutDialog } from '@/src/components/pos/server-checkout-dialog';
 import { ItemOptionsDialog, type ItemDraft } from '@/src/components/pos/item-options-dialog';
 import { ALL_CATEGORIES, MenuCategoryTabs } from '@/src/components/pos/menu-category-tabs';
 import { MenuItemCard } from '@/src/components/pos/menu-item-card';
@@ -18,6 +18,8 @@ import { formatVnd } from '@/src/data/format';
 import { normalizeText } from '@/src/data/order-utils';
 import { useStore } from '@/src/data/store';
 import type { MenuItem } from '@/src/data/types';
+import { checkoutCart, loadCashierMenu, type CounterOrder } from '@/src/services/cashier-api';
+import { useStation } from '@/src/stations/station-context';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 
@@ -36,15 +38,38 @@ export default function PosScreen() {
     removeCartLine,
     decrementMenuItem,
     clearCart,
-    createOrder,
+    replaceMenu,
   } = useStore();
+  const { selectedStation } = useStation();
   const { menu, categories, cart } = state;
 
   const [width, setWidth] = useState(0);
   const [category, setCategory] = useState(ALL_CATEGORIES);
   const [query, setQuery] = useState('');
   const [picking, setPicking] = useState<MenuItem | null>(null);
-  const [checkoutOrderId, setCheckoutOrderId] = useState<string | null>(null);
+  const [checkoutOrder, setCheckoutOrder] = useState<CounterOrder | null>(null);
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [menuLoading, setMenuLoading] = useState(true);
+  const [menuError, setMenuError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    setMenuLoading(true);
+    setMenuError(null);
+    replaceMenu([], []);
+    loadCashierMenu()
+      .then((result) => {
+        if (active) replaceMenu(result.menu, result.categories);
+      })
+      .catch((reason) => {
+        if (active) setMenuError(reason instanceof Error ? reason.message : 'Không thể tải thực đơn');
+      })
+      .finally(() => {
+        if (active) setMenuLoading(false);
+      });
+    return () => { active = false; };
+  }, [reloadToken, replaceMenu, selectedStation?.id]);
 
   const cartWidth = Math.min(440, Math.max(320, width * 0.32));
   const menuWidth = Math.max(0, width - cartWidth);
@@ -84,20 +109,17 @@ export default function PosScreen() {
     setPicking(null);
   };
 
-  const checkout = () => {
-    const result = createOrder();
-    if (!result.ok) {
-      if (result.unavailable.length > 0) {
-        Toast.fail(
-          t('pos.errors.unavailable', { names: result.unavailable.join(', ') }),
-          3,
-          undefined,
-          false,
-        );
-      }
-      return;
+  const checkout = async () => {
+    if (!cart.length || checkingOut) return;
+    setCheckingOut(true);
+    try {
+      setCheckoutOrder(await checkoutCart(cart));
+    } catch (reason) {
+      Toast.fail(reason instanceof Error ? reason.message : 'Không thể chốt đơn', 3, undefined, false);
+      setReloadToken((value) => value + 1);
+    } finally {
+      setCheckingOut(false);
     }
-    setCheckoutOrderId(result.orderId);
   };
 
   return (
@@ -123,6 +145,13 @@ export default function PosScreen() {
               allLabel={t('pos.allCategories')}
             />
           </View>
+          {menuError ? (
+            <View style={[styles.menuNotice, { borderColor: theme.brand_error, backgroundColor: theme.fill_base }]}>
+              <Txt variant="caption" color={theme.brand_error}>{menuError}</Txt>
+              <Btn label="Tải lại" size="sm" onPress={() => setReloadToken((value) => value + 1)} />
+            </View>
+          ) : null}
+          {menuLoading ? <ActivityIndicator style={styles.loader} color={theme.brand_primary} /> : null}
           <FlatList
             key={`${category}-${columns}`}
             style={styles.list}
@@ -217,7 +246,6 @@ export default function PosScreen() {
           <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
           <View style={styles.cartFooter}>
             <View style={styles.summaryRow}>
-              <Txt variant="body">{t('pos.cartCount', { count: cartCount })}</Txt>
               <Txt style={styles.summaryTotal}>{formatVnd(total)}</Txt>
             </View>
             <Btn
@@ -225,7 +253,8 @@ export default function PosScreen() {
               icon="payment"
               block
               disabled={cart.length === 0}
-              onPress={checkout}
+              loading={checkingOut}
+              onPress={() => void checkout()}
             />
           </View>
         </View>
@@ -237,10 +266,10 @@ export default function PosScreen() {
         onDismiss={() => setPicking(null)}
         onConfirm={addFromDraft}
       />
-      <CheckoutDialog
-        orderId={checkoutOrderId}
+      <ServerCheckoutDialog
+        order={checkoutOrder}
         onClose={(paid) => {
-          setCheckoutOrderId(null);
+          setCheckoutOrder(null);
           if (paid) clearCart();
         }}
       />
@@ -254,6 +283,8 @@ const styles = StyleSheet.create({
   menuSide: { flex: 1 },
   searchWrap: { paddingHorizontal: GRID_PADDING, paddingTop: 12 },
   tabsWrap: { paddingHorizontal: GRID_PADDING, paddingTop: 8 },
+  menuNotice: { margin: GRID_PADDING, padding: 12, borderWidth: StyleSheet.hairlineWidth, borderRadius: 6, gap: 8 },
+  loader: { padding: 20 },
   list: { flex: 1 },
   grid: { gap: GRID_GAP, padding: GRID_PADDING },
   row: { gap: GRID_GAP },

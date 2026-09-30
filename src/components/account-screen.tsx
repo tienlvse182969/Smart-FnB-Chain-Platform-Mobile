@@ -1,10 +1,10 @@
-import { Switch } from '@ant-design/react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/src/components/screen-header';
+import { useAuth } from '@/src/auth/auth-context';
 import { Btn } from '@/src/components/ui/button';
 import { Icon } from '@/src/components/ui/icon';
 import { Segmented } from '@/src/components/ui/segmented';
@@ -23,9 +23,10 @@ const initials = (name: string) =>
 export function AccountScreen({ role }: { role: StaffRole }) {
   const theme = useAppTheme();
   const { t, i18n } = useTranslation();
-  const { state, checkOut, setPrinterOffline } = useStore();
+  const { state, checkOut } = useStore();
+  const { user, logout } = useAuth();
   const staff = staffByRole[role];
-  const displayName = state.currentUser?.name ?? staff.name;
+  const displayName = state.currentUser?.name ?? user?.email ?? staff.name;
 
   const cardStyle = [
     styles.card,
@@ -77,28 +78,14 @@ export function AccountScreen({ role }: { role: StaffRole }) {
           />
         </View>
 
-        {role === 'Thu ngân' ? (
-          <View style={cardStyle}>
-            <View style={styles.settingRow}>
-              <Icon name="print" size={18} color={theme.color_text_caption} />
-              <View style={styles.settingText}>
-                <Txt variant="body">{t('account.simulatePrinterFail')}</Txt>
-                <Txt variant="tiny" muted>
-                  {t('account.simulatePrinterFailHint')}
-                </Txt>
-              </View>
-              <Switch checked={state.printerOffline} onChange={setPrinterOffline} />
-            </View>
-          </View>
-        ) : null}
-
         <Btn
           label={t('account.logout')}
           icon="logout"
           block
           variant="ghost"
           style={styles.logout}
-          onPress={() => {
+          onPress={async () => {
+            await logout();
             checkOut();
             router.replace('/login');
           }}

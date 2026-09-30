@@ -1,5 +1,5 @@
-import { Switch } from '@ant-design/react-native';
-import { useMemo } from 'react';
+import { Switch, Toast } from '@ant-design/react-native';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenHeader } from '@/src/components/screen-header';
 import { Txt } from '@/src/components/ui/txt';
 import { useStore } from '@/src/data/store';
+import { setMenuItemAvailability as updateItem, setMenuOptionAvailability as updateOption } from '@/src/services/barista-api';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 
@@ -19,6 +20,31 @@ export default function BaristaMenuScreen() {
   const { t } = useTranslation();
   const { state, isMenuAvailable, isOptionAvailable, setMenuAvailability, setOptionAvailability } =
     useStore();
+  const [workingId, setWorkingId] = useState<string | null>(null);
+
+  const changeItem = async (id: string, available: boolean) => {
+    setWorkingId(id);
+    try {
+      await updateItem(id, available);
+      setMenuAvailability(id, available);
+    } catch (reason) {
+      Toast.fail(reason instanceof Error ? reason.message : 'Không thể cập nhật món', 2, undefined, false);
+    } finally {
+      setWorkingId(null);
+    }
+  };
+
+  const changeOption = async (id: string, available: boolean) => {
+    setWorkingId(id);
+    try {
+      await updateOption(id, available);
+      setOptionAvailability(id, available);
+    } catch (reason) {
+      Toast.fail(reason instanceof Error ? reason.message : 'Không thể cập nhật tùy chọn', 2, undefined, false);
+    } finally {
+      setWorkingId(null);
+    }
+  };
 
   // tuỳ chọn không bắt buộc (topping, thêm…) mới có thể hết — size/đường/đá luôn sẵn
   const optionChoices = useMemo(() => {
@@ -53,7 +79,7 @@ export default function BaristaMenuScreen() {
                   {c.group}
                 </Txt>
               </View>
-              <Switch checked={isOptionAvailable(c.id)} onChange={(v) => setOptionAvailability(c.id, v)} />
+              <Switch disabled={workingId !== null} checked={isOptionAvailable(c.id)} onChange={(v) => void changeOption(c.id, v)} />
             </View>
           ))}
         </View>
@@ -72,7 +98,7 @@ export default function BaristaMenuScreen() {
                   {state.categories.find((c) => c.id === item.categoryId)?.label}
                 </Txt>
               </View>
-              <Switch checked={isMenuAvailable(item.id)} onChange={(v) => setMenuAvailability(item.id, v)} />
+              <Switch disabled={workingId !== null} checked={isMenuAvailable(item.id)} onChange={(v) => void changeItem(item.id, v)} />
             </View>
           ))}
         </View>

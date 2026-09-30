@@ -1,10 +1,11 @@
 import { Redirect } from 'expo-router';
 
-import { useStore } from '@/src/data/store';
+import { useAuth } from '@/src/auth/auth-context';
 
 export default function Index() {
-  const { state } = useStore();
-  if (state.role === 'Thu ngân') return <Redirect href="/(cashier)/pos" />;
-  if (state.role === 'Pha chế') return <Redirect href="/(barista)/queue" />;
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user?.role === 'CASHIER') return <Redirect href="/select-station" />;
+  if (user?.role === 'BARISTA') return <Redirect href="/(barista)/queue" />;
   return <Redirect href="/login" />;
 }

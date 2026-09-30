@@ -79,7 +79,8 @@ type Action =
   | { type: 'handOver'; orderId: string }
   | { type: 'setMenuAvailability'; menuItemId: string; available: boolean }
   | { type: 'setOptionAvailability'; choiceId: string; available: boolean }
-  | { type: 'tick' };
+  | { type: 'tick' }
+  | { type: 'replaceMenu'; menu: MenuItem[]; categories: MenuCategory[] };
 
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
 const rid = (p: string) => `${p}_${Math.random().toString(36).slice(2, 9)}`;
@@ -172,6 +173,15 @@ function flagOutOfStock(state: State, matches: (l: OrderLine) => boolean): State
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
+    case 'replaceMenu':
+      return {
+        ...state,
+        menu: action.menu,
+        categories: action.categories,
+        unavailableOptions: action.menu.flatMap((item) =>
+          item.options.flatMap((group) => group.choices.filter((choice) => choice.available === false).map((choice) => choice.id)),
+        ),
+      };
     case 'checkIn':
       return { ...state, role: action.role, currentUser: action.user, checkedInAt: iso() };
     // đơn và menu giữ nguyên khi đăng xuất để demo Cashier → Barista trên cùng một máy
@@ -383,6 +393,7 @@ type StoreValue = {
   removeCartLine: (key: string) => void;
   decrementMenuItem: (menuItemId: string) => void;
   clearCart: () => void;
+  replaceMenu: (menu: MenuItem[], categories: MenuCategory[]) => void;
   /** Chốt đơn từ giỏ hiện tại: kiểm tra lại món còn bán, chụp giá lúc bán (BR-15, BR-16). */
   createOrder: () => CreateOrderResult;
   payCash: (orderId: string) => void;
@@ -462,6 +473,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [state.cart, state.menu, state.unavailableOptions, state.currentUser],
   );
 
+  const replaceMenu = useCallback(
+    (menu: MenuItem[], categories: MenuCategory[]) =>
+      dispatch({ type: 'replaceMenu', menu, categories }),
+    [],
+  );
+
   const value = useMemo<StoreValue>(() => {
     const batches = buildBatches(state.orders);
     const outOfStockEntries: BatchEntry[] = [];
@@ -489,6 +506,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       removeCartLine: (key) => dispatch({ type: 'removeCartLine', key }),
       decrementMenuItem: (menuItemId) => dispatch({ type: 'decrementMenuItem', menuItemId }),
       clearCart: () => dispatch({ type: 'clearCart' }),
+      replaceMenu,
       createOrder,
       payCash: (orderId) =>
         dispatch({ type: 'payCash', orderId, cashier: state.currentUser?.name ?? '' }),
@@ -509,7 +527,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       isMenuAvailable: (menuItemId) => state.menu.find((m) => m.id === menuItemId)?.available ?? false,
       isOptionAvailable: (choiceId) => !state.unavailableOptions.includes(choiceId),
     };
-  }, [state, createOrder]);
+  }, [state, createOrder, replaceMenu]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

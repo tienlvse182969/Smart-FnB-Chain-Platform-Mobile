@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { Toast } from '@ant-design/react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BatchCard } from '@/src/components/barista/batch-card';
@@ -11,7 +12,10 @@ import { Pill } from '@/src/components/ui/pill';
 import { Txt } from '@/src/components/ui/txt';
 import { durationSince } from '@/src/data/format';
 import { useStore } from '@/src/data/store';
+import type { Batch } from '@/src/data/types';
 import { useNow } from '@/src/data/use-now';
+import { completeUnit, deliverOrder, loadBaristaQueue, loadReadyOrders, startBatch, type ReadyCounterOrder } from '@/src/services/barista-api';
+import { loadBaristaMenu } from '@/src/services/cashier-api';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 
@@ -26,8 +30,46 @@ export default function BaristaQueueScreen() {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const now = useNow(15_000);
-  const { state, batches, readyOrders, outOfStockEntries, startBatch, finishLines, handOver } = useStore();
+  const { state, replaceMenu } = useStore();
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [readyOrders, setReadyOrders] = useState<ReadyCounterOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [working, setWorking] = useState(false);
   const [kind, setKind] = useState<KindFilter>('all');
+
+  const refresh = useCallback(async (showLoader = false) => {
+    if (showLoader) setLoading(true);
+    try {
+      const [queue, ready, menu] = await Promise.all([loadBaristaQueue(), loadReadyOrders(), loadBaristaMenu()]);
+      setBatches(queue);
+      setReadyOrders(ready);
+      replaceMenu(menu.menu, menu.categories);
+    } catch (reason) {
+      Toast.fail(reason instanceof Error ? reason.message : 'Không thể tải hàng đợi', 2, undefined, false);
+    } finally {
+      setLoading(false);
+    }
+  }, [replaceMenu]);
+
+  useEffect(() => {
+    void refresh(true);
+    const timer = setInterval(() => void refresh(), 5_000);
+    return () => clearInterval(timer);
+  }, [refresh]);
+
+  const mutate = async (action: () => Promise<unknown>) => {
+    if (working) return;
+    setWorking(true);
+    try {
+      await action();
+      await refresh();
+    } catch (reason) {
+      Toast.fail(reason instanceof Error ? reason.message : 'Thao tác thất bại', 2, undefined, false);
+      await refresh();
+    } finally {
+      setWorking(false);
+    }
+  };
 
   const wide = width >= 900;
   const kindOf = (categoryId: string) => state.categories.find((c) => c.id === categoryId)?.kind;
@@ -62,14 +104,15 @@ export default function BaristaQueueScreen() {
             </View>
             <View style={styles.readyInfo}>
               <Txt variant="caption" muted numberOfLines={1}>
-                {o.lines.map((l) => `${l.qty}× ${l.name}`).join(', ')}
+                {o.items.map((item) => `${item.quantity}× ${item.itemName}`).join(', ')}
               </Txt>
               <Txt variant="tiny" muted>
                 {o.readyAt ? durationSince(o.readyAt) : ''}
               </Txt>
             </View>
             <Pressable
-              onPress={() => handOver(o.id)}
+              disabled={working}
+              onPress={() => void mutate(() => deliverOrder(o.id))}
               style={({ pressed }) => [
                 styles.handOverBtn,
                 { backgroundColor: theme.brand_primary },
@@ -99,26 +142,7 @@ export default function BaristaQueueScreen() {
           <Pill label={t('baristaQueue.filterFood')} selected={kind === 'food'} onPress={() => setKind('food')} />
         </View>
 
-        {outOfStockEntries.length > 0 ? (
-          <View style={[styles.alert, { borderColor: '#C0392B', backgroundColor: '#FBDBD8' }]}>
-            <Icon name="unavailable" size={20} color="#C0392B" />
-            <View style={styles.alertText}>
-              <Txt variant="bodyStrong" color="#C0392B">
-                {t('baristaQueue.outOfStockTitle')}
-              </Txt>
-              <Txt variant="body">
-                {outOfStockEntries
-                  .map((e) =>
-                    t('baristaQueue.outOfStockItem', {
-                      call: String(e.callNumber).padStart(3, '0'),
-                      name: e.line.name,
-                    }),
-                  )
-                  .join('  ·  ')}
-              </Txt>
-            </View>
-          </View>
-        ) : null}
+        {loading ? <ActivityIndicator color={theme.brand_primary} style={styles.loader} /> : null}
 
         <View style={[styles.body, wide && styles.bodyWide]}>
           <View style={styles.queueCol}>
@@ -131,7 +155,12 @@ export default function BaristaQueueScreen() {
                 contentContainerStyle={styles.list}
                 ListFooterComponent={wide ? null : readyPanel}
                 renderItem={({ item }) => (
-                  <BatchCard batch={item} now={now} onStart={startBatch} onFinish={finishLines} />
+                  <BatchCard
+                    batch={item}
+                    now={now}
+                    onStart={(unitIds) => void mutate(() => startBatch(unitIds))}
+                    onFinish={(unitIds) => void mutate(() => Promise.all(unitIds.map(completeUnit)))}
+                  />
                 )}
               />
             )}
@@ -148,6 +177,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   pad: { flex: 1, paddingHorizontal: 20, paddingTop: 16 },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingBottom: 8 },
+  loader: { paddingVertical: 8 },
   alert: {
     flexDirection: 'row',
     alignItems: 'center',
