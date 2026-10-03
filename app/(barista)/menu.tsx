@@ -1,5 +1,6 @@
 import { Switch, Toast } from '@ant-design/react-native';
-import { useMemo, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +9,7 @@ import { ScreenHeader } from '@/src/components/screen-header';
 import { Txt } from '@/src/components/ui/txt';
 import { useStore } from '@/src/data/store';
 import { setMenuItemAvailability as updateItem, setMenuOptionAvailability as updateOption } from '@/src/services/barista-api';
+import { loadBaristaMenu } from '@/src/services/cashier-api';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 
@@ -18,15 +20,32 @@ import { useAppTheme } from '@/src/theme/use-theme';
 export default function BaristaMenuScreen() {
   const theme = useAppTheme();
   const { t } = useTranslation();
-  const { state, isMenuAvailable, isOptionAvailable, setMenuAvailability, setOptionAvailability } =
+  const { state, isMenuAvailable, isOptionAvailable, setMenuAvailability, setOptionAvailability, replaceMenu } =
     useStore();
   const [workingId, setWorkingId] = useState<string | null>(null);
+
+  const reload = useCallback(async () => {
+    try {
+      const menu = await loadBaristaMenu();
+      replaceMenu(menu.menu, menu.categories);
+    } catch (reason) {
+      Toast.fail(reason instanceof Error ? reason.message : 'Không thể tải danh sách món', 2, undefined, false);
+    }
+  }, [replaceMenu]);
+
+  // màn hình tự tải menu mỗi lần được focus, không dựa vào việc hàng đợi đã tải trước
+  useFocusEffect(
+    useCallback(() => {
+      void reload();
+    }, [reload]),
+  );
 
   const changeItem = async (id: string, available: boolean) => {
     setWorkingId(id);
     try {
       await updateItem(id, available);
       setMenuAvailability(id, available);
+      await reload();
     } catch (reason) {
       Toast.fail(reason instanceof Error ? reason.message : 'Không thể cập nhật món', 2, undefined, false);
     } finally {
@@ -39,6 +58,7 @@ export default function BaristaMenuScreen() {
     try {
       await updateOption(id, available);
       setOptionAvailability(id, available);
+      await reload();
     } catch (reason) {
       Toast.fail(reason instanceof Error ? reason.message : 'Không thể cập nhật tùy chọn', 2, undefined, false);
     } finally {
