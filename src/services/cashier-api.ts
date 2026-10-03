@@ -66,7 +66,7 @@ async function loadMenu(path: '/cashier/context' | '/barista/context'): Promise<
 }> {
   const { data } = await apiClient.get<CashierContextResponse>(path);
   const categoryMap = new Map<string, MenuCategory>();
-  const menu = data.menuItems.map(({ menuItem, isAvailable, remainingPortions }) => {
+  const menu = data.menuItems.map(({ menuItem, isAvailable }) => {
     if (!categoryMap.has(menuItem.category.id)) {
       categoryMap.set(menuItem.category.id, {
         id: menuItem.category.id,
@@ -79,7 +79,8 @@ async function loadMenu(path: '/cashier/context' | '/barista/context'): Promise<
       name: menuItem.name,
       categoryId: menuItem.category.id,
       price: Number(menuItem.price),
-      available: isAvailable && menuItem.isAvailable && (remainingPortions === null || remainingPortions > 0),
+      // còn/hết chỉ do pha chế bật/tắt (cờ chi nhánh); số suất không ảnh hưởng
+      available: isAvailable && menuItem.isAvailable,
       image: menuItem.imageUrl ?? '',
       batchable: true,
       options: menuItem.optionGroups.map(({ group }) => ({
