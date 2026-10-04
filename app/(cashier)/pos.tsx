@@ -20,6 +20,10 @@ import { normalizeText } from '@/src/data/order-utils';
 import { useStore } from '@/src/data/store';
 import type { MenuItem } from '@/src/data/types';
 import { checkoutCart, loadCashierMenu, type CounterOrder } from '@/src/services/cashier-api';
+import {
+  snapshotFromCart,
+  updateCustomerDisplay,
+} from '@/src/services/customer-display-realtime';
 import { useStation } from '@/src/stations/station-context';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
@@ -53,6 +57,14 @@ export default function PosScreen() {
   const [menuLoading, setMenuLoading] = useState(true);
   const [menuError, setMenuError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+
+  useEffect(() => {
+    if (!selectedStation) return;
+    const timer = setTimeout(() => {
+      void updateCustomerDisplay(selectedStation.id, snapshotFromCart(cart));
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [cart, selectedStation]);
 
   useEffect(() => {
     let active = true;
@@ -270,6 +282,7 @@ export default function PosScreen() {
       />
       <ServerCheckoutDialog
         order={checkoutOrder}
+        cartSnapshot={snapshotFromCart(cart)}
         onClose={(paid) => {
           setCheckoutOrder(null);
           if (paid) clearCart();

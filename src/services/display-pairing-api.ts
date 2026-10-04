@@ -3,10 +3,9 @@ import { ApiError } from './auth-types';
 
 /**
  * Ghép màn hình phía khách với quầy bằng mã OTP 6 số (đặc tả v9.1, mục 11.10, BR-45).
- * Backend chưa có API ghép → mặc định chạy mock. Khi backend xong, đặt
- * `EXPO_PUBLIC_DISPLAY_PAIRING_MOCK=false` để gọi API thật.
+ * Mặc định gọi backend thật. Chỉ bật mock rõ ràng khi dựng UI độc lập.
  */
-const USE_MOCK = process.env.EXPO_PUBLIC_DISPLAY_PAIRING_MOCK !== 'false';
+const USE_MOCK = process.env.EXPO_PUBLIC_DISPLAY_PAIRING_MOCK === 'true';
 export const isPairingMock = USE_MOCK;
 
 /** Một quầy nhập sai quá 5 lần liên tiếp thì bị khoá ghép 5 phút (BR-45). */
@@ -38,8 +37,12 @@ export class DisplayPairingError extends Error {
 export async function pairCustomerDisplay(stationId: string, code: string): Promise<CustomerDisplay> {
   if (USE_MOCK) return mockPair(stationId, code);
   try {
-    const { data } = await apiClient.post<CustomerDisplay>(`/stations/${stationId}/display-pairing`, { code });
-    return data;
+    const { data } = await apiClient.post<{ deviceId: string }>('/stations/pair-customer-display', {
+      stationId,
+      code,
+      deviceName: 'Màn hình khách',
+    });
+    return { deviceId: data.deviceId, pairedAt: new Date().toISOString() };
   } catch (reason) {
     if (!(reason instanceof ApiError)) throw reason;
     if (reason.status === 429) throw new DisplayPairingError('locked', reason.message, Date.now() + PAIRING_LOCK_MS);
@@ -53,8 +56,13 @@ export async function pairCustomerDisplay(stationId: string, code: string): Prom
 /** Màn hình khách đang ghép với quầy (null = chưa ghép). */
 export async function getCustomerDisplay(stationId: string): Promise<CustomerDisplay | null> {
   if (USE_MOCK) return mockDisplays.get(stationId) ?? null;
-  const { data } = await apiClient.get<CustomerDisplay | null>(`/stations/${stationId}/display`);
-  return data;
+  const { data } = await apiClient.get<{
+    id: string;
+    displayDevices?: { id: string; type: string; pairedAt: string }[];
+  }[]>('/stations');
+  const station = data.find((value) => value.id === stationId);
+  const display = station?.displayDevices?.find((value) => value.type === 'CUSTOMER_DISPLAY');
+  return display ? { deviceId: display.id, pairedAt: display.pairedAt } : null;
 }
 
 // ---- mock: mô phỏng đúng luật của server để dựng giao diện trước ----

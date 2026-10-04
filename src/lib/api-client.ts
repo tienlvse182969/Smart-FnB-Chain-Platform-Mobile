@@ -3,10 +3,10 @@ import { create, type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { ApiError, type AuthResponse } from '@/src/services/auth-types';
 import { clearTokens, getTokens, saveTokens } from '@/src/services/token-storage';
 
-const baseURL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3100/api/v1';
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3100/api/v1';
 
-export const apiClient = create({ baseURL, timeout: 15_000 });
-const refreshClient = create({ baseURL, timeout: 15_000 });
+export const apiClient = create({ baseURL: API_BASE_URL, timeout: 15_000 });
+const refreshClient = create({ baseURL: API_BASE_URL, timeout: 15_000 });
 
 let refreshPromise: Promise<string> | null = null;
 

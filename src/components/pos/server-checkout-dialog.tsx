@@ -19,14 +19,20 @@ import { Btn } from '@/src/components/ui/button';
 import { Field } from '@/src/components/ui/field';
 import { Txt } from '@/src/components/ui/txt';
 import { Segmented } from '@/src/components/ui/segmented';
+import {
+  type DisplaySnapshot,
+  updateCustomerDisplay,
+} from '@/src/services/customer-display-realtime';
 
 type PaymentTab = 'cash' | 'qr';
 
 export function ServerCheckoutDialog({
   order,
+  cartSnapshot,
   onClose,
 }: {
   order: CounterOrder | null;
+  cartSnapshot: DisplaySnapshot;
   onClose: (paid: boolean) => void;
 }) {
   const { selectedStation } = useStation();
@@ -44,20 +50,40 @@ export function ServerCheckoutDialog({
   }, [order]);
 
   useEffect(() => {
+    if (!order || !selectedStation) return;
+    void updateCustomerDisplay(selectedStation.id, {
+      ...cartSnapshot,
+      state: 'PAYMENT_PENDING',
+      orderCode: order.orderCode,
+    });
+  }, [cartSnapshot, order, selectedStation]);
+
+  useEffect(() => {
     if (!order || !qrPayment || paidOrder) return;
     const poll = setInterval(() => {
       void getCounterOrder(order.id)
         .then((latest) => {
-          if (latest.paymentStatus === 'PAID') setPaidOrder(latest);
+          if (latest.paymentStatus === 'PAID') {
+            setPaidOrder(latest);
+            if (selectedStation) {
+              void updateCustomerDisplay(selectedStation.id, {
+                ...cartSnapshot,
+                state: 'PAID',
+                orderCode: latest.orderCode,
+                callNumber: latest.callNumber ?? undefined,
+              });
+            }
+          }
           else if (latest.status === 'CANCELLED') {
             toast.info('Mã QR đã hết hạn. Giỏ hàng được giữ lại để bạn chốt lại đơn.', 3, undefined, false);
+            if (selectedStation) void updateCustomerDisplay(selectedStation.id, cartSnapshot);
             onClose(false);
           }
         })
         .catch(() => undefined);
     }, 2_000);
     return () => clearInterval(poll);
-  }, [onClose, order, paidOrder, qrPayment]);
+  }, [cartSnapshot, onClose, order, paidOrder, qrPayment, selectedStation]);
 
   const total = Number(order?.totalAmount ?? 0);
   const tenderedAmount = Number(tendered.replace(/[^0-9]/g, ''));
@@ -70,6 +96,7 @@ export function ServerCheckoutDialog({
       setSubmitting(true);
       try {
         await cancelUnpaidOrder(order.id, 'Thu ngân quay lại sửa đơn');
+        if (selectedStation) void updateCustomerDisplay(selectedStation.id, cartSnapshot);
       } catch (reason) {
         toast.fail(reason instanceof Error ? reason.message : 'Không thể hủy đơn', 2, undefined, false);
         setSubmitting(false);
@@ -86,6 +113,13 @@ export function ServerCheckoutDialog({
     try {
       const result = await collectCash(order.id, selectedStation.id, tenderedAmount);
       setPaidOrder(result.order);
+      void updateCustomerDisplay(selectedStation.id, {
+        ...cartSnapshot,
+        state: 'PAID',
+        orderCode: result.order.orderCode,
+        callNumber: result.order.callNumber ?? undefined,
+        paymentMethod: 'CASH',
+      });
     } catch (reason) {
       toast.fail(reason instanceof Error ? reason.message : 'Không thể ghi nhận thanh toán', 3, undefined, false);
     } finally {
@@ -97,7 +131,18 @@ export function ServerCheckoutDialog({
     if (submitting || qrPayment) return;
     setSubmitting(true);
     try {
-      setQrPayment(await createPayosPayment(order.id));
+      const payment = await createPayosPayment(order.id);
+      setQrPayment(payment);
+      if (selectedStation && payment.qrCode) {
+        void updateCustomerDisplay(selectedStation.id, {
+          ...cartSnapshot,
+          state: 'PAYMENT_QR',
+          orderCode: order.orderCode,
+          paymentMethod: 'PAYOS',
+          qrCode: payment.qrCode,
+          qrExpiresAt: payment.expiresAt ?? undefined,
+        });
+      }
     } catch (reason) {
       toast.fail(reason instanceof Error ? reason.message : 'Không thể tạo mã QR', 3, undefined, false);
     } finally {
