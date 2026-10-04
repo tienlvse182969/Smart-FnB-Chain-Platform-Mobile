@@ -1,4 +1,4 @@
-import { Toast } from '@ant-design/react-native';
+import { toast } from '@/src/components/ui/toast';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -45,7 +45,7 @@ export default function BaristaQueueScreen() {
       setReadyOrders(ready);
       replaceMenu(menu.menu, menu.categories);
     } catch (reason) {
-      Toast.fail(reason instanceof Error ? reason.message : 'Không thể tải hàng đợi', 2, undefined, false);
+      toast.fail(reason instanceof Error ? reason.message : 'Không thể tải hàng đợi', 2, undefined, false);
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,7 @@ export default function BaristaQueueScreen() {
       await action();
       await refresh();
     } catch (reason) {
-      Toast.fail(reason instanceof Error ? reason.message : 'Thao tác thất bại', 2, undefined, false);
+      toast.fail(reason instanceof Error ? reason.message : 'Thao tác thất bại', 2, undefined, false);
       await refresh();
     } finally {
       setWorking(false);

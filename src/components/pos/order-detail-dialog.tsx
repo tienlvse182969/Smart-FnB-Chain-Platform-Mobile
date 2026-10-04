@@ -1,4 +1,4 @@
-import { Toast } from '@ant-design/react-native';
+import { toast } from '@/src/components/ui/toast';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
@@ -55,9 +55,9 @@ export function OrderDetailDialog({ orderId, onClose }: { orderId: string | null
                 reprint(order.id);
                 // in lại có thể vẫn lỗi nếu máy in còn offline (BR-21)
                 if (state.printerOffline) {
-                  Toast.fail(t('orders.printFailedToast'), 1.5, undefined, false);
+                  toast.fail(t('orders.printFailedToast'), 1.5, undefined, false);
                 } else {
-                  Toast.success(t('orders.reprinted', { count: order.reprintCount + 1 }), 1.5, undefined, false);
+                  toast.success(t('orders.reprinted', { count: order.reprintCount + 1 }), 1.5, undefined, false);
                 }
               }}
             />

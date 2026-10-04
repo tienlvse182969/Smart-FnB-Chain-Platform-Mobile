@@ -172,5 +172,46 @@
     "subtitle": "Mark items or toppings as out of stock — the cashier can no longer sell them.",
     "itemsSection": "Items",
     "optionsSection": "Options"
+  },
+  "customerDisplay": {
+    "label": "Customer display",
+    "section": "Customer display",
+    "pair": "Pair",
+    "pairCta": "Pair customer display",
+    "pairAnother": "Pair another device",
+    "replaceNote": "Pairing a new device removes the current one from this counter. Full revocation is done by the manager.",
+    "pairedAt": "paired {{time}}",
+    "disconnectedHint": "QR payments will show on this device so you can turn it to the customer.",
+    "simulateDisconnect": "Simulate: customer display offline",
+    "simulateDisconnectHint": "Demo only — to try the QR flow while the customer display is offline (BR-47).",
+    "status": {
+      "loading": "Checking…",
+      "unpaired": "Not paired",
+      "unpairedLong": "This counter has no customer display yet",
+      "connected": "Connected",
+      "disconnected": "Offline"
+    },
+    "dialog": {
+      "title": "Pair customer display",
+      "instruction": "Enter the 6-digit code shown on the customer display of {{station}}.",
+      "codeLabel": "6-digit pairing code",
+      "codeHint": "The code changes every 5 minutes. If it expires, enter the new one.",
+      "replaceHint": "{{station}} already has a customer display. Pairing a new one removes the old one.",
+      "submitting": "Pairing…",
+      "attemptsLeft": "{{count}} attempts left.",
+      "locked": "Too many wrong codes. Pairing is locked for this counter — try again in {{time}}.",
+      "errors": {
+        "invalid": "Wrong code. Check the code on the customer display.",
+        "expired": "This code has expired. The display now shows a new one — enter that instead.",
+        "network": "Can't reach the server. Please try again."
+      },
+      "clear": "Clear",
+      "backspace": "Delete digit",
+      "cancel": "Close",
+      "mockHint": "Demo: 000000 = wrong code, 111111 = expired, any other code = paired.",
+      "successTitle": "Customer display paired",
+      "successHint": "The customer display of {{station}} is connected. The cart and QR codes will show there.",
+      "done": "Done"
+    }
   }
 }

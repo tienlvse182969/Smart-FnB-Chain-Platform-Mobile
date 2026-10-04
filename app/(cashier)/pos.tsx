@@ -1,10 +1,11 @@
-import { Toast } from '@ant-design/react-native';
+import { toast } from '@/src/components/ui/toast';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/src/components/empty-state';
+import { CustomerDisplayBar } from '@/src/components/pos/customer-display-bar';
 import { ServerCheckoutDialog } from '@/src/components/pos/server-checkout-dialog';
 import { ItemOptionsDialog, type ItemDraft } from '@/src/components/pos/item-options-dialog';
 import { ALL_CATEGORIES, MenuCategoryTabs } from '@/src/components/pos/menu-category-tabs';
@@ -115,7 +116,7 @@ export default function PosScreen() {
     try {
       setCheckoutOrder(await checkoutCart(cart));
     } catch (reason) {
-      Toast.fail(reason instanceof Error ? reason.message : 'Không thể chốt đơn', 3, undefined, false);
+      toast.fail(reason instanceof Error ? reason.message : 'Không thể chốt đơn', 3, undefined, false);
       setReloadToken((value) => value + 1);
     } finally {
       setCheckingOut(false);
@@ -199,6 +200,7 @@ export default function PosScreen() {
             </View>
             {cart.length > 0 ? <IconButton name="remove" size={18} onPress={clearCart} /> : null}
           </View>
+          <CustomerDisplayBar />
           <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
 
           {cart.length === 0 ? (

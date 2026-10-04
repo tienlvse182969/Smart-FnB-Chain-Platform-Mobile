@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,8 +20,11 @@ import { useAppTheme } from '@/src/theme/use-theme';
 const initials = (name: string) =>
   name.split(' ').slice(-2).map((w) => w[0]).join('').toUpperCase();
 
-/** Màn hình tài khoản dùng chung cho Cashier và Barista — mở khi bấm avatar ở NavRail. */
-export function AccountScreen({ role }: { role: StaffRole }) {
+/**
+ * Màn hình tài khoản dùng chung cho Cashier và Barista — mở khi bấm avatar ở NavRail.
+ * `children` = mục riêng của từng vai trò, hiện ngay dưới thẻ hồ sơ.
+ */
+export function AccountScreen({ role, children }: { role: StaffRole; children?: ReactNode }) {
   const theme = useAppTheme();
   const { t, i18n } = useTranslation();
   const { state, checkOut } = useStore();
@@ -53,6 +57,8 @@ export function AccountScreen({ role }: { role: StaffRole }) {
             {t(staffRoleKey[role])} · {staff.branch}
           </Txt>
         </View>
+
+        {children}
 
         <Txt variant="bodyStrong" muted style={styles.sectionTitle}>
           {t('account.settingsSection')}

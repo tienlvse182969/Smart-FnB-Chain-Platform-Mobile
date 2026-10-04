@@ -1,4 +1,4 @@
-import { Toast } from '@ant-design/react-native';
+import { toast } from '@/src/components/ui/toast';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import QRCode from 'react-native-qrcode-svg';
@@ -62,7 +62,7 @@ export function CheckoutDialog({
     printed.current = order.id;
     // mask=false để toast không chặn thu ngân bấm "Đơn mới"
     if (order.printStatus !== 'In thất bại') {
-      Toast.success(t('checkout.printed'), 1.5, undefined, false);
+      toast.success(t('checkout.printed'), 1.5, undefined, false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paid, order?.id]);
@@ -129,9 +129,9 @@ export function CheckoutDialog({
                     reprint(order.id);
                     // in lại vẫn lỗi nếu máy in còn offline (BR-21)
                     if (state.printerOffline) {
-                      Toast.fail(t('orders.printFailedToast'), 1.5, undefined, false);
+                      toast.fail(t('orders.printFailedToast'), 1.5, undefined, false);
                     } else {
-                      Toast.success(t('checkout.printed'), 1.5, undefined, false);
+                      toast.success(t('checkout.printed'), 1.5, undefined, false);
                     }
                   }}
                 />
@@ -195,7 +195,7 @@ export function CheckoutDialog({
                         label={t('checkout.recheck')}
                         icon="refresh"
                         variant="ghost"
-                        onPress={() => Toast.info(t('checkout.recheckNone'), 2.5)}
+                        onPress={() => toast.info(t('checkout.recheckNone'), 2.5)}
                       />
                       <Btn
                         label={t('checkout.switchCash')}

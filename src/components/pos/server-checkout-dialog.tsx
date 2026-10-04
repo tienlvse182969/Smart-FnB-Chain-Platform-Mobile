@@ -1,4 +1,4 @@
-import { Toast } from '@ant-design/react-native';
+import { toast } from '@/src/components/ui/toast';
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
@@ -50,7 +50,7 @@ export function ServerCheckoutDialog({
         .then((latest) => {
           if (latest.paymentStatus === 'PAID') setPaidOrder(latest);
           else if (latest.status === 'CANCELLED') {
-            Toast.info('Mã QR đã hết hạn. Giỏ hàng được giữ lại để bạn chốt lại đơn.', 3, undefined, false);
+            toast.info('Mã QR đã hết hạn. Giỏ hàng được giữ lại để bạn chốt lại đơn.', 3, undefined, false);
             onClose(false);
           }
         })
@@ -71,7 +71,7 @@ export function ServerCheckoutDialog({
       try {
         await cancelUnpaidOrder(order.id, 'Thu ngân quay lại sửa đơn');
       } catch (reason) {
-        Toast.fail(reason instanceof Error ? reason.message : 'Không thể hủy đơn', 2, undefined, false);
+        toast.fail(reason instanceof Error ? reason.message : 'Không thể hủy đơn', 2, undefined, false);
         setSubmitting(false);
         return;
       }
@@ -87,7 +87,7 @@ export function ServerCheckoutDialog({
       const result = await collectCash(order.id, selectedStation.id, tenderedAmount);
       setPaidOrder(result.order);
     } catch (reason) {
-      Toast.fail(reason instanceof Error ? reason.message : 'Không thể ghi nhận thanh toán', 3, undefined, false);
+      toast.fail(reason instanceof Error ? reason.message : 'Không thể ghi nhận thanh toán', 3, undefined, false);
     } finally {
       setSubmitting(false);
     }
@@ -99,7 +99,7 @@ export function ServerCheckoutDialog({
     try {
       setQrPayment(await createPayosPayment(order.id));
     } catch (reason) {
-      Toast.fail(reason instanceof Error ? reason.message : 'Không thể tạo mã QR', 3, undefined, false);
+      toast.fail(reason instanceof Error ? reason.message : 'Không thể tạo mã QR', 3, undefined, false);
     } finally {
       setSubmitting(false);
     }
@@ -107,7 +107,7 @@ export function ServerCheckoutDialog({
 
   const changeTab = (next: PaymentTab) => {
     if (qrPayment && next === 'cash') {
-      Toast.info('Mã QR đang hoạt động. Hãy chờ thanh toán hoặc mã hết hạn.', 2, undefined, false);
+      toast.info('Mã QR đang hoạt động. Hãy chờ thanh toán hoặc mã hết hạn.', 2, undefined, false);
       return;
     }
     setTab(next);

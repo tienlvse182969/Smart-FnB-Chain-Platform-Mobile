@@ -11,7 +11,9 @@ import {
   CircleCheck,
   CircleX,
   Clock,
+  Info,
   CupSoda,
+  Delete,
   LayoutGrid,
   ListFilter,
   Loader,
@@ -19,6 +21,9 @@ import {
   Lock,
   LogIn,
   LogOut,
+  MonitorCheck,
+  MonitorOff,
+  MonitorSmartphone,
   Minus,
   Moon,
   PackageCheck,
@@ -89,6 +94,11 @@ export const Icons = {
   play: Play,
   search: Search,
   clear: CircleX,
+  info: Info,
+  display: MonitorSmartphone,
+  displayPaired: MonitorCheck,
+  displayOff: MonitorOff,
+  backspace: Delete,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof Icons;
