@@ -172,5 +172,46 @@
     "subtitle": "Báo hết món hoặc hết topping — quầy thu ngân sẽ không bán được ngay.",
     "itemsSection": "Món",
     "optionsSection": "Tuỳ chọn"
+  },
+  "customerDisplay": {
+    "label": "Màn hình khách",
+    "section": "Màn hình phía khách",
+    "pair": "Ghép",
+    "pairCta": "Ghép màn hình khách",
+    "pairAnother": "Ghép máy khác",
+    "replaceNote": "Ghép máy mới thì máy đang ghép tự bị gỡ khỏi quầy. Thu hồi hẳn do Quản lý thực hiện.",
+    "pairedAt": "ghép lúc {{time}}",
+    "disconnectedHint": "Khi thu QR, mã sẽ hiện ngay trên máy này để xoay cho khách quét.",
+    "simulateDisconnect": "Giả lập: màn hình khách mất kết nối",
+    "simulateDisconnectHint": "Bản mô phỏng — dùng để thử luồng thu QR khi màn hình khách mất kết nối (BR-47).",
+    "status": {
+      "loading": "Đang kiểm tra…",
+      "unpaired": "Chưa ghép",
+      "unpairedLong": "Quầy này chưa ghép màn hình khách",
+      "connected": "Đã kết nối",
+      "disconnected": "Mất kết nối"
+    },
+    "dialog": {
+      "title": "Ghép màn hình khách",
+      "instruction": "Nhập mã 6 số đang hiện trên màn hình phía khách của {{station}}.",
+      "codeLabel": "Mã ghép 6 số",
+      "codeHint": "Mã tự đổi sau 5 phút. Mã hết hạn thì nhập mã mới trên màn hình khách.",
+      "replaceHint": "{{station}} đang có màn hình khách. Ghép máy mới sẽ gỡ máy cũ.",
+      "submitting": "Đang ghép…",
+      "attemptsLeft": "Còn {{count}} lần thử.",
+      "locked": "Nhập sai quá nhiều lần. Quầy tạm khoá ghép, thử lại sau {{time}}.",
+      "errors": {
+        "invalid": "Mã không đúng. Kiểm tra lại mã trên màn hình khách.",
+        "expired": "Mã đã hết hạn. Màn hình khách đã đổi mã mới — hãy nhập mã mới.",
+        "network": "Không kết nối được máy chủ. Vui lòng thử lại."
+      },
+      "clear": "Xoá",
+      "backspace": "Xoá một số",
+      "cancel": "Đóng",
+      "mockHint": "Bản mô phỏng: 000000 = sai mã, 111111 = mã hết hạn, mã khác = ghép thành công.",
+      "successTitle": "Đã ghép màn hình khách",
+      "successHint": "Màn hình phía khách của {{station}} đã kết nối. Giỏ hàng và mã QR sẽ hiện trên màn hình đó.",
+      "done": "Xong"
+    }
   }
 }

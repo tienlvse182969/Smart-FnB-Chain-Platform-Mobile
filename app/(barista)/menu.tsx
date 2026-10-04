@@ -1,4 +1,5 @@
-import { Switch, Toast } from '@ant-design/react-native';
+import { Switch } from '@ant-design/react-native';
+import { toast } from '@/src/components/ui/toast';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,7 +29,7 @@ export default function BaristaMenuScreen() {
       const menu = await loadBaristaMenu();
       replaceMenu(menu.menu, menu.categories);
     } catch (reason) {
-      Toast.fail(reason instanceof Error ? reason.message : 'Không thể tải danh sách món', 2, undefined, false);
+      toast.fail(reason instanceof Error ? reason.message : 'Không thể tải danh sách món', 2, undefined, false);
     }
   }, [replaceMenu]);
 
@@ -46,7 +47,7 @@ export default function BaristaMenuScreen() {
       setMenuAvailability(id, available);
       await reload();
     } catch (reason) {
-      Toast.fail(reason instanceof Error ? reason.message : 'Không thể cập nhật món', 2, undefined, false);
+      toast.fail(reason instanceof Error ? reason.message : 'Không thể cập nhật món', 2, undefined, false);
     } finally {
       setWorkingId(null);
     }
@@ -59,7 +60,7 @@ export default function BaristaMenuScreen() {
       setOptionAvailability(id, available);
       await reload();
     } catch (reason) {
-      Toast.fail(reason instanceof Error ? reason.message : 'Không thể cập nhật tùy chọn', 2, undefined, false);
+      toast.fail(reason instanceof Error ? reason.message : 'Không thể cập nhật tùy chọn', 2, undefined, false);
     } finally {
       setWorkingId(null);
     }
