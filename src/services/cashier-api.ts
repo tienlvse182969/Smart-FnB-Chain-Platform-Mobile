@@ -5,6 +5,10 @@ type ApiOption = {
   id: string;
   name: string;
   priceDelta: string;
+  isDefault?: boolean;
+  chainAvailable?: boolean;
+  branchAvailable?: boolean;
+  effectiveAvailable?: boolean;
   branchAvailability: { isAvailable: boolean }[];
 };
 
@@ -22,12 +26,25 @@ type ApiOptionGroupLink = {
 
 type ApiBranchMenuItem = {
   isAvailable: boolean;
+  isEnabled: boolean;
   remainingPortions: number | null;
+  chainAvailable?: boolean;
+  branchEnabled?: boolean;
+  branchAvailable?: boolean;
+  effectiveAvailable?: boolean;
+  unavailableReason?:
+    | 'CHAIN_DISABLED'
+    | 'NOT_ASSIGNED_TO_BRANCH'
+    | 'BRANCH_SOLD_OUT'
+    | 'NO_REMAINING_PORTIONS'
+    | null;
   menuItem: {
     id: string;
     name: string;
     price: string;
     imageUrl: string | null;
+    allowBatching?: boolean;
+    isActive: boolean;
     isAvailable: boolean;
     category: { id: string; name: string };
     optionGroups: ApiOptionGroupLink[];
@@ -59,6 +76,14 @@ export type CounterOrder = {
   }[];
 };
 
+export type PayosPayment = {
+  id: string;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  qrCode: string | null;
+  checkoutUrl: string | null;
+  expiresAt: string | null;
+};
+
 async function loadMenu(path: '/cashier/context' | '/barista/context'): Promise<{
   branch: CashierContextResponse['branch'];
   categories: MenuCategory[];
@@ -66,7 +91,15 @@ async function loadMenu(path: '/cashier/context' | '/barista/context'): Promise<
 }> {
   const { data } = await apiClient.get<CashierContextResponse>(path);
   const categoryMap = new Map<string, MenuCategory>();
-  const menu = data.menuItems.map(({ menuItem, isAvailable }) => {
+  const menu = data.menuItems.map((row) => {
+    const { menuItem, isAvailable, isEnabled, remainingPortions } = row;
+    const chainAvailable = row.chainAvailable ?? (menuItem.isActive && menuItem.isAvailable);
+    const branchEnabled = row.branchEnabled ?? isEnabled;
+    const branchAvailable = row.branchAvailable ?? isAvailable;
+    const hasRemainingPortions = remainingPortions === null || remainingPortions > 0;
+    const effectiveAvailable =
+      row.effectiveAvailable ??
+      (chainAvailable && branchEnabled && branchAvailable && hasRemainingPortions);
     if (!categoryMap.has(menuItem.category.id)) {
       categoryMap.set(menuItem.category.id, {
         id: menuItem.category.id,
@@ -79,10 +112,24 @@ async function loadMenu(path: '/cashier/context' | '/barista/context'): Promise<
       name: menuItem.name,
       categoryId: menuItem.category.id,
       price: Number(menuItem.price),
-      // còn/hết chỉ do pha chế bật/tắt (cờ chi nhánh); số suất không ảnh hưởng
-      available: isAvailable && menuItem.isAvailable,
+      available: effectiveAvailable,
+      chainAvailable,
+      branchEnabled,
+      branchAvailable,
+      remainingPortions,
+      unavailableReason: row.unavailableReason ?? (
+        !chainAvailable
+          ? 'CHAIN_DISABLED'
+          : !branchEnabled
+            ? 'NOT_ASSIGNED_TO_BRANCH'
+            : !branchAvailable
+              ? 'BRANCH_SOLD_OUT'
+              : !hasRemainingPortions
+                ? 'NO_REMAINING_PORTIONS'
+                : null
+      ),
       image: menuItem.imageUrl ?? '',
-      batchable: true,
+      batchable: menuItem.allowBatching ?? true,
       options: menuItem.optionGroups.map(({ group }) => ({
         // UI uses the literal `size` to highlight Size; API still receives the option UUID.
         id: group.code.toLowerCase() === 'size' ? 'size' : group.id,
@@ -94,8 +141,14 @@ async function loadMenu(path: '/cashier/context' | '/barista/context'): Promise<
           id: option.id,
           label: option.name,
           priceDelta: Number(option.priceDelta),
-          isDefault: false,
-          available: option.branchAvailability[0]?.isAvailable !== false,
+          isDefault: option.isDefault ?? false,
+          chainAvailable: option.chainAvailable ?? true,
+          branchAvailable:
+            option.branchAvailable ?? option.branchAvailability[0]?.isAvailable !== false,
+          available:
+            option.effectiveAvailable ??
+            ((option.chainAvailable ?? true) &&
+              (option.branchAvailable ?? option.branchAvailability[0]?.isAvailable !== false)),
         })),
       })),
     } satisfies MenuItem;
@@ -130,6 +183,20 @@ export async function collectCash(orderId: string, stationId: string, tenderedAm
     stationId,
     tenderedAmount,
   });
+  return data;
+}
+
+export async function createPayosPayment(orderId: string) {
+  const callbackUrl = 'https://smart-fnb-be.onrender.com/api/docs';
+  const { data } = await apiClient.post<PayosPayment>(`/cashier/orders/${orderId}/payments/payos`, {
+    cancelUrl: callbackUrl,
+    returnUrl: callbackUrl,
+  });
+  return data;
+}
+
+export async function getCounterOrder(orderId: string) {
+  const { data } = await apiClient.get<CounterOrder>(`/cashier/orders/${orderId}`);
   return data;
 }
 

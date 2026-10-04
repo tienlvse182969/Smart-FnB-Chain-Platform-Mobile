@@ -7,8 +7,16 @@ export type OptionSelection = Record<string, string[]>;
 export function defaultSelection(item: MenuItem): OptionSelection {
   const out: OptionSelection = {};
   for (const g of item.options) {
-    const defaults = g.choices.filter((c) => c.isDefault).map((c) => c.id);
-    out[g.id] = defaults.length ? defaults : g.required ? [g.choices[0].id] : [];
+    const availableChoices = g.choices.filter((choice) => choice.available !== false);
+    const defaults = availableChoices
+      .filter((choice) => choice.isDefault)
+      .slice(0, g.max)
+      .map((choice) => choice.id);
+    out[g.id] = defaults.length
+      ? defaults
+      : g.required && availableChoices.length
+        ? [availableChoices[0].id]
+        : [];
   }
   return out;
 }

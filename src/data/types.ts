@@ -23,6 +23,10 @@ export type MenuOptionChoice = {
   /** giá cộng thêm, ≥ 0 (mục 12.2) */
   priceDelta: number;
   isDefault?: boolean;
+  /** Cờ kinh doanh cấp chuỗi do Owner quản lý. */
+  chainAvailable?: boolean;
+  /** Cờ còn bán hôm nay tại chi nhánh do Manager/Barista quản lý. */
+  branchAvailable?: boolean;
   available?: boolean;
 };
 
@@ -41,8 +45,22 @@ export type MenuItem = {
   name: string;
   categoryId: string;
   price: number;
-  /** cờ còn bán hôm nay ở cấp chi nhánh (BR-12) */
+  /** Món có bán được thực tế trên POS sau khi gộp mọi điều kiện. */
   available: boolean;
+  /** Cờ kinh doanh cấp chuỗi do Owner quản lý. */
+  chainAvailable?: boolean;
+  /** Món có được gán cho chi nhánh hay không. */
+  branchEnabled?: boolean;
+  /** Cờ còn bán hôm nay do Manager/Barista quản lý. */
+  branchAvailable?: boolean;
+  /** Số suất còn lại; null nghĩa là không giới hạn. */
+  remainingPortions?: number | null;
+  unavailableReason?:
+    | 'CHAIN_DISABLED'
+    | 'NOT_ASSIGNED_TO_BRANCH'
+    | 'BRANCH_SOLD_OUT'
+    | 'NO_REMAINING_PORTIONS'
+    | null;
   /** ảnh minh hoạ món, hiển thị trên card ở POS */
   image: string;
   options: MenuOptionGroup[];

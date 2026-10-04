@@ -322,8 +322,29 @@ function reducer(state: State, action: Action): State {
       );
 
     case 'setMenuAvailability': {
-      const menu = state.menu.map((m) =>
-        m.id === action.menuItemId ? { ...m, available: action.available } : m,
+      const menu: MenuItem[] = state.menu.map((m): MenuItem =>
+        m.id === action.menuItemId
+          ? {
+              ...m,
+              branchAvailable: action.available,
+              available:
+                action.available &&
+                (m.chainAvailable ?? true) &&
+                (m.branchEnabled ?? true) &&
+                (m.remainingPortions === undefined ||
+                  m.remainingPortions === null ||
+                  m.remainingPortions > 0),
+              unavailableReason: m.chainAvailable === false
+                ? 'CHAIN_DISABLED'
+                : m.branchEnabled === false
+                  ? 'NOT_ASSIGNED_TO_BRANCH'
+                  : !action.available
+                    ? 'BRANCH_SOLD_OUT'
+                    : m.remainingPortions === 0
+                      ? 'NO_REMAINING_PORTIONS'
+                      : null,
+            }
+          : m,
       );
       const next = { ...state, menu };
       return action.available ? next : flagOutOfStock(next, (l) => l.menuItemId === action.menuItemId);
@@ -334,6 +355,21 @@ function reducer(state: State, action: Action): State {
       if (action.available === !has) return state;
       const next = {
         ...state,
+        menu: state.menu.map((item) => ({
+          ...item,
+          options: item.options.map((group) => ({
+            ...group,
+            choices: group.choices.map((choice) =>
+              choice.id === action.choiceId
+                ? {
+                    ...choice,
+                    branchAvailable: action.available,
+                    available: action.available && (choice.chainAvailable ?? true),
+                  }
+                : choice,
+            ),
+          })),
+        })),
         unavailableOptions: action.available
           ? state.unavailableOptions.filter((id) => id !== action.choiceId)
           : [...state.unavailableOptions, action.choiceId],

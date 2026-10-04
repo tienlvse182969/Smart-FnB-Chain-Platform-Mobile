@@ -20,8 +20,7 @@ import { useAppTheme } from '@/src/theme/use-theme';
 export default function BaristaMenuScreen() {
   const theme = useAppTheme();
   const { t } = useTranslation();
-  const { state, isMenuAvailable, isOptionAvailable, setMenuAvailability, setOptionAvailability, replaceMenu } =
-    useStore();
+  const { state, setMenuAvailability, setOptionAvailability, replaceMenu } = useStore();
   const [workingId, setWorkingId] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
@@ -68,11 +67,21 @@ export default function BaristaMenuScreen() {
 
   // tuỳ chọn không bắt buộc (topping, thêm…) mới có thể hết — size/đường/đá luôn sẵn
   const optionChoices = useMemo(() => {
-    const seen = new Map<string, { id: string; label: string; group: string }>();
+    const seen = new Map<string, { id: string; label: string; group: string; branchAvailable: boolean; chainAvailable: boolean }>();
     for (const item of state.menu) {
       for (const g of item.options) {
         if (g.required) continue;
-        for (const c of g.choices) if (!seen.has(c.id)) seen.set(c.id, { id: c.id, label: c.label, group: g.label });
+        for (const c of g.choices) {
+          if (!seen.has(c.id)) {
+            seen.set(c.id, {
+              id: c.id,
+              label: c.label,
+              group: g.label,
+              branchAvailable: c.branchAvailable ?? c.available !== false,
+              chainAvailable: c.chainAvailable ?? true,
+            });
+          }
+        }
       }
     }
     return [...seen.values()];
@@ -99,7 +108,11 @@ export default function BaristaMenuScreen() {
                   {c.group}
                 </Txt>
               </View>
-              <Switch disabled={workingId !== null} checked={isOptionAvailable(c.id)} onChange={(v) => void changeOption(c.id, v)} />
+              <Switch
+                disabled={workingId !== null || !c.chainAvailable}
+                checked={c.branchAvailable}
+                onChange={(v) => void changeOption(c.id, v)}
+              />
             </View>
           ))}
         </View>
@@ -117,8 +130,14 @@ export default function BaristaMenuScreen() {
                 <Txt variant="title" muted>
                   {state.categories.find((c) => c.id === item.categoryId)?.label}
                 </Txt>
+                {!item.chainAvailable ? <Txt variant="caption" color={theme.brand_error}>Owner đã tắt món</Txt> : null}
+                {item.remainingPortions === 0 ? <Txt variant="caption" color={theme.brand_warning}>Đã hết số lượng</Txt> : null}
               </View>
-              <Switch disabled={workingId !== null} checked={isMenuAvailable(item.id)} onChange={(v) => void changeItem(item.id, v)} />
+              <Switch
+                disabled={workingId !== null || item.chainAvailable === false || item.branchEnabled === false}
+                checked={item.branchAvailable ?? item.available}
+                onChange={(v) => void changeItem(item.id, v)}
+              />
             </View>
           ))}
         </View>

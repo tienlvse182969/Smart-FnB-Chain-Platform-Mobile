@@ -1,15 +1,26 @@
 import { Toast } from '@ant-design/react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 
 import { formatVnd } from '@/src/data/format';
-import { cancelUnpaidOrder, collectCash, type CounterOrder } from '@/src/services/cashier-api';
+import {
+  cancelUnpaidOrder,
+  collectCash,
+  createPayosPayment,
+  getCounterOrder,
+  type CounterOrder,
+  type PayosPayment,
+} from '@/src/services/cashier-api';
 import { useStation } from '@/src/stations/station-context';
 import { fontFamily } from '@/src/theme/typography';
 import { AppModal } from '@/src/components/ui/app-modal';
 import { Btn } from '@/src/components/ui/button';
 import { Field } from '@/src/components/ui/field';
 import { Txt } from '@/src/components/ui/txt';
+import { Segmented } from '@/src/components/ui/segmented';
+
+type PaymentTab = 'cash' | 'qr';
 
 export function ServerCheckoutDialog({
   order,
@@ -21,12 +32,32 @@ export function ServerCheckoutDialog({
   const { selectedStation } = useStation();
   const [tendered, setTendered] = useState('');
   const [paidOrder, setPaidOrder] = useState<CounterOrder | null>(null);
+  const [tab, setTab] = useState<PaymentTab>('cash');
+  const [qrPayment, setQrPayment] = useState<PayosPayment | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setPaidOrder(null);
+    setTab('cash');
+    setQrPayment(null);
     setTendered(order ? String(Number(order.totalAmount)) : '');
   }, [order]);
+
+  useEffect(() => {
+    if (!order || !qrPayment || paidOrder) return;
+    const poll = setInterval(() => {
+      void getCounterOrder(order.id)
+        .then((latest) => {
+          if (latest.paymentStatus === 'PAID') setPaidOrder(latest);
+          else if (latest.status === 'CANCELLED') {
+            Toast.info('Mã QR đã hết hạn. Giỏ hàng được giữ lại để bạn chốt lại đơn.', 3, undefined, false);
+            onClose(false);
+          }
+        })
+        .catch(() => undefined);
+    }, 2_000);
+    return () => clearInterval(poll);
+  }, [onClose, order, paidOrder, qrPayment]);
 
   const total = Number(order?.totalAmount ?? 0);
   const tenderedAmount = Number(tendered.replace(/[^0-9]/g, ''));
@@ -62,6 +93,26 @@ export function ServerCheckoutDialog({
     }
   };
 
+  const showQr = async () => {
+    if (submitting || qrPayment) return;
+    setSubmitting(true);
+    try {
+      setQrPayment(await createPayosPayment(order.id));
+    } catch (reason) {
+      Toast.fail(reason instanceof Error ? reason.message : 'Không thể tạo mã QR', 3, undefined, false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const changeTab = (next: PaymentTab) => {
+    if (qrPayment && next === 'cash') {
+      Toast.info('Mã QR đang hoạt động. Hãy chờ thanh toán hoặc mã hết hạn.', 2, undefined, false);
+      return;
+    }
+    setTab(next);
+  };
+
   return (
     <AppModal
       visible
@@ -83,26 +134,47 @@ export function ServerCheckoutDialog({
             <Txt variant="caption" muted>TỔNG THANH TOÁN</Txt>
             <Txt style={styles.total}>{formatVnd(total)}</Txt>
           </View>
-          <Field
-            label="Tiền khách đưa"
-            value={tendered}
-            onChangeText={setTendered}
-            keyboardType="number-pad"
+          <Segmented<PaymentTab>
+            value={tab}
+            onChange={changeTab}
+            options={[
+              { value: 'cash', label: 'Tiền mặt' },
+              { value: 'qr', label: 'Chuyển khoản QR' },
+            ]}
           />
-          <View style={styles.row}>
-            <Txt muted>Tiền thừa</Txt>
-            <Txt variant="bodyStrong">{formatVnd(change)}</Txt>
-          </View>
-          {tenderedAmount < total ? <Txt color="#C0392B">Số tiền khách đưa chưa đủ.</Txt> : null}
-          <Btn
-            label="Xác nhận đã thu tiền"
-            icon="cash"
-            block
-            loading={submitting}
-            disabled={tenderedAmount < total}
-            onPress={() => void confirmCash()}
-          />
-          <Btn label="Quay lại sửa đơn" variant="plain" disabled={submitting} onPress={() => void dismiss()} />
+          {tab === 'cash' ? (
+            <>
+              <Field
+                label="Tiền khách đưa"
+                value={tendered}
+                onChangeText={setTendered}
+                keyboardType="number-pad"
+              />
+              <View style={styles.row}>
+                <Txt muted>Tiền thừa</Txt>
+                <Txt variant="bodyStrong">{formatVnd(change)}</Txt>
+              </View>
+              {tenderedAmount < total ? <Txt color="#C0392B">Số tiền khách đưa chưa đủ.</Txt> : null}
+              <Btn
+                label="Xác nhận đã thu tiền"
+                icon="cash"
+                block
+                loading={submitting}
+                disabled={tenderedAmount < total}
+                onPress={() => void confirmCash()}
+              />
+            </>
+          ) : qrPayment?.qrCode ? (
+            <View style={styles.qrArea}>
+              <View style={styles.qrFrame}><QRCode value={qrPayment.qrCode} size={210} /></View>
+              <Txt variant="caption" muted>Đang chờ PayOS xác nhận thanh toán…</Txt>
+            </View>
+          ) : (
+            <Btn label="Tạo mã QR" icon="qr" block loading={submitting} onPress={() => void showQr()} />
+          )}
+          {!qrPayment ? (
+            <Btn label="Quay lại sửa đơn" variant="plain" disabled={submitting} onPress={() => void dismiss()} />
+          ) : null}
         </View>
       )}
     </AppModal>
@@ -114,6 +186,8 @@ const styles = StyleSheet.create({
   totalBox: { alignItems: 'center', gap: 4 },
   total: { fontFamily: fontFamily.black, fontSize: 36, lineHeight: 44 },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
+  qrArea: { alignItems: 'center', gap: 10 },
+  qrFrame: { padding: 12, borderRadius: 8, backgroundColor: '#FFF' },
   success: { alignItems: 'center', gap: 10, paddingVertical: 12 },
   callNumber: { fontFamily: fontFamily.black, fontSize: 64, lineHeight: 72 },
 });
