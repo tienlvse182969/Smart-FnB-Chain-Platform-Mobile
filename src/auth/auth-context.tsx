@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 
 import { login as loginRequest, logout as logoutRequest, me } from '@/src/services/auth-api';
 import type { AuthUser } from '@/src/services/auth-types';
+import { disconnectCustomerDisplay } from '@/src/services/customer-display-realtime';
 import { clearTokens, getTokens, saveTokens } from '@/src/services/token-storage';
 
 type AuthContextValue = {
@@ -46,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     const tokens = await getTokens();
     if (tokens) await logoutRequest(tokens.refreshToken).catch(() => undefined);
+    disconnectCustomerDisplay();
     await clearTokens();
     setUser(null);
   }, []);

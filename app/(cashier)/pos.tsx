@@ -58,13 +58,17 @@ export default function PosScreen() {
   const [menuError, setMenuError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
+  // giữ nguyên object khi giỏ không đổi — hộp thanh toán dùng nó làm phụ thuộc của effect,
+  // object mới mỗi lần render sẽ gửi lại PAYMENT_PENDING và đè mất QR trên màn hình khách
+  const cartSnapshot = useMemo(() => snapshotFromCart(cart), [cart]);
+
   useEffect(() => {
     if (!selectedStation) return;
     const timer = setTimeout(() => {
-      void updateCustomerDisplay(selectedStation.id, snapshotFromCart(cart));
+      void updateCustomerDisplay(selectedStation.id, cartSnapshot);
     }, 120);
     return () => clearTimeout(timer);
-  }, [cart, selectedStation]);
+  }, [cartSnapshot, selectedStation]);
 
   useEffect(() => {
     let active = true;
@@ -282,7 +286,7 @@ export default function PosScreen() {
       />
       <ServerCheckoutDialog
         order={checkoutOrder}
-        cartSnapshot={snapshotFromCart(cart)}
+        cartSnapshot={cartSnapshot}
         onClose={(paid) => {
           setCheckoutOrder(null);
           if (paid) clearCart();
