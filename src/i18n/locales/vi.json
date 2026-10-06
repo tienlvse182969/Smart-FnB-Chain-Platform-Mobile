@@ -138,7 +138,12 @@
     "reprinted": "Đã in lại (lần {{count}})",
     "cancelledReason": "Lý do huỷ: {{reason}}",
     "managerOnlyNote": "Đơn đã thanh toán chỉ Quản lý chi nhánh mới huỷ được.",
-    "printFailedToast": "In thất bại, kiểm tra máy in"
+    "printFailedToast": "In thất bại, kiểm tra máy in",
+    "loadError": "Không thể tải danh sách đơn",
+    "reprintReason": "Lý do in lại",
+    "reprintReasonPlaceholder": "Ví dụ: giấy kẹt, khách yêu cầu",
+    "reprintConfirm": "In lại",
+    "reprintFailed": "Không thể in lại bill"
   },
   "receipt": {
     "callNumberSlip": "Phiếu số",

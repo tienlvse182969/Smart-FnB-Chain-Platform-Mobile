@@ -138,7 +138,12 @@
     "reprinted": "Reprinted (time {{count}})",
     "cancelledReason": "Reason: {{reason}}",
     "managerOnlyNote": "Only the branch manager can cancel a paid order.",
-    "printFailedToast": "Print failed, check the printer"
+    "printFailedToast": "Print failed, check the printer",
+    "loadError": "Could not load orders",
+    "reprintReason": "Reprint reason",
+    "reprintReasonPlaceholder": "e.g. paper jam, customer request",
+    "reprintConfirm": "Reprint",
+    "reprintFailed": "Could not reprint the bill"
   },
   "receipt": {
     "callNumberSlip": "Number slip",
