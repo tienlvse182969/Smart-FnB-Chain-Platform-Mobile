@@ -1,37 +1,82 @@
-import { useMemo, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/src/components/empty-state';
 import { OrderDetailDialog } from '@/src/components/pos/order-detail-dialog';
 import { ScreenHeader } from '@/src/components/screen-header';
-import { OrderStatusBadge, PrintFailedBadge } from '@/src/components/status-badge';
+import { OrderStatusBadge } from '@/src/components/status-badge';
+import { Btn } from '@/src/components/ui/button';
 import { Segmented } from '@/src/components/ui/segmented';
 import { Txt } from '@/src/components/ui/txt';
 import { clockAt, formatVnd } from '@/src/data/format';
-import { useStore } from '@/src/data/store';
+import type { HistoryOrder } from '@/src/data/types';
 import { paymentMethodKey } from '@/src/i18n/labels';
+import { loadTodayOrders } from '@/src/services/cashier-api';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 
 type Filter = 'all' | 'active' | 'cancelled';
 
+/** Trạng thái đơn đổi khi pha chế xong nên tải lại định kỳ lúc màn hình đang mở. */
+const POLL_INTERVAL_MS = 15_000;
+
 /** Lịch sử đơn trong ngày của chi nhánh (CS-05) — xem lại và in lại bill; không huỷ được đơn đã trả (BR-18). */
 export default function OrdersScreen() {
   const theme = useAppTheme();
   const { t } = useTranslation();
-  const { ordersNewestFirst } = useStore();
+  const [orders, setOrders] = useState<HistoryOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>('all');
   const [openId, setOpenId] = useState<string | null>(null);
+  const requestId = useRef(0);
+
+  const load = useCallback(
+    async (mode: 'initial' | 'pull' | 'silent') => {
+      const current = ++requestId.current;
+      if (mode === 'initial') setLoading(true);
+      if (mode === 'pull') setRefreshing(true);
+      try {
+        const next = await loadTodayOrders();
+        if (current !== requestId.current) return;
+        setOrders(next);
+        setError(null);
+      } catch (reason) {
+        if (current !== requestId.current || mode === 'silent') return;
+        setError(reason instanceof Error ? reason.message : t('orders.loadError'));
+      } finally {
+        if (current === requestId.current) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      }
+    },
+    [t],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      void load('initial');
+      const timer = setInterval(() => void load('silent'), POLL_INTERVAL_MS);
+      return () => {
+        clearInterval(timer);
+        requestId.current += 1;
+      };
+    }, [load]),
+  );
 
   const data = useMemo(
     () =>
-      ordersNewestFirst.filter((o) =>
+      orders.filter((o) =>
         filter === 'all' ? true : filter === 'cancelled' ? o.status === 'Đã huỷ' : o.status !== 'Đã huỷ',
       ),
-    [ordersNewestFirst, filter],
+    [orders, filter],
   );
+  const openOrder = useMemo(() => orders.find((o) => o.id === openId) ?? null, [orders, openId]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
@@ -48,13 +93,33 @@ export default function OrdersScreen() {
           ]}
         />
 
-        {data.length === 0 ? (
-          <EmptyState icon="receipt" title={t('orders.emptyTitle')} hint={t('orders.emptyHint')} />
+        {error ? (
+          <View style={[styles.notice, { borderColor: theme.brand_error, backgroundColor: theme.fill_base }]}>
+            <Txt variant="caption" color={theme.brand_error}>
+              {error}
+            </Txt>
+            <Btn label={t('common.retry')} size="sm" onPress={() => void load('initial')} />
+          </View>
+        ) : null}
+
+        {loading && orders.length === 0 ? (
+          <ActivityIndicator style={styles.loader} color={theme.brand_primary} />
         ) : (
           <FlatList
             data={data}
             keyExtractor={(o) => o.id}
             contentContainerStyle={styles.list}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={() => void load('pull')}
+                tintColor={theme.brand_primary}
+                colors={[theme.brand_primary]}
+              />
+            }
+            ListEmptyComponent={
+              error ? null : <EmptyState icon="receipt" title={t('orders.emptyTitle')} hint={t('orders.emptyHint')} />
+            }
             renderItem={({ item: o }) => (
               <Pressable
                 onPress={() => setOpenId(o.id)}
@@ -72,7 +137,9 @@ export default function OrdersScreen() {
                   </Txt>
                 </View>
                 <View style={styles.info}>
-                  <Txt variant="bodyStrong">{t('orders.orderCode', { code: o.orderCode })}</Txt>
+                  <Txt variant="bodyStrong" numberOfLines={1}>
+                    {t('orders.orderCode', { code: o.orderCode })}
+                  </Txt>
                   <Txt variant="caption" muted numberOfLines={1}>
                     {clockAt(o.createdAt)}
                     {o.payment ? ` · ${t(paymentMethodKey[o.payment.method])}` : ''}
@@ -80,7 +147,6 @@ export default function OrdersScreen() {
                   </Txt>
                   <View style={styles.badges}>
                     <OrderStatusBadge status={o.status} size="sm" />
-                    {o.printStatus === 'In thất bại' ? <PrintFailedBadge size="sm" /> : null}
                   </View>
                 </View>
                 <Txt variant="title">{formatVnd(o.total)}</Txt>
@@ -90,7 +156,7 @@ export default function OrdersScreen() {
         )}
       </View>
 
-      <OrderDetailDialog orderId={openId} onClose={() => setOpenId(null)} />
+      <OrderDetailDialog order={openOrder} onClose={() => setOpenId(null)} />
     </SafeAreaView>
   );
 }
@@ -99,7 +165,9 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   pad: { flex: 1, paddingHorizontal: 20, paddingTop: 16 },
   filter: { paddingBottom: 8 },
-  list: { gap: 10, paddingVertical: 8, paddingBottom: 24 },
+  notice: { padding: 12, borderWidth: StyleSheet.hairlineWidth, borderRadius: 6, gap: 8, marginBottom: 8 },
+  loader: { padding: 20 },
+  list: { gap: 10, paddingVertical: 8, paddingBottom: 24, flexGrow: 1 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

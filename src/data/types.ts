@@ -153,6 +153,9 @@ export type Order = {
   reprintCount: number;
 };
 
+/** Đơn lấy từ backend cho lịch sử trong ngày — mã đơn là chuỗi (`CTR-<ms>-<hex>`) thay vì số của đơn mock. */
+export type HistoryOrder = Omit<Order, 'orderCode'> & { orderCode: string };
+
 /** Một dòng món trong mẻ, kèm số gọi để pha chế biết ly nào của đơn nào. */
 export type BatchEntry = {
   orderId: string;

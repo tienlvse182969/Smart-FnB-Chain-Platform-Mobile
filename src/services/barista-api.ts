@@ -35,7 +35,7 @@ export type ReadyCounterOrder = {
   items: { id: string; itemName: string; quantity: number }[];
 };
 
-function mapOptions(value: unknown): OrderOption[] {
+export function mapOptions(value: unknown): OrderOption[] {
   if (!Array.isArray(value)) return [];
   return (value as ApiOptionSnapshot[]).map((option) => ({
     groupId: option.groupCode?.toLowerCase() === 'size' ? 'size' : option.groupId ?? '',

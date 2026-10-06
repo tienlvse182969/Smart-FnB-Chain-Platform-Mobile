@@ -3,7 +3,7 @@ import { Image, StyleSheet, View } from 'react-native';
 
 import { branchName } from '@/src/data/mock';
 import { clockAt, formatVnd } from '@/src/data/format';
-import type { Order } from '@/src/data/types';
+import type { HistoryOrder, Order } from '@/src/data/types';
 import { paymentMethodKey } from '@/src/i18n/labels';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
@@ -13,7 +13,14 @@ import { Txt } from '../ui/txt';
  * Xem trước bill và phiếu số in kèm sau thanh toán (CS-04, BR-21). Chưa in thật: bản có backend dựng
  * bill thành ảnh rồi POS gửi lệnh ESC/POS tới máy in nhiệt của quầy (GĐ-15). Có logo và tên chuỗi như mục 10.3.
  */
-export function ReceiptPreview({ order }: { order: Order }) {
+export function ReceiptPreview({
+  order,
+  branchName: branch = branchName,
+}: {
+  order: Order | HistoryOrder;
+  /** tên chi nhánh thật (từ receipt API); mặc định dùng tên mock */
+  branchName?: string;
+}) {
   const theme = useAppTheme();
   const { t } = useTranslation();
 
@@ -21,7 +28,7 @@ export function ReceiptPreview({ order }: { order: Order }) {
     <View style={[styles.wrap, { backgroundColor: theme.fill_base, borderColor: theme.border_color_thin }]}>
       <Image source={require('@/assets/logo/logo1.png')} style={styles.logo} resizeMode="contain" />
       <Txt variant="caption" muted style={styles.center}>
-        {branchName}
+        {branch}
       </Txt>
       <Txt variant="caption" muted style={styles.center}>
         {t('orders.orderCode', { code: order.orderCode })}

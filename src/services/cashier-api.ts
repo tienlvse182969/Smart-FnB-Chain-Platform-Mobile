@@ -1,5 +1,14 @@
 import { apiClient } from '@/src/lib/api-client';
-import type { MenuCategory, MenuItem, OrderOption } from '@/src/data/types';
+import { sizeOf } from '@/src/data/order-utils';
+import type {
+  HistoryOrder,
+  LineStatus,
+  MenuCategory,
+  MenuItem,
+  OrderOption,
+  OrderStatus,
+} from '@/src/data/types';
+import { mapOptions } from './barista-api';
 
 type ApiOption = {
   id: string;
@@ -202,4 +211,125 @@ export async function getCounterOrder(orderId: string) {
 
 export async function cancelUnpaidOrder(orderId: string, reason: string) {
   await apiClient.post(`/cashier/orders/${orderId}/cancel`, { reason });
+}
+
+type ApiHistoryOrder = {
+  id: string;
+  orderCode: string;
+  status: string;
+  paymentStatus: string;
+  totalAmount: string;
+  callNumber: number | null;
+  createdAt: string;
+  paidAt: string | null;
+  readyAt: string | null;
+  cancellationReason: string | null;
+  items: {
+    id: string;
+    menuItemId: string;
+    itemName: string;
+    quantity: number;
+    unitPrice: string;
+    status: string;
+    selectedOptions: unknown;
+    specialInstructions: string | null;
+  }[];
+  payments: {
+    method: string;
+    status: string;
+    amount: string;
+    paidAt: string | null;
+  }[];
+};
+
+export type OrderReceipt = {
+  orderId: string;
+  orderCode: string;
+  callNumber: number | null;
+  paidAt: string | null;
+  seller: { name: string; branchName: string; address: string | null; phone: string | null };
+  cashier: string | null;
+};
+
+function mapHistoryStatus(order: ApiHistoryOrder): OrderStatus {
+  switch (order.status) {
+    case 'CANCELLED':
+      return 'Đã huỷ';
+    case 'PREPARING':
+      return 'Đang pha';
+    case 'READY':
+      return 'Sẵn sàng';
+    case 'DELIVERED':
+    case 'COMPLETED':
+    case 'SERVED':
+      return 'Hoàn tất';
+    default:
+      return order.paymentStatus === 'PAID' ? 'Đã thanh toán' : 'Chờ thanh toán';
+  }
+}
+
+function mapHistoryLineStatus(status: string): LineStatus {
+  if (status === 'CANCELLED') return 'Huỷ';
+  if (status === 'OUT_OF_STOCK') return 'Hết món';
+  return 'Xong';
+}
+
+function mapHistoryOrder(order: ApiHistoryOrder): HistoryOrder {
+  const paidPayment = order.payments.find((payment) => payment.status === 'SUCCESS');
+  return {
+    id: order.id,
+    orderCode: order.orderCode,
+    callNumber: order.callNumber ?? undefined,
+    total: Number(order.totalAmount),
+    status: mapHistoryStatus(order),
+    createdAt: order.createdAt,
+    paidAt: order.paidAt ?? paidPayment?.paidAt ?? undefined,
+    readyAt: order.readyAt ?? undefined,
+    cancelledReason: order.cancellationReason ?? undefined,
+    cashierName: '',
+    reprintCount: 0,
+    payment: paidPayment
+      ? {
+          method: paidPayment.method === 'CASH' ? 'Tiền mặt' : 'Chuyển khoản QR',
+          amount: Number(paidPayment.amount),
+          paidAt: paidPayment.paidAt ?? undefined,
+        }
+      : undefined,
+    lines: order.items.map((item) => {
+      const options = mapOptions(item.selectedOptions);
+      const size = sizeOf(options);
+      return {
+        id: item.id,
+        menuItemId: item.menuItemId,
+        name: item.itemName,
+        categoryId: '',
+        batchable: false,
+        sizeChoiceId: size?.choiceId,
+        sizeLabel: size?.label,
+        qty: item.quantity,
+        unitPrice: Number(item.unitPrice),
+        options,
+        note: item.specialInstructions ?? undefined,
+        status: mapHistoryLineStatus(item.status),
+      };
+    }),
+  };
+}
+
+/** Đơn quầy hôm nay của chi nhánh (đã thanh toán + đã huỷ), mới nhất trước. */
+export async function loadTodayOrders(): Promise<HistoryOrder[]> {
+  const { data } = await apiClient.get<ApiHistoryOrder[]>('/cashier/orders');
+  return data.map(mapHistoryOrder).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function getOrderReceipt(orderId: string) {
+  const { data } = await apiClient.get<OrderReceipt>(`/cashier/orders/${orderId}/receipt`);
+  return data;
+}
+
+export async function reprintOrder(orderId: string, reason: string) {
+  const { data } = await apiClient.post<OrderReceipt>(`/cashier/orders/${orderId}/reprint`, {
+    reason: reason.trim(),
+  });
+  return data;
 }
