@@ -147,7 +147,8 @@
   },
   "receipt": {
     "callNumberSlip": "Phiếu số",
-    "showToPickup": "Đưa phiếu này để nhận món khi được gọi số."
+    "showToPickup": "Đưa phiếu này để nhận món khi được gọi số.",
+    "scanToTrack": "Quét để nhận thông báo khi món xong."
   },
   "baristaQueue": {
     "title": "Hàng đợi pha chế",

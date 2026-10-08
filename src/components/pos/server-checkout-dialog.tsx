@@ -9,6 +9,7 @@ import {
   collectCash,
   createPayosPayment,
   getCounterOrder,
+  getOrderReceipt,
   type CounterOrder,
   type PayosPayment,
 } from '@/src/services/cashier-api';
@@ -41,12 +42,14 @@ export function ServerCheckoutDialog({
   const [tab, setTab] = useState<PaymentTab>('cash');
   const [qrPayment, setQrPayment] = useState<PayosPayment | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [trackingUrl, setTrackingUrl] = useState<string | null>(null);
 
   useEffect(() => {
     setPaidOrder(null);
     setTab('cash');
     setQrPayment(null);
     setTendered(order ? String(Number(order.totalAmount)) : '');
+    setTrackingUrl(null);
   }, [order]);
 
   useEffect(() => {
@@ -65,6 +68,7 @@ export function ServerCheckoutDialog({
         .then((latest) => {
           if (latest.paymentStatus === 'PAID') {
             setPaidOrder(latest);
+            void getOrderReceipt(latest.id).then((receipt) => setTrackingUrl(receipt.tracking?.url ?? null));
             if (selectedStation) {
               void updateCustomerDisplay(selectedStation.id, {
                 ...cartSnapshot,
@@ -113,6 +117,7 @@ export function ServerCheckoutDialog({
     try {
       const result = await collectCash(order.id, selectedStation.id, tenderedAmount);
       setPaidOrder(result.order);
+      setTrackingUrl(result.tracking.url);
       void updateCustomerDisplay(selectedStation.id, {
         ...cartSnapshot,
         state: 'PAID',
@@ -128,10 +133,10 @@ export function ServerCheckoutDialog({
   };
 
   const showQr = async () => {
-    if (submitting || qrPayment) return;
+    if (submitting || qrPayment || !selectedStation) return;
     setSubmitting(true);
     try {
-      const payment = await createPayosPayment(order.id);
+      const payment = await createPayosPayment(order.id, selectedStation.id);
       setQrPayment(payment);
       if (selectedStation && payment.qrCode) {
         void updateCustomerDisplay(selectedStation.id, {
@@ -172,6 +177,12 @@ export function ServerCheckoutDialog({
           <Txt style={styles.callNumber}>{String(paidOrder.callNumber ?? 0).padStart(3, '0')}</Txt>
           <Txt variant="body">Đơn đã được chuyển tới màn hình pha chế.</Txt>
           <Txt variant="caption" muted>Lệnh in hóa đơn và phiếu số đã được tạo cho quầy hiện tại.</Txt>
+          {trackingUrl ? (
+            <View style={styles.trackingQr}>
+              <QRCode value={trackingUrl} size={150} />
+              <Txt variant="caption" muted>Quét để nhận thông báo khi món xong</Txt>
+            </View>
+          ) : null}
         </View>
       ) : (
         <View style={styles.body}>
@@ -235,4 +246,5 @@ const styles = StyleSheet.create({
   qrFrame: { padding: 12, borderRadius: 8, backgroundColor: '#FFF' },
   success: { alignItems: 'center', gap: 10, paddingVertical: 12 },
   callNumber: { fontFamily: fontFamily.black, fontSize: 64, lineHeight: 72 },
+  trackingQr: { alignItems: 'center', gap: 8, marginTop: 12 },
 });

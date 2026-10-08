@@ -92,7 +92,11 @@ export function OrderDetailDialog({ order, onClose }: { order: HistoryOrder | nu
           </Txt>
         ) : null}
 
-        <ReceiptPreview order={order} branchName={receipt?.seller.branchName} />
+        <ReceiptPreview
+          order={order}
+          branchName={receipt?.seller.branchName}
+          trackingUrl={receipt?.tracking?.url}
+        />
 
         {paid ? (
           <>
