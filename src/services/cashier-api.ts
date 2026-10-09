@@ -188,7 +188,10 @@ export async function checkoutCart(cart: CheckoutCartLine[]) {
 }
 
 export async function collectCash(orderId: string, stationId: string, tenderedAmount: number) {
-  const { data } = await apiClient.post<{ order: CounterOrder }>(`/cashier/orders/${orderId}/payments/cash`, {
+  const { data } = await apiClient.post<{
+    order: CounterOrder;
+    tracking: { token: string; url: string };
+  }>(`/cashier/orders/${orderId}/payments/cash`, {
     stationId,
     tenderedAmount,
   });
@@ -250,6 +253,7 @@ export type OrderReceipt = {
   paidAt: string | null;
   seller: { name: string; branchName: string; address: string | null; phone: string | null };
   cashier: string | null;
+  tracking: { url: string } | null;
 };
 
 function mapHistoryStatus(order: ApiHistoryOrder): OrderStatus {

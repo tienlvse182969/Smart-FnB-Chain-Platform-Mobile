@@ -147,7 +147,8 @@
   },
   "receipt": {
     "callNumberSlip": "Number slip",
-    "showToPickup": "Show this slip to pick up your order when the number is called."
+    "showToPickup": "Show this slip to pick up your order when the number is called.",
+    "scanToTrack": "Scan to be notified when your order is ready."
   },
   "baristaQueue": {
     "title": "Preparation queue",

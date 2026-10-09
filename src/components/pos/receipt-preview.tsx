@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Image, StyleSheet, View } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 
 import { branchName } from '@/src/data/mock';
 import { clockAt, formatVnd } from '@/src/data/format';
@@ -16,10 +17,12 @@ import { Txt } from '../ui/txt';
 export function ReceiptPreview({
   order,
   branchName: branch = branchName,
+  trackingUrl,
 }: {
   order: Order | HistoryOrder;
   /** tên chi nhánh thật (từ receipt API); mặc định dùng tên mock */
   branchName?: string;
+  trackingUrl?: string | null;
 }) {
   const theme = useAppTheme();
   const { t } = useTranslation();
@@ -85,6 +88,14 @@ export function ReceiptPreview({
           <Txt variant="tiny" muted style={styles.center}>
             {t('receipt.showToPickup')}
           </Txt>
+          {trackingUrl ? (
+            <View style={styles.tracking}>
+              <QRCode value={trackingUrl} size={116} />
+              <Txt variant="tiny" muted style={styles.center}>
+                {t('receipt.scanToTrack')}
+              </Txt>
+            </View>
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -109,4 +120,5 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   slipNumber: { fontFamily: fontFamily.black, fontSize: 44, lineHeight: 52 },
+  tracking: { alignItems: 'center', gap: 6, marginTop: 10 },
 });
