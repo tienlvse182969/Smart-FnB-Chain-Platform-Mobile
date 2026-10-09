@@ -195,9 +195,10 @@ export async function collectCash(orderId: string, stationId: string, tenderedAm
   return data;
 }
 
-export async function createPayosPayment(orderId: string) {
+export async function createPayosPayment(orderId: string, stationId: string) {
   const callbackUrl = 'https://smart-fnb-be.onrender.com/api/docs';
   const { data } = await apiClient.post<PayosPayment>(`/cashier/orders/${orderId}/payments/payos`, {
+    stationId,
     cancelUrl: callbackUrl,
     returnUrl: callbackUrl,
   });

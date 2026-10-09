@@ -128,12 +128,12 @@ export function ServerCheckoutDialog({
   };
 
   const showQr = async () => {
-    if (submitting || qrPayment) return;
+    if (!selectedStation || submitting || qrPayment) return;
     setSubmitting(true);
     try {
-      const payment = await createPayosPayment(order.id);
+      const payment = await createPayosPayment(order.id, selectedStation.id);
       setQrPayment(payment);
-      if (selectedStation && payment.qrCode) {
+      if (payment.qrCode) {
         void updateCustomerDisplay(selectedStation.id, {
           ...cartSnapshot,
           state: 'PAYMENT_QR',
