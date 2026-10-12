@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "smart_fnb",
+    "name": "Smart F&B",
     "slug": "smart_fnb",
     "version": "1.0.0",
     "orientation": "default",
@@ -12,6 +12,8 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.smartfnb.mobile",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

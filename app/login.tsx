@@ -11,6 +11,7 @@ import { Icon } from '@/src/components/ui/icon';
 import { Txt } from '@/src/components/ui/txt';
 import { useStore } from '@/src/data/store';
 import { ApiError } from '@/src/services/auth-types';
+import { customerDisplayStorage } from '@/src/services/customer-display-device';
 import { useAppTheme } from '@/src/theme/use-theme';
 
 const AVATAR_COLORS = ['#1677ff', '#52a41a', '#fa8c16', '#eb2f96', '#722ed1', '#13a8a8'];
@@ -169,6 +170,9 @@ export default function LoginScreen() {
                 {accounts.length ? <Btn label="Chọn từ tài khoản đã đăng nhập" variant="plain" block onPress={showPicker} /> : null}
               </>
             )}
+            <View style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border_color_thin, paddingTop: 12 }}>
+              <Btn label="Dùng máy này làm màn hình khách" variant="ghost" block onPress={() => void customerDisplayStorage.setMode('CUSTOMER_DISPLAY').then(() => router.replace('/customer-display'))} />
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

@@ -50,6 +50,7 @@ export default function RootLayout() {
                 <Stack.Screen name="index" />
                 <Stack.Screen name="login" />
                 <Stack.Screen name="select-station" />
+                <Stack.Screen name="customer-display" />
                 <Stack.Screen name="(cashier)" />
                 <Stack.Screen name="(barista)" />
                 </Stack>
