@@ -5,6 +5,8 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { toast } from '@/src/components/ui/toast';
 import type { HistoryOrder } from '@/src/data/types';
 import { getOrderReceipt, reprintOrder, type OrderReceipt } from '@/src/services/cashier-api';
+import { printReceipt } from '@/src/services/printer/print-service';
+import { useStation } from '@/src/stations/station-context';
 import { OrderStatusBadge } from '../status-badge';
 import { AppModal } from '../ui/app-modal';
 import { Btn } from '../ui/button';
@@ -17,6 +19,7 @@ const MIN_REASON_LENGTH = 3;
 /** Chi tiết một đơn trong lịch sử (CS-05): xem lại bill, in lại kèm lý do — backend ghi nhận mỗi lần in lại (BR-21). */
 export function OrderDetailDialog({ order, onClose }: { order: HistoryOrder | null; onClose: () => void }) {
   const { t } = useTranslation();
+  const { selectedStation } = useStation();
   const orderId = order?.id;
   const paid = order?.callNumber !== undefined;
   const [receipt, setReceipt] = useState<OrderReceipt | null>(null);
@@ -52,14 +55,16 @@ export function OrderDetailDialog({ order, onClose }: { order: HistoryOrder | nu
     if (!reasonValid || printing) return;
     setPrinting(true);
     try {
-      await reprintOrder(order.id, reason);
+      // Backend ghi nhận lượt in lại (BR-21) rồi trả receipt; máy POS mới là nơi gửi lệnh tới máy in.
+      const reprinted = await reprintOrder(order.id, reason);
+      await printReceipt(reprinted, selectedStation);
       const count = reprintCount + 1;
       setReprintCount(count);
       setReasonOpen(false);
       setReason('');
       toast.success(t('orders.reprinted', { count }), 1.5, undefined, false);
     } catch (failure) {
-      toast.fail(failure instanceof Error ? failure.message : t('orders.reprintFailed'), 2, undefined, false);
+      toast.fail(failure instanceof Error ? failure.message : t('orders.reprintFailed'), 3, undefined, false);
     } finally {
       setPrinting(false);
     }

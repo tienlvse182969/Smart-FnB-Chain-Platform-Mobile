@@ -251,8 +251,26 @@ export type OrderReceipt = {
   orderCode: string;
   callNumber: number | null;
   paidAt: string | null;
+  currency: string;
   seller: { name: string; branchName: string; address: string | null; phone: string | null };
   cashier: string | null;
+  items: {
+    id: string;
+    itemName: string;
+    quantity: number;
+    unitPrice: string;
+    selectedOptions: unknown;
+    specialInstructions: string | null;
+  }[];
+  subtotal: string;
+  totalAmount: string;
+  /** Giao dịch thanh toán thành công gần nhất; Decimal của Prisma về dạng chuỗi. */
+  payment: {
+    method: string;
+    amount: string;
+    tenderedAmount: string | null;
+    changeAmount: string | null;
+  } | null;
   tracking: { url: string } | null;
 };
 

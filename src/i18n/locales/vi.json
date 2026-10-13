@@ -219,5 +219,23 @@
       "successHint": "Màn hình phía khách của {{station}} đã kết nối. Giỏ hàng và mã QR sẽ hiện trên màn hình đó.",
       "done": "Xong"
     }
+  },
+  "printer": {
+    "section": "Máy in hóa đơn",
+    "none": "Chưa chọn máy in",
+    "noneHint": "Ghép đôi máy in trong Cài đặt Bluetooth của Android, rồi chọn máy in ở đây.",
+    "choose": "Chọn máy in",
+    "change": "Đổi máy in",
+    "pickTitle": "Chọn máy in đã ghép đôi",
+    "pickEmpty": "Chưa có thiết bị nào được ghép đôi. Hãy ghép máy in trong Cài đặt Bluetooth của Android (mã PIN thường là 0000 hoặc 1234).",
+    "testPrint": "In thử",
+    "testPrinted": "Đã gửi phiếu in thử.",
+    "loadFailed": "Không đọc được danh sách thiết bị Bluetooth.",
+    "remove": "Bỏ chọn",
+    "printMode": "Kiểu in trên bill",
+    "modeImage": "Ảnh (có dấu)",
+    "modeText": "Chữ không dấu",
+    "modeImageHint": "Dựng bill thành ảnh với font như trong app, đủ dấu tiếng Việt. In chậm hơn vài giây.",
+    "modeTextHint": "Máy in tự in chữ ASCII không dấu, nhanh nhưng không có dấu tiếng Việt."
   }
 }
