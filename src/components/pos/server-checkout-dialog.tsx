@@ -1,5 +1,5 @@
 import { toast } from '@/src/components/ui/toast';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
@@ -13,6 +13,8 @@ import {
   type CounterOrder,
   type PayosPayment,
 } from '@/src/services/cashier-api';
+import { PrinterNotConfiguredError } from '@/src/services/printer/bluetooth-printer';
+import { printOrderReceipt } from '@/src/services/printer/print-service';
 import { useStation } from '@/src/stations/station-context';
 import { fontFamily } from '@/src/theme/typography';
 import { AppModal } from '@/src/components/ui/app-modal';
@@ -26,6 +28,7 @@ import {
 } from '@/src/services/customer-display-realtime';
 
 type PaymentTab = 'cash' | 'qr';
+type PrintState = 'idle' | 'printing' | 'done' | 'failed' | 'unconfigured';
 
 export function ServerCheckoutDialog({
   order,
@@ -43,6 +46,9 @@ export function ServerCheckoutDialog({
   const [qrPayment, setQrPayment] = useState<PayosPayment | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [trackingUrl, setTrackingUrl] = useState<string | null>(null);
+  const [printState, setPrintState] = useState<PrintState>('idle');
+  const [printError, setPrintError] = useState<string | null>(null);
+  const printedOrderId = useRef<string | null>(null);
 
   useEffect(() => {
     setPaidOrder(null);
@@ -50,7 +56,37 @@ export function ServerCheckoutDialog({
     setQrPayment(null);
     setTendered(order ? String(Number(order.totalAmount)) : '');
     setTrackingUrl(null);
+    setPrintState('idle');
+    setPrintError(null);
+    printedOrderId.current = null;
   }, [order]);
+
+  // In không chặn thanh toán (BR-21): lỗi chỉ hiện trạng thái và cho in lại.
+  const printBill = useCallback(
+    async (orderId: string) => {
+      setPrintState('printing');
+      setPrintError(null);
+      try {
+        await printOrderReceipt(orderId, selectedStation);
+        setPrintState('done');
+      } catch (failure) {
+        if (failure instanceof PrinterNotConfiguredError) {
+          setPrintState('unconfigured');
+        } else {
+          setPrintState('failed');
+          setPrintError(failure instanceof Error ? failure.message : 'Không in được hóa đơn');
+        }
+      }
+    },
+    [selectedStation],
+  );
+
+  const paidOrderId = paidOrder?.id;
+  useEffect(() => {
+    if (!paidOrderId || printedOrderId.current === paidOrderId) return;
+    printedOrderId.current = paidOrderId;
+    void printBill(paidOrderId);
+  }, [paidOrderId, printBill]);
 
   useEffect(() => {
     if (!order || !selectedStation) return;
@@ -176,7 +212,19 @@ export function ServerCheckoutDialog({
           <Txt variant="caption" muted>SỐ GỌI</Txt>
           <Txt style={styles.callNumber}>{String(paidOrder.callNumber ?? 0).padStart(3, '0')}</Txt>
           <Txt variant="body">Đơn đã được chuyển tới màn hình pha chế.</Txt>
-          <Txt variant="caption" muted>Lệnh in hóa đơn và phiếu số đã được tạo cho quầy hiện tại.</Txt>
+          {printState === 'printing' ? <Txt variant="caption" muted>Đang in hóa đơn và phiếu số…</Txt> : null}
+          {printState === 'done' ? <Txt variant="caption" muted>Đã in hóa đơn và phiếu số.</Txt> : null}
+          {printState === 'unconfigured' ? (
+            <Txt variant="caption" muted>Chưa chọn máy in. Vào Tài khoản &gt; Máy in hóa đơn để chọn.</Txt>
+          ) : null}
+          {printState === 'failed' ? (
+            <>
+              <Txt variant="caption" color="#C0392B" style={styles.printError}>
+                {printError} Thanh toán vẫn đã được ghi nhận.
+              </Txt>
+              <Btn label="In lại" icon="print" variant="ghost" onPress={() => void printBill(paidOrder.id)} />
+            </>
+          ) : null}
           {trackingUrl ? (
             <View style={styles.trackingQr}>
               <QRCode value={trackingUrl} size={150} />
@@ -247,4 +295,5 @@ const styles = StyleSheet.create({
   success: { alignItems: 'center', gap: 10, paddingVertical: 12 },
   callNumber: { fontFamily: fontFamily.black, fontSize: 64, lineHeight: 72 },
   trackingQr: { alignItems: 'center', gap: 8, marginTop: 12 },
+  printError: { textAlign: 'center' },
 });

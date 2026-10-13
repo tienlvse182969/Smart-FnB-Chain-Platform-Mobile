@@ -219,5 +219,23 @@
       "successHint": "The customer display of {{station}} is connected. The cart and QR codes will show there.",
       "done": "Done"
     }
+  },
+  "printer": {
+    "section": "Receipt printer",
+    "none": "No printer selected",
+    "noneHint": "Pair the printer in Android Bluetooth settings, then select it here.",
+    "choose": "Select printer",
+    "change": "Change printer",
+    "pickTitle": "Select a paired printer",
+    "pickEmpty": "No paired devices yet. Pair the printer in Android Bluetooth settings first (PIN is usually 0000 or 1234).",
+    "testPrint": "Test print",
+    "testPrinted": "Test page sent.",
+    "loadFailed": "Could not read the Bluetooth device list.",
+    "remove": "Remove",
+    "printMode": "Receipt print mode",
+    "modeImage": "Image (diacritics)",
+    "modeText": "Plain text",
+    "modeImageHint": "Renders the receipt as an image with the app font, full Vietnamese diacritics. A few seconds slower.",
+    "modeTextHint": "The printer prints ASCII text without diacritics. Faster."
   }
 }

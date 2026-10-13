@@ -4,6 +4,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { NavRail, type NavDest } from '@/src/components/nav-rail';
 import { CustomerDisplayDialog } from '@/src/components/pos/customer-display-dialog';
+import { ReceiptPrintHost } from '@/src/components/pos/receipt-print-host';
 import { useAuth } from '@/src/auth/auth-context';
 import { useStore } from '@/src/data/store';
 import { CustomerDisplayProvider } from '@/src/stations/customer-display-context';
@@ -67,6 +68,7 @@ export default function CashierLayout() {
         ) : null}
       </View>
       <CustomerDisplayDialog />
+      <ReceiptPrintHost />
     </CustomerDisplayProvider>
   );
 }
