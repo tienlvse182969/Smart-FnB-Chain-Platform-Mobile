@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { AuthProvider } from '@/src/auth/auth-context';
+import { AppSplash } from '@/src/components/app-splash';
 import { StoreProvider } from '@/src/data/store';
 import { loadStoredLanguage } from '@/src/i18n';
 import { StationProvider } from '@/src/stations/station-context';
@@ -32,7 +33,9 @@ export default function RootLayout() {
     loadStoredLanguage().finally(() => setLanguageLoaded(true));
   }, []);
 
-  if (!fontsLoaded || !languageLoaded) return null;
+  const ready = fontsLoaded && languageLoaded;
+
+  if (!ready) return <AppSplash visible />;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -60,6 +63,7 @@ export default function RootLayout() {
           </AntdProvider>
         </AppThemeContext.Provider>
       </SafeAreaProvider>
+      <AppSplash visible={false} />
     </GestureHandlerRootView>
   );
 }

@@ -1,6 +1,7 @@
+import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, ImageBackground, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/auth/auth-context';
@@ -116,10 +117,11 @@ export default function LoginScreen() {
   const roleLabel = (role: RecentAccount['role']) => (role === 'CASHIER' ? 'Thu ngân' : 'Pha chế');
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.fill_body }]}>
+    <ImageBackground source={require('@/assets/images/login-background.jpg')} style={styles.safe} resizeMode="cover">
+    <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView style={styles.safe} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.center} keyboardShouldPersistTaps="handled">
-          <View style={[styles.card, { backgroundColor: theme.fill_base, borderColor: theme.border_color_thin }]}>
+          <BlurView intensity={60} tint="light" experimentalBlurMethod="dimezisBlurView" style={styles.card}>
             <Image source={require('@/assets/logo/logo1.png')} style={styles.logo} resizeMode="contain" />
             <Txt variant="title" style={styles.title}>Đăng nhập nhân viên</Txt>
 
@@ -169,17 +171,28 @@ export default function LoginScreen() {
                 {accounts.length ? <Btn label="Chọn từ tài khoản đã đăng nhập" variant="plain" block onPress={showPicker} /> : null}
               </>
             )}
-          </View>
+          </BlurView>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   center: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  card: { width: '100%', maxWidth: 440, padding: 24, borderWidth: StyleSheet.hairlineWidth, borderRadius: 8, gap: 16 },
+  card: {
+    width: '100%',
+    maxWidth: 440,
+    padding: 24,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.55)',
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.35)',
+    overflow: 'hidden',
+    gap: 16,
+  },
   logo: { width: 220, height: 90, alignSelf: 'center' },
   title: { textAlign: 'center' },
   subtitle: { textAlign: 'center', marginTop: -10 },
