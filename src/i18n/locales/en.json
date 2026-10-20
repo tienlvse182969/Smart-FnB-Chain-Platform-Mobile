@@ -143,7 +143,29 @@
     "reprintReason": "Reprint reason",
     "reprintReasonPlaceholder": "e.g. paper jam, customer request",
     "reprintConfirm": "Reprint",
-    "reprintFailed": "Could not reprint the bill"
+    "reprintFailed": "Could not reprint the bill",
+    "pdf": {
+      "title": "PDF payment receipt",
+      "view": "View / print PDF",
+      "retry": "Regenerate PDF",
+      "refresh": "Refresh",
+      "generating": "Generating PDF…",
+      "failed": "Could not generate the PDF",
+      "disabled": "PDF storage is not enabled on the server.",
+      "localStorageHint": "The server stores PDFs locally, so the app cannot open them. S3/R2 storage is required.",
+      "loadError": "Could not load the PDF receipt"
+    },
+    "printHistory": {
+      "title": "Print history",
+      "first": "Bill print",
+      "reprint": "Reprint",
+      "status": {
+        "PENDING": "Pending",
+        "PRINTED": "Printed",
+        "FAILED": "Failed",
+        "CANCELLED": "Cancelled"
+      }
+    }
   },
   "receipt": {
     "callNumberSlip": "Number slip",
@@ -236,6 +258,51 @@
     "modeImage": "Image (diacritics)",
     "modeText": "Plain text",
     "modeImageHint": "Renders the receipt as an image with the app font, full Vietnamese diacritics. A few seconds slower.",
-    "modeTextHint": "The printer prints ASCII text without diacritics. Faster."
+    "modeTextHint": "The printer prints ASCII text without diacritics. Faster.",
+    "error": {
+      "retry": "Try again",
+      "NOT_CONFIGURED": {
+        "title": "No printer selected",
+        "tips": {
+          "0": "Go to Account > Receipt printer and pick a paired Bluetooth printer."
+        }
+      },
+      "UNSUPPORTED": {
+        "title": "This device cannot print",
+        "tips": {
+          "0": "Bluetooth printing only works on Android with a development build (not Expo Go)."
+        }
+      },
+      "NO_PERMISSION": {
+        "title": "Bluetooth permission needed",
+        "tips": {
+          "0": "Open Android Settings, allow “Nearby devices” for the app, then try again."
+        }
+      },
+      "BLUETOOTH_OFF": {
+        "title": "Bluetooth is off",
+        "tips": {
+          "0": "Turn Bluetooth on for the POS device, then try again."
+        }
+      },
+      "CONNECTION": {
+        "title": "Cannot connect to the printer",
+        "tips": {
+          "0": "The printer is powered on and close to the POS device.",
+          "1": "The printer has paper, the cover is closed and there is no paper jam.",
+          "2": "The printer is paired in Bluetooth settings and not connected to another device.",
+          "3": "Turn the printer off and on again if it still fails."
+        }
+      },
+      "UNKNOWN": {
+        "title": "Printing failed",
+        "tips": {
+          "0": "Check whether the printer is out of paper, jammed or showing an error.",
+          "1": "Check the device’s network connection.",
+          "2": "Tap Try again once it is sorted."
+        }
+      },
+      "orderPaid": "The payment is still recorded. You can reprint any time from Today’s orders."
+    }
   }
 }

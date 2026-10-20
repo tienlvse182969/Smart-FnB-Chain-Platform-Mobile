@@ -13,7 +13,11 @@ import {
   type CounterOrder,
   type PayosPayment,
 } from '@/src/services/cashier-api';
-import { PrinterNotConfiguredError } from '@/src/services/printer/bluetooth-printer';
+import {
+  PrinterNotConfiguredError,
+  toPrintFailure,
+  type PrintFailure,
+} from '@/src/services/printer/bluetooth-printer';
 import { printOrderReceipt } from '@/src/services/printer/print-service';
 import { useStation } from '@/src/stations/station-context';
 import { fontFamily } from '@/src/theme/typography';
@@ -22,6 +26,7 @@ import { Btn } from '@/src/components/ui/button';
 import { Field } from '@/src/components/ui/field';
 import { Txt } from '@/src/components/ui/txt';
 import { Segmented } from '@/src/components/ui/segmented';
+import { PrintErrorDialog } from './print-error-dialog';
 import {
   type DisplaySnapshot,
   updateCustomerDisplay,
@@ -48,16 +53,22 @@ export function ServerCheckoutDialog({
   const [trackingUrl, setTrackingUrl] = useState<string | null>(null);
   const [printState, setPrintState] = useState<PrintState>('idle');
   const [printError, setPrintError] = useState<string | null>(null);
+  /** Lỗi in đang chờ thu ngân xác nhận trong modal; tách khỏi `printState` để đóng modal vẫn còn nút "In lại". */
+  const [printFailure, setPrintFailure] = useState<PrintFailure | null>(null);
   const printedOrderId = useRef<string | null>(null);
+  /** PrintJob backend tạo khi thu tiền mặt; nhánh PayOS không có nên tự tìm theo đơn. */
+  const printJobIds = useRef<string[] | undefined>(undefined);
 
   useEffect(() => {
     setPaidOrder(null);
+    printJobIds.current = undefined;
     setTab('cash');
     setQrPayment(null);
     setTendered(order ? String(Number(order.totalAmount)) : '');
     setTrackingUrl(null);
     setPrintState('idle');
     setPrintError(null);
+    setPrintFailure(null);
     printedOrderId.current = null;
   }, [order]);
 
@@ -67,9 +78,10 @@ export function ServerCheckoutDialog({
       setPrintState('printing');
       setPrintError(null);
       try {
-        await printOrderReceipt(orderId, selectedStation);
+        await printOrderReceipt(orderId, selectedStation, printJobIds.current);
         setPrintState('done');
       } catch (failure) {
+        setPrintFailure(toPrintFailure(failure));
         if (failure instanceof PrinterNotConfiguredError) {
           setPrintState('unconfigured');
         } else {
@@ -152,6 +164,8 @@ export function ServerCheckoutDialog({
     setSubmitting(true);
     try {
       const result = await collectCash(order.id, selectedStation.id, tenderedAmount);
+      // phải gán trước setPaidOrder: effect tự in chạy ngay sau khi có paidOrder
+      printJobIds.current = result.printJobs?.map((job) => job.id);
       setPaidOrder(result.order);
       setTrackingUrl(result.tracking.url);
       void updateCustomerDisplay(selectedStation.id, {
@@ -200,6 +214,20 @@ export function ServerCheckoutDialog({
   };
 
   return (
+    <>
+    <PrintErrorDialog
+      failure={printFailure}
+      orderPaid
+      onClose={() => setPrintFailure(null)}
+      onRetry={
+        paidOrder
+          ? () => {
+              setPrintFailure(null);
+              void printBill(paidOrder.id);
+            }
+          : undefined
+      }
+    />
     <AppModal
       visible
       title={paidOrder ? 'Thanh toán thành công' : `Thanh toán ${order.orderCode}`}
@@ -282,6 +310,7 @@ export function ServerCheckoutDialog({
         </View>
       )}
     </AppModal>
+    </>
   );
 }
 
