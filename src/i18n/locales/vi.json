@@ -143,7 +143,29 @@
     "reprintReason": "Lý do in lại",
     "reprintReasonPlaceholder": "Ví dụ: giấy kẹt, khách yêu cầu",
     "reprintConfirm": "In lại",
-    "reprintFailed": "Không thể in lại bill"
+    "reprintFailed": "Không thể in lại bill",
+    "pdf": {
+      "title": "Phiếu thanh toán PDF",
+      "view": "Xem / in PDF",
+      "retry": "Tạo lại PDF",
+      "refresh": "Làm mới",
+      "generating": "Đang tạo PDF…",
+      "failed": "Chưa tạo được PDF",
+      "disabled": "Máy chủ chưa bật tính năng lưu PDF.",
+      "localStorageHint": "Máy chủ đang lưu PDF cục bộ nên chưa mở được trên app. Cần cấu hình kho S3/R2.",
+      "loadError": "Không thể tải phiếu PDF"
+    },
+    "printHistory": {
+      "title": "Lịch sử in",
+      "first": "In bill",
+      "reprint": "In lại",
+      "status": {
+        "PENDING": "Chờ in",
+        "PRINTED": "Đã in",
+        "FAILED": "In thất bại",
+        "CANCELLED": "Đã huỷ"
+      }
+    }
   },
   "receipt": {
     "callNumberSlip": "Phiếu số",
@@ -236,6 +258,51 @@
     "modeImage": "Ảnh (có dấu)",
     "modeText": "Chữ không dấu",
     "modeImageHint": "Dựng bill thành ảnh với font như trong app, đủ dấu tiếng Việt. In chậm hơn vài giây.",
-    "modeTextHint": "Máy in tự in chữ ASCII không dấu, nhanh nhưng không có dấu tiếng Việt."
+    "modeTextHint": "Máy in tự in chữ ASCII không dấu, nhanh nhưng không có dấu tiếng Việt.",
+    "error": {
+      "retry": "Thử lại",
+      "NOT_CONFIGURED": {
+        "title": "Chưa chọn máy in",
+        "tips": {
+          "0": "Vào Tài khoản > Máy in hóa đơn để chọn máy in Bluetooth đã ghép đôi."
+        }
+      },
+      "UNSUPPORTED": {
+        "title": "Thiết bị không in được",
+        "tips": {
+          "0": "In Bluetooth chỉ chạy trên Android với development build (không dùng Expo Go)."
+        }
+      },
+      "NO_PERMISSION": {
+        "title": "Chưa cấp quyền Bluetooth",
+        "tips": {
+          "0": "Vào Cài đặt Android, cấp quyền “Thiết bị ở gần” cho ứng dụng rồi thử lại."
+        }
+      },
+      "BLUETOOTH_OFF": {
+        "title": "Bluetooth đang tắt",
+        "tips": {
+          "0": "Bật Bluetooth trên thiết bị POS rồi thử lại."
+        }
+      },
+      "CONNECTION": {
+        "title": "Không kết nối được máy in",
+        "tips": {
+          "0": "Máy in đã bật nguồn và nằm gần thiết bị POS.",
+          "1": "Máy in còn giấy, nắp đóng kín và không bị kẹt giấy.",
+          "2": "Máy in đã ghép đôi trong Cài đặt Bluetooth và không đang kết nối với thiết bị khác.",
+          "3": "Tắt rồi bật lại máy in nếu vẫn lỗi."
+        }
+      },
+      "UNKNOWN": {
+        "title": "In không thành công",
+        "tips": {
+          "0": "Kiểm tra máy in có hết giấy, kẹt giấy hoặc báo lỗi không.",
+          "1": "Kiểm tra kết nối mạng của thiết bị.",
+          "2": "Bấm Thử lại sau khi xử lý xong."
+        }
+      },
+      "orderPaid": "Thanh toán vẫn đã được ghi nhận. Bạn có thể in lại bất cứ lúc nào trong màn Đơn hôm nay."
+    }
   }
 }

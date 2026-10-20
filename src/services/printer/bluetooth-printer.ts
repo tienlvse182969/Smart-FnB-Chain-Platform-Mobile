@@ -3,10 +3,38 @@ import { PermissionsAndroid, Platform } from 'react-native';
 
 type BluetoothModule = typeof import('react-native-bluetooth-classic').default;
 
-export class PrinterError extends Error {}
+/** Nhóm lỗi in để UI báo đúng nguyên nhân và hướng dẫn xử lý cho thu ngân. */
+export type PrinterErrorKind =
+  | 'NOT_CONFIGURED'
+  | 'UNSUPPORTED'
+  | 'NO_PERMISSION'
+  | 'BLUETOOTH_OFF'
+  | 'CONNECTION'
+  | 'UNKNOWN';
+
+export class PrinterError extends Error {
+  kind: PrinterErrorKind;
+
+  constructor(message: string, kind: PrinterErrorKind = 'UNKNOWN') {
+    super(message);
+    this.kind = kind;
+  }
+}
 
 /** Chưa chọn máy in nào cho thiết bị này (khác với lỗi khi đang in). */
-export class PrinterNotConfiguredError extends PrinterError {}
+export class PrinterNotConfiguredError extends PrinterError {
+  constructor(message: string) {
+    super(message, 'NOT_CONFIGURED');
+  }
+}
+
+export type PrintFailure = { kind: PrinterErrorKind; message: string };
+
+/** Chuẩn hoá mọi ngoại lệ phát sinh khi in (kể cả lỗi ngoài PrinterError như mất mạng khi lấy bill) để hiển thị. */
+export function toPrintFailure(error: unknown): PrintFailure {
+  if (error instanceof PrinterError) return { kind: error.kind, message: error.message };
+  return { kind: 'UNKNOWN', message: error instanceof Error ? error.message : String(error ?? '') };
+}
 
 /** `image`: dựng bill thành ảnh (có dấu, font như app). `text`: chữ ASCII không dấu, nhanh hơn. */
 export type PrintMode = 'image' | 'text';
@@ -44,12 +72,15 @@ export async function clearPrinterConfig() {
 
 // Nạp module native khi cần để app vẫn mở được trên Expo Go (không có module này); khi đó in sẽ báo lỗi rõ ràng.
 function bluetooth(): BluetoothModule {
-  if (Platform.OS !== 'android') throw new PrinterError('In qua Bluetooth hiện chỉ hỗ trợ Android.');
+  if (Platform.OS !== 'android') throw new PrinterError('In qua Bluetooth hiện chỉ hỗ trợ Android.', 'UNSUPPORTED');
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('react-native-bluetooth-classic').default as BluetoothModule;
   } catch {
-    throw new PrinterError('Bản app này chưa có module Bluetooth. Hãy dùng development build thay cho Expo Go.');
+    throw new PrinterError(
+      'Bản app này chưa có module Bluetooth. Hãy dùng development build thay cho Expo Go.',
+      'UNSUPPORTED',
+    );
   }
 }
 
@@ -57,11 +88,11 @@ async function ensureReady(bt: BluetoothModule) {
   if (typeof Platform.Version === 'number' && Platform.Version >= 31) {
     const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT);
     if (result !== PermissionsAndroid.RESULTS.GRANTED) {
-      throw new PrinterError('Chưa cấp quyền Bluetooth cho ứng dụng. Hãy cấp quyền trong Cài đặt.');
+      throw new PrinterError('Chưa cấp quyền Bluetooth cho ứng dụng. Hãy cấp quyền trong Cài đặt.', 'NO_PERMISSION');
     }
   }
   if (!(await bt.isBluetoothEnabled())) {
-    throw new PrinterError('Bluetooth đang tắt. Hãy bật Bluetooth rồi thử lại.');
+    throw new PrinterError('Bluetooth đang tắt. Hãy bật Bluetooth rồi thử lại.', 'BLUETOOTH_OFF');
   }
 }
 
@@ -99,7 +130,10 @@ export async function sendToPrinter(address: string, payload: string, chunkDelay
     try {
       await writeAll(bt, address, payload, chunkDelayMs);
     } catch {
-      throw new PrinterError('Không kết nối được máy in. Hãy kiểm tra máy in đã bật, còn giấy và đã ghép đôi.');
+      throw new PrinterError(
+        'Không kết nối được máy in. Hãy kiểm tra máy in đã bật, còn giấy và đã ghép đôi.',
+        'CONNECTION',
+      );
     }
   }
 }

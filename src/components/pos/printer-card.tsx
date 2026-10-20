@@ -13,12 +13,15 @@ import {
   listPairedPrinters,
   loadPrinterConfig,
   savePrinterConfig,
+  toPrintFailure,
   type PairedPrinter,
   type PrinterConfig,
+  type PrintFailure,
   type PrintMode,
 } from '@/src/services/printer/bluetooth-printer';
 import { printTestPage } from '@/src/services/printer/print-service';
 import { useAppTheme } from '@/src/theme/use-theme';
+import { PrintErrorDialog } from './print-error-dialog';
 
 /** Mục "Máy in hóa đơn" trong Tài khoản của thu ngân: chọn máy in Bluetooth đã ghép đôi, chọn kiểu chữ, in thử. */
 export function PrinterCard() {
@@ -28,6 +31,7 @@ export function PrinterCard() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [devices, setDevices] = useState<PairedPrinter[] | null>(null);
   const [testing, setTesting] = useState(false);
+  const [testFailure, setTestFailure] = useState<PrintFailure | null>(null);
 
   useEffect(() => {
     void loadPrinterConfig().then(setConfig);
@@ -70,7 +74,7 @@ export function PrinterCard() {
       await printTestPage(config);
       toast.success(t('printer.testPrinted'), 1.5, undefined, false);
     } catch (failure) {
-      toast.fail(failure instanceof Error ? failure.message : String(failure), 3, undefined, false);
+      setTestFailure(toPrintFailure(failure));
     } finally {
       setTesting(false);
     }
@@ -124,6 +128,15 @@ export function PrinterCard() {
           </>
         ) : null}
       </View>
+
+      <PrintErrorDialog
+        failure={testFailure}
+        onClose={() => setTestFailure(null)}
+        onRetry={() => {
+          setTestFailure(null);
+          void testPrint();
+        }}
+      />
 
       <AppModal
         visible={pickerOpen}

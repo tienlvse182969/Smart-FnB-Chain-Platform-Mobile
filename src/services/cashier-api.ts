@@ -85,6 +85,33 @@ export type CounterOrder = {
   }[];
 };
 
+export type PrintJobStatus = 'PENDING' | 'PRINTED' | 'FAILED' | 'CANCELLED';
+
+/** Lượt in bill (RECEIPT) hoặc phiếu số (QUEUE_TICKET); Mobile phải báo kết quả in thật về backend. */
+export type PrintJob = {
+  id: string;
+  orderId: string;
+  type: 'RECEIPT' | 'QUEUE_TICKET';
+  status: PrintJobStatus;
+  isReprint: boolean;
+  reason: string | null;
+  printedAt: string | null;
+  errorMessage: string | null;
+};
+
+/** `DISABLED` khi backend tắt `RECEIPT_PDF_ENABLED`; khi đó chỉ có `status` và `orderId`. */
+export type ReceiptDocument = {
+  status: 'PENDING' | 'READY' | 'FAILED' | 'DISABLED';
+  orderId: string;
+  fileName?: string | null;
+  fileSize?: number | null;
+  generatedAt?: string | null;
+  errorMessage?: string | null;
+  /** S3/R2: presigned URL sống 10 phút. Local storage: đường dẫn tương đối, cần JWT. */
+  downloadUrl?: string | null;
+  expiresAt?: string | null;
+};
+
 export type PayosPayment = {
   id: string;
   status: 'PENDING' | 'SUCCESS' | 'FAILED';
@@ -191,6 +218,7 @@ export async function collectCash(orderId: string, stationId: string, tenderedAm
   const { data } = await apiClient.post<{
     order: CounterOrder;
     tracking: { token: string; url: string };
+    printJobs?: PrintJob[];
   }>(`/cashier/orders/${orderId}/payments/cash`, {
     stationId,
     tenderedAmount,
@@ -351,8 +379,43 @@ export async function getOrderReceipt(orderId: string) {
 }
 
 export async function reprintOrder(orderId: string, reason: string) {
-  const { data } = await apiClient.post<OrderReceipt>(`/cashier/orders/${orderId}/reprint`, {
-    reason: reason.trim(),
+  const { data } = await apiClient.post<OrderReceipt & { printJobs?: PrintJob[] }>(
+    `/cashier/orders/${orderId}/reprint`,
+    { reason: reason.trim() },
+  );
+  return data;
+}
+
+export async function listPrintJobs(orderId: string) {
+  const { data } = await apiClient.get<PrintJob[]>(`/cashier/orders/${orderId}/print-jobs`);
+  return data;
+}
+
+const PRINT_ERROR_MAX_LENGTH = 500;
+
+/** Báo kết quả in vật lý. FAILED bắt buộc có errorMessage (backend giới hạn 500 ký tự). */
+export async function reportPrintResult(
+  printJobId: string,
+  status: 'PRINTED' | 'FAILED',
+  errorMessage?: string,
+) {
+  const { data } = await apiClient.post<PrintJob>(`/cashier/print-jobs/${printJobId}/result`, {
+    status,
+    ...(status === 'FAILED'
+      ? { errorMessage: (errorMessage?.trim() || 'Không in được').slice(0, PRINT_ERROR_MAX_LENGTH) }
+      : {}),
   });
+  return data;
+}
+
+export async function getReceiptDocument(orderId: string) {
+  const { data } = await apiClient.get<ReceiptDocument>(`/cashier/orders/${orderId}/receipt-document`);
+  return data;
+}
+
+export async function retryReceiptDocument(orderId: string) {
+  const { data } = await apiClient.post<ReceiptDocument>(
+    `/cashier/orders/${orderId}/receipt-document/retry`,
+  );
   return data;
 }

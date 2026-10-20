@@ -1,4 +1,9 @@
-import { getOrderReceipt, type OrderReceipt } from '@/src/services/cashier-api';
+import {
+  getOrderReceipt,
+  listPrintJobs,
+  reportPrintResult,
+  type OrderReceipt,
+} from '@/src/services/cashier-api';
 import type { PosStation } from '@/src/services/stations-api';
 import {
   loadPrinterConfig,
@@ -45,15 +50,55 @@ async function print(printer: PrinterConfig, receipt: OrderReceipt) {
   await sendToPrinter(printer.address, data, chunkDelayMs);
 }
 
-/** In bill + phiếu số gọi từ dữ liệu receipt có sẵn (dùng cho in lại). */
-export async function printReceipt(receipt: OrderReceipt, station: PosStation | null) {
-  await print(await resolvePrinter(station), receipt);
+/** Báo kết quả in thật cho backend; lỗi báo cáo không được làm đổi kết quả in vật lý (BR-21). */
+async function reportJobs(jobIds: string[], failure?: unknown) {
+  const message = failure instanceof Error ? failure.message : String(failure);
+  await Promise.all(
+    jobIds.map((id) =>
+      (failure === undefined
+        ? reportPrintResult(id, 'PRINTED')
+        : reportPrintResult(id, 'FAILED', message)
+      ).catch((reason) => console.warn('Không báo được kết quả in về máy chủ:', reason)),
+    ),
+  );
 }
 
-/** Lấy receipt từ backend rồi in. */
-export async function printOrderReceipt(orderId: string, station: PosStation | null) {
-  const printer = await resolvePrinter(station);
-  await print(printer, await getOrderReceipt(orderId));
+/** Job cần báo cho lượt in đầu của đơn (PayOS không trả `printJobs`); gồm cả FAILED để in lại dùng đúng job cũ. */
+async function openPrintJobIds(orderId: string): Promise<string[]> {
+  try {
+    const jobs = await listPrintJobs(orderId);
+    return jobs
+      .filter((job) => !job.isReprint && (job.status === 'PENDING' || job.status === 'FAILED'))
+      .map((job) => job.id);
+  } catch (reason) {
+    console.warn('Không lấy được danh sách lượt in:', reason);
+    return [];
+  }
+}
+
+/** Chạy lệnh in rồi báo PRINTED/FAILED cho từng job; lỗi vẫn được ném lại để UI xử lý như trước. */
+async function printAndReport(jobIds: string[], run: () => Promise<void>) {
+  try {
+    await run();
+  } catch (failure) {
+    await reportJobs(jobIds, failure ?? 'Không in được');
+    throw failure;
+  }
+  await reportJobs(jobIds);
+}
+
+/** In bill + phiếu số gọi từ dữ liệu receipt có sẵn (dùng cho in lại); `jobIds` là các PrintJob backend đã tạo. */
+export async function printReceipt(receipt: OrderReceipt, station: PosStation | null, jobIds: string[] = []) {
+  await printAndReport(jobIds, async () => print(await resolvePrinter(station), receipt));
+}
+
+/** Lấy receipt từ backend rồi in; không truyền `jobIds` thì tự tìm job đang chờ của đơn. */
+export async function printOrderReceipt(orderId: string, station: PosStation | null, jobIds?: string[]) {
+  const ids = jobIds ?? (await openPrintJobIds(orderId));
+  await printAndReport(ids, async () => {
+    const printer = await resolvePrinter(station);
+    await print(printer, await getOrderReceipt(orderId));
+  });
 }
 
 /** Phiếu in thử theo đúng chế độ đang chọn; ở chế độ ảnh, lỗi dựng ảnh được báo lên để biết mà sửa. */
