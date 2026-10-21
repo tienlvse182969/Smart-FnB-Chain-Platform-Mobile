@@ -4,6 +4,8 @@ import { ApiError, type AuthResponse } from '@/src/services/auth-types';
 import { clearTokens, getTokens, saveTokens } from '@/src/services/token-storage';
 
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3100/api/v1';
+/** Gốc máy chủ (không có `/api/v1`): socket và file tĩnh như logo `/uploads/...` nằm ngoài prefix API. */
+export const API_ORIGIN = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
 
 export const apiClient = create({ baseURL: API_BASE_URL, timeout: 15_000 });
 const refreshClient = create({ baseURL: API_BASE_URL, timeout: 15_000 });

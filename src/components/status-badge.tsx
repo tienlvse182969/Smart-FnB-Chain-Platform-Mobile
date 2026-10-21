@@ -37,7 +37,7 @@ function Badge({ visual, size }: { visual: Visual; size: 'sm' | 'md' }) {
   const danger = '#C0392B';
   const solid = visual.variant === 'solid';
   const fg = solid
-    ? theme.color_text_base_inverse
+    ? theme.brand_on_primary
     : visual.variant === 'danger'
       ? danger
       : theme.color_text_base;
