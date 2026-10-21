@@ -1,9 +1,12 @@
 import { Badge } from '@ant-design/react-native';
 import type { Href } from 'expo-router';
 import { router, usePathname } from 'expo-router';
+import { Image as RemoteImage } from 'expo-image';
+import { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useBrand } from '@/src/branding/branding-context';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { Icon, type IconName } from './ui/icon';
@@ -19,6 +22,32 @@ export type NavDest = {
 
 const initials = (name: string) =>
   name.split(' ').slice(-2).map((w) => w[0]).join('').toUpperCase();
+
+/** Logo của chuỗi (Owner tải lên); chưa có hoặc tải lỗi thì dùng logo nền tảng đóng gói sẵn. */
+function BrandLogo({ compact }: { compact: boolean }) {
+  const { logo } = useBrand();
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [logo]);
+
+  if (logo && !failed) {
+    return (
+      <RemoteImage
+        source={{ uri: logo }}
+        style={compact ? styles.brandIconCompact : styles.brandLogoCustom}
+        contentFit="contain"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+  return compact ? (
+    <Image source={require('@/assets/logo/logo2-icon.png')} style={styles.brandIconCompact} resizeMode="contain" />
+  ) : (
+    <Image source={require('@/assets/logo/logo2.png')} style={styles.brandLogo} resizeMode="contain" />
+  );
+}
 
 /**
  * Nav rail dùng chung cho mọi actor (Cashier, Barista…) — logo, badge, avatar cuối rail
@@ -41,6 +70,7 @@ export function NavRail({
   size?: 'md' | 'lg';
 }) {
   const theme = useAppTheme();
+  const brand = useBrand();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
 
@@ -76,19 +106,12 @@ export function NavRail({
       {!bottom ? (
         <>
           <View style={[styles.brand, compact && styles.brandCompact]}>
-            {compact ? (
-              <Image
-                source={require('@/assets/logo/logo2-icon.png')}
-                style={styles.brandIconCompact}
-                resizeMode="contain"
-              />
-            ) : (
-              <Image
-                source={require('@/assets/logo/logo2.png')}
-                style={styles.brandLogo}
-                resizeMode="contain"
-              />
-            )}
+            <BrandLogo compact={compact} />
+            {brand.custom && brand.displayName && !compact ? (
+              <Txt variant="tiny" muted numberOfLines={2} style={styles.brandName}>
+                {brand.displayName}
+              </Txt>
+            ) : null}
           </View>
 
           <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
@@ -99,7 +122,7 @@ export function NavRail({
         {dests.map((d) => {
           const active = pathname.includes(d.match);
           const showBadge = (d.badgeCount ?? 0) > 0;
-          const fg = active ? theme.color_text_base_inverse : theme.color_text_base;
+          const fg = active ? theme.brand_on_primary : theme.color_text_base;
           return (
             <Pressable
               key={d.match}
@@ -179,7 +202,9 @@ const styles = StyleSheet.create({
   brand: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6, minHeight: 32 },
   brandCompact: { justifyContent: 'center' },
   brandLogo: { width: 84, height: 119 },
+  brandLogoCustom: { width: 84, height: 64 },
   brandIconCompact: { width: 32, height: 32 },
+  brandName: { textAlign: 'center', marginTop: 4 },
   divider: { height: StyleSheet.hairlineWidth, marginVertical: 12 },
   destList: { gap: 6, flex: 1 },
   destListBottom: { flexDirection: 'row', gap: 0, alignItems: 'center', justifyContent: 'space-evenly' },

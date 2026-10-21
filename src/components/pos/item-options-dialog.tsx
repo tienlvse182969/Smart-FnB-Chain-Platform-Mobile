@@ -53,7 +53,7 @@ function OptionRow({
             backgroundColor: checked ? theme.brand_primary : 'transparent',
           },
         ]}>
-        {checked ? <Icon name="check" size={12} color={theme.color_text_base_inverse} strokeWidth={3} /> : null}
+        {checked ? <Icon name="check" size={12} color={theme.brand_on_primary} strokeWidth={3} /> : null}
       </View>
       <Txt variant="body" style={styles.optLabel}>
         {label}

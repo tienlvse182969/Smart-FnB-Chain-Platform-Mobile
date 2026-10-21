@@ -32,7 +32,7 @@ function BigButton({
 }) {
   const theme = useAppTheme();
   const bg = active ? theme.brand_primary : theme.fill_base;
-  const fg = active ? theme.color_text_base_inverse : theme.color_text_base;
+  const fg = active ? theme.brand_on_primary : theme.color_text_base;
   return (
     <Pressable
       onPress={onPress}

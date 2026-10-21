@@ -1,7 +1,7 @@
 import { io, type Socket } from 'socket.io-client';
 
 import type { CartLine } from '@/src/data/store';
-import { API_BASE_URL } from '@/src/lib/api-client';
+import { API_ORIGIN } from '@/src/lib/api-client';
 import { me } from '@/src/services/auth-api';
 import { getTokens } from '@/src/services/token-storage';
 
@@ -36,10 +36,6 @@ let retryTimer: ReturnType<typeof setTimeout> | undefined;
 /** Bản mới nhất của từng quầy — gửi lại mỗi lần (nối lại) kết nối, không gửi dồn bản cũ. */
 const latest = new Map<string, DisplaySnapshot>();
 
-function apiOrigin() {
-  return API_BASE_URL.replace(/\/api\/v1\/?$/, '');
-}
-
 const send = (active: Socket, stationId: string, snapshot: DisplaySnapshot) =>
   active.emit('display:update', { stationId, snapshot });
 
@@ -49,7 +45,7 @@ const send = (active: Socket, stationId: string, snapshot: DisplaySnapshot) =>
  */
 function connection() {
   if (socket) return socket;
-  const active = io(`${apiOrigin()}/operations`, {
+  const active = io(`${API_ORIGIN}/operations`, {
     path: process.env.EXPO_PUBLIC_REALTIME_PATH || '/socket.io',
     auth: (cb) => {
       void getTokens()

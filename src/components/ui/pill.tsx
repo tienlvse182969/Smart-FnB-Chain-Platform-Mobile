@@ -22,7 +22,7 @@ export function Pill({
     normalWrap: { backgroundColor: 'transparent', borderColor: theme.border_color_base },
     normalText: { color: theme.color_text_base },
     activeWrap: { backgroundColor: theme.brand_primary, borderColor: theme.brand_primary },
-    activeText: { color: theme.color_text_base_inverse },
+    activeText: { color: theme.brand_on_primary },
   };
 
   return (

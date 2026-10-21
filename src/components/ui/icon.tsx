@@ -138,7 +138,7 @@ export function IconButton({
 }) {
   const theme = useAppTheme();
   const tint =
-    variant === 'filled' ? theme.color_text_base_inverse : color ?? theme.color_text_base;
+    variant === 'filled' ? theme.brand_on_primary : color ?? theme.color_text_base;
 
   return (
     <Pressable

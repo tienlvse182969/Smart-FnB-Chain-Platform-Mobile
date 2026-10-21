@@ -118,7 +118,7 @@ export default function BaristaQueueScreen() {
                 { backgroundColor: theme.brand_primary },
                 pressed && { opacity: 0.7 },
               ]}>
-              <Txt style={[styles.handOverText, { color: theme.color_text_base_inverse }]}>
+              <Txt style={[styles.handOverText, { color: theme.brand_on_primary }]}>
                 {t('baristaQueue.handOver')}
               </Txt>
             </Pressable>

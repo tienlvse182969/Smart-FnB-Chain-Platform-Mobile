@@ -7,7 +7,7 @@ export async function login(email: string, password: string) {
 }
 
 export async function me() {
-  const { data } = await apiClient.get<AuthUser & { employeeId: string | null; branchId: string | null }>('/auth/me');
+  const { data } = await apiClient.get<AuthUser & { employeeId: string | null; branchId: string | null; chainId: string | null }>('/auth/me');
   return data;
 }
 

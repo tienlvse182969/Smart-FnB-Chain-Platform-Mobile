@@ -1,6 +1,5 @@
 import '@/src/theme/global-font';
 
-import { Provider as AntdProvider } from '@ant-design/react-native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -10,12 +9,13 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { AuthProvider } from '@/src/auth/auth-context';
+import { BrandingProvider } from '@/src/branding/branding-context';
 import { AppSplash } from '@/src/components/app-splash';
 import { StoreProvider } from '@/src/data/store';
 import { loadStoredLanguage } from '@/src/i18n';
 import { StationProvider } from '@/src/stations/station-context';
 import { harmonyFontMap } from '@/src/theme/harmony-fonts';
-import { AppThemeContext, appLightTheme } from '@/src/theme/use-theme';
+import { appLightTheme } from '@/src/theme/use-theme';
 
 export const unstable_settings = {
   anchor: 'login',
@@ -40,9 +40,9 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AppThemeContext.Provider value={appLightTheme}>
-          <AntdProvider theme={appLightTheme}>
-            <AuthProvider>
+        <AuthProvider>
+          {/* Theme theo thương hiệu chuỗi nằm trong AuthProvider: chưa đăng nhập (màn login) thì dùng theme gốc. */}
+          <BrandingProvider>
               <StationProvider>
                 <StoreProvider>
                 <Stack
@@ -59,9 +59,8 @@ export default function RootLayout() {
                 <StatusBar style="dark" />
                 </StoreProvider>
               </StationProvider>
-            </AuthProvider>
-          </AntdProvider>
-        </AppThemeContext.Provider>
+          </BrandingProvider>
+        </AuthProvider>
       </SafeAreaProvider>
       <AppSplash visible={false} />
     </GestureHandlerRootView>

@@ -90,7 +90,7 @@ export function NewOrderBanner() {
           }}
           style={[styles.banner, { backgroundColor: theme.fill_base, borderColor: theme.color_text_base }]}>
           <View style={[styles.iconWrap, { backgroundColor: theme.brand_primary }]}>
-            <Icon name="bell" size={20} color={theme.color_text_base_inverse} />
+            <Icon name="bell" size={20} color={theme.brand_on_primary} />
           </View>
           <View style={styles.textWrap}>
             <Txt variant="bodyStrong">

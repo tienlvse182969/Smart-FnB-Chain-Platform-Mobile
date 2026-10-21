@@ -33,7 +33,7 @@ export function Btn({
 }) {
   const theme = useAppTheme();
   const solid = variant === 'primary';
-  const fg = solid ? theme.color_text_base_inverse : theme.color_text_base;
+  const fg = solid ? theme.brand_on_primary : theme.color_text_base;
   const raw: 'smallRaw' | 'largeRaw' = size === 'sm' ? 'smallRaw' : 'largeRaw';
 
   const styles: Partial<ButtonStyles> = {

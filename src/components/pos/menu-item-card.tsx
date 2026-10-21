@@ -72,9 +72,9 @@ export function MenuItemCard({
                 onDecrement?.();
               }}
               style={styles.stepperBtn}>
-              <Icon name="minus" size={14} color={theme.color_text_base_inverse} />
+              <Icon name="minus" size={14} color={theme.brand_on_primary} />
             </Pressable>
-            <Txt variant="label" color={theme.color_text_base_inverse} style={styles.stepperQty}>
+            <Txt variant="label" color={theme.brand_on_primary} style={styles.stepperQty}>
               {qtyInCart}
             </Txt>
             <Pressable
@@ -84,12 +84,12 @@ export function MenuItemCard({
                 onPress();
               }}
               style={styles.stepperBtn}>
-              <Icon name="plus" size={14} color={theme.color_text_base_inverse} />
+              <Icon name="plus" size={14} color={theme.brand_on_primary} />
             </Pressable>
           </View>
         ) : (
           <View style={[styles.addBadge, { backgroundColor: theme.brand_primary }]}>
-            <Icon name="plus" size={16} color={theme.color_text_base_inverse} />
+            <Icon name="plus" size={16} color={theme.brand_on_primary} />
           </View>
         )}
       </View>
