@@ -413,6 +413,31 @@ export async function getReceiptDocument(orderId: string) {
   return data;
 }
 
+/** Chuyển byte PNG thành base64 theo khối để không tràn stack khi ảnh vài trăm KB. */
+function bytesToBase64(bytes: Uint8Array) {
+  const CHUNK = 0x8000;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
+
+/** Hết thời gian này thì thôi chờ ảnh từ PDF để quầy vẫn có bill in ngay bằng bản dựng cục bộ. */
+const PRINT_IMAGE_TIMEOUT_MS = 8_000;
+
+/**
+ * Ảnh PNG (base64, rộng 768px, đã cắt phần trống cuối phiếu) do backend render từ chính file PDF đã lưu, để in lên
+ * máy nhiệt đúng nội dung bản lưu. Ném lỗi (404 khi PDF tắt/chưa tạo được, hết thời gian...) → caller tự in bản cục bộ.
+ */
+export async function getReceiptPrintImage(orderId: string) {
+  const { data } = await apiClient.get<ArrayBuffer>(
+    `/cashier/orders/${orderId}/receipt-document/print-image`,
+    { responseType: 'arraybuffer', timeout: PRINT_IMAGE_TIMEOUT_MS },
+  );
+  return bytesToBase64(new Uint8Array(data));
+}
+
 export async function retryReceiptDocument(orderId: string) {
   const { data } = await apiClient.post<ReceiptDocument>(
     `/cashier/orders/${orderId}/receipt-document/retry`,

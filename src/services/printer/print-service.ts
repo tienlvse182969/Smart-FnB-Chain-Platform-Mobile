@@ -1,5 +1,6 @@
 import {
   getOrderReceipt,
+  getReceiptPrintImage,
   listPrintJobs,
   reportPrintResult,
   type OrderReceipt,
@@ -33,9 +34,19 @@ async function resolvePrinter(station: PosStation | null): Promise<PrinterConfig
   throw new PrinterNotConfiguredError('Chưa chọn máy in. Vào Tài khoản > Máy in hóa đơn để chọn.');
 }
 
-/** Dựng ảnh nếu được chọn; nếu không dựng được thì in chữ không dấu để bill vẫn ra giấy. */
+/**
+ * Chế độ ảnh: ưu tiên in đúng file PDF đã lưu ở backend (ảnh render từ chính PDF, một tờ đã gồm số gọi và QR) để bản
+ * in và bản lưu thống nhất. Không lấy được (PDF tắt/chưa tạo được, mạng chậm...) thì dựng bill + phiếu số cục bộ; vẫn
+ * không dựng được thì in chữ không dấu — bill luôn ra giấy (BR-21). Chế độ chữ giữ nguyên vì là lựa chọn riêng của máy in.
+ */
 async function buildPayload(receipt: OrderReceipt, mode: PrinterConfig['printMode']): Promise<Payload> {
   if (mode === 'image') {
+    try {
+      const pdfImage = await getReceiptPrintImage(receipt.orderId);
+      return { data: buildRasterPayload([pdfImage]), chunkDelayMs: IMAGE_CHUNK_DELAY_MS };
+    } catch (failure) {
+      console.warn('Không lấy được ảnh bill từ PDF của máy chủ, in bill dựng cục bộ:', failure);
+    }
     try {
       return { data: buildRasterPayload(await renderReceiptImages(receipt)), chunkDelayMs: IMAGE_CHUNK_DELAY_MS };
     } catch (failure) {
