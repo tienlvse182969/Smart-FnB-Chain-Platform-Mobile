@@ -1,5 +1,5 @@
 import { toast } from '@/src/components/ui/toast';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,7 +19,12 @@ import { formatVnd } from '@/src/data/format';
 import { normalizeText } from '@/src/data/order-utils';
 import { useStore } from '@/src/data/store';
 import type { MenuItem } from '@/src/data/types';
-import { checkoutCart, loadCashierMenu, type CounterOrder } from '@/src/services/cashier-api';
+import {
+  checkoutCart,
+  getCounterOrder,
+  loadCashierMenu,
+  type CounterOrder,
+} from '@/src/services/cashier-api';
 import {
   snapshotFromCart,
   updateCustomerDisplay,
@@ -27,6 +32,11 @@ import {
 import { useStation } from '@/src/stations/station-context';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
+import { useAuth } from '@/src/auth/auth-context';
+import {
+  clearPendingPayosCheckout,
+  loadPendingPayosCheckout,
+} from '@/src/services/pending-payment-storage';
 
 const GRID_GAP = 10;
 const GRID_PADDING = 12;
@@ -34,6 +44,7 @@ const GRID_PADDING = 12;
 /** POS tạo đơn tại quầy (CS-01): chọn món + tuỳ chọn, giỏ ở cột phải, chốt đơn rồi thu tiền. */
 export default function PosScreen() {
   const theme = useAppTheme();
+  const { user } = useAuth();
   const { t } = useTranslation();
   const {
     state,
@@ -57,6 +68,31 @@ export default function PosScreen() {
   const [menuLoading, setMenuLoading] = useState(true);
   const [menuError, setMenuError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+
+  const closeCheckout = useCallback((paid: boolean) => {
+    setCheckoutOrder(null);
+    if (paid) clearCart();
+  }, [clearCart]);
+
+  // Khôi phục đơn QR đang chờ sau khi app bị đóng/refresh. Dialog sẽ khôi phục paymentId
+  // và recheck PayOS; không tạo đơn hoặc QR mới nên không thể thu trùng.
+  useEffect(() => {
+    if (!user || !selectedStation || checkoutOrder) return;
+    let active = true;
+    loadPendingPayosCheckout(user.id, selectedStation.branchId)
+      .then(async (pending) => {
+        if (!pending || pending.stationId !== selectedStation.id) return;
+        const latest = await getCounterOrder(pending.order.id);
+        if (!active) return;
+        if (latest.status === 'CANCELLED') {
+          await clearPendingPayosCheckout(user.id, selectedStation.branchId);
+          return;
+        }
+        setCheckoutOrder(latest);
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [checkoutOrder, selectedStation, user]);
 
   // giữ nguyên object khi giỏ không đổi — hộp thanh toán dùng nó làm phụ thuộc của effect,
   // object mới mỗi lần render sẽ gửi lại PAYMENT_PENDING và đè mất QR trên màn hình khách
@@ -287,10 +323,7 @@ export default function PosScreen() {
       <ServerCheckoutDialog
         order={checkoutOrder}
         cartSnapshot={cartSnapshot}
-        onClose={(paid) => {
-          setCheckoutOrder(null);
-          if (paid) clearCart();
-        }}
+        onClose={closeCheckout}
       />
     </SafeAreaView>
   );

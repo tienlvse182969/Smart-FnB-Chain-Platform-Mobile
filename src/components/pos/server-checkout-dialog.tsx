@@ -1,6 +1,6 @@
 import { toast } from '@/src/components/ui/toast';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { AppState, StyleSheet, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 import { formatVnd } from '@/src/data/format';
@@ -10,6 +10,7 @@ import {
   createPayosPayment,
   getCounterOrder,
   getOrderReceipt,
+  recheckPayosPayment,
   type CounterOrder,
   type PayosPayment,
 } from '@/src/services/cashier-api';
@@ -31,6 +32,12 @@ import {
   type DisplaySnapshot,
   updateCustomerDisplay,
 } from '@/src/services/customer-display-realtime';
+import { useAuth } from '@/src/auth/auth-context';
+import {
+  clearPendingPayosCheckout,
+  loadPendingPayosCheckout,
+  savePendingPayosCheckout,
+} from '@/src/services/pending-payment-storage';
 
 type PaymentTab = 'cash' | 'qr';
 type PrintState = 'idle' | 'printing' | 'done' | 'failed' | 'unconfigured';
@@ -44,6 +51,7 @@ export function ServerCheckoutDialog({
   cartSnapshot: DisplaySnapshot;
   onClose: (paid: boolean) => void;
 }) {
+  const { user } = useAuth();
   const { selectedStation } = useStation();
   const [tendered, setTendered] = useState('');
   const [paidOrder, setPaidOrder] = useState<CounterOrder | null>(null);
@@ -55,7 +63,11 @@ export function ServerCheckoutDialog({
   const [printError, setPrintError] = useState<string | null>(null);
   /** Lỗi in đang chờ thu ngân xác nhận trong modal; tách khỏi `printState` để đóng modal vẫn còn nút "In lại". */
   const [printFailure, setPrintFailure] = useState<PrintFailure | null>(null);
+  const [rechecking, setRechecking] = useState(false);
+  const [recheckError, setRecheckError] = useState<string | null>(null);
+  const [lastCheckedAt, setLastCheckedAt] = useState<Date | null>(null);
   const printedOrderId = useRef<string | null>(null);
+  const recheckRunning = useRef(false);
   /** PrintJob backend tạo khi thu tiền mặt; nhánh PayOS không có nên tự tìm theo đơn. */
   const printJobIds = useRef<string[] | undefined>(undefined);
 
@@ -69,8 +81,25 @@ export function ServerCheckoutDialog({
     setPrintState('idle');
     setPrintError(null);
     setPrintFailure(null);
+    setRechecking(false);
+    setRecheckError(null);
+    setLastCheckedAt(null);
     printedOrderId.current = null;
-  }, [order]);
+    if (!order || !user || !selectedStation) return;
+    if (order.paymentStatus === 'PAID') {
+      setPaidOrder(order);
+      void clearPendingPayosCheckout(user.id, selectedStation.branchId);
+      void getOrderReceipt(order.id).then((receipt) => setTrackingUrl(receipt.tracking?.url ?? null));
+      return;
+    }
+    let active = true;
+    void loadPendingPayosCheckout(user.id, selectedStation.branchId).then((pending) => {
+      if (!active || pending?.order.id !== order.id || pending.stationId !== selectedStation.id) return;
+      setTab('qr');
+      setQrPayment(pending.payment);
+    });
+    return () => { active = false; };
+  }, [order, selectedStation, user]);
 
   // In không chặn thanh toán (BR-21): lỗi chỉ hiện trạng thái và cho in lại.
   const printBill = useCallback(
@@ -109,24 +138,74 @@ export function ServerCheckoutDialog({
     });
   }, [cartSnapshot, order, selectedStation]);
 
+  const acceptPaidOrder = useCallback(async (latest: CounterOrder) => {
+    setPaidOrder(latest);
+    setRecheckError(null);
+    if (user && selectedStation) {
+      await clearPendingPayosCheckout(user.id, selectedStation.branchId).catch(() => undefined);
+    }
+    void getOrderReceipt(latest.id).then((receipt) => setTrackingUrl(receipt.tracking?.url ?? null));
+    if (selectedStation) {
+      void updateCustomerDisplay(selectedStation.id, {
+        ...cartSnapshot,
+        state: 'PAID',
+        orderCode: latest.orderCode,
+        callNumber: latest.callNumber ?? undefined,
+        paymentMethod: 'PAYOS',
+      });
+    }
+  }, [cartSnapshot, selectedStation, user]);
+
+  const checkPayos = useCallback(async (manual = false) => {
+    if (!order || !qrPayment || paidOrder || recheckRunning.current) return;
+    recheckRunning.current = true;
+    setRechecking(true);
+    if (manual) setRecheckError(null);
+    try {
+      const result = await recheckPayosPayment(qrPayment.id);
+      setLastCheckedAt(new Date());
+      const latest = result.order ?? await getCounterOrder(order.id);
+      if (result.status === 'SUCCESS' || latest.paymentStatus === 'PAID') {
+        await acceptPaidOrder(latest);
+        return;
+      }
+      if (latest.status === 'CANCELLED') {
+        if (user && selectedStation) {
+          await clearPendingPayosCheckout(user.id, selectedStation.branchId);
+        }
+        toast.info('Đơn hoặc mã QR đã hết hiệu lực.', 3, undefined, false);
+        onClose(false);
+        return;
+      }
+      if (result.status === 'AMOUNT_MISMATCH' || result.status === 'REQUIRES_ATTENTION') {
+        setRecheckError('Khoản tiền cần Quản lý kiểm tra trước khi chuyển xuống pha chế.');
+      } else if (result.status === 'EXPIRED' || result.status === 'FAILED') {
+        setRecheckError('Mã QR đã hết hiệu lực. Hãy quay lại và tạo thanh toán mới.');
+      } else {
+        setRecheckError(null);
+      }
+    } catch (reason) {
+      const message = reason instanceof Error ? reason.message : 'Chưa kiểm tra được PayOS';
+      setRecheckError(message);
+      if (manual) toast.fail(message, 3, undefined, false);
+    } finally {
+      recheckRunning.current = false;
+      setRechecking(false);
+    }
+  }, [acceptPaidOrder, onClose, order, paidOrder, qrPayment, selectedStation, user]);
+
   useEffect(() => {
     if (!order || !qrPayment || paidOrder) return;
     const poll = setInterval(() => {
       void getCounterOrder(order.id)
         .then((latest) => {
           if (latest.paymentStatus === 'PAID') {
-            setPaidOrder(latest);
-            void getOrderReceipt(latest.id).then((receipt) => setTrackingUrl(receipt.tracking?.url ?? null));
-            if (selectedStation) {
-              void updateCustomerDisplay(selectedStation.id, {
-                ...cartSnapshot,
-                state: 'PAID',
-                orderCode: latest.orderCode,
-                callNumber: latest.callNumber ?? undefined,
-              });
-            }
+            void acceptPaidOrder(latest);
           }
           else if (latest.status === 'CANCELLED') {
+            if (user && selectedStation) {
+              void clearPendingPayosCheckout(user.id, selectedStation.branchId);
+            }
             toast.info('Mã QR đã hết hạn. Giỏ hàng được giữ lại để bạn chốt lại đơn.', 3, undefined, false);
             if (selectedStation) void updateCustomerDisplay(selectedStation.id, cartSnapshot);
             onClose(false);
@@ -135,7 +214,21 @@ export function ServerCheckoutDialog({
         .catch(() => undefined);
     }, 2_000);
     return () => clearInterval(poll);
-  }, [cartSnapshot, onClose, order, paidOrder, qrPayment, selectedStation]);
+  }, [acceptPaidOrder, cartSnapshot, onClose, order, paidOrder, qrPayment, selectedStation, user]);
+
+  useEffect(() => {
+    if (!order || !qrPayment || paidOrder) return;
+    const first = setTimeout(() => void checkPayos(), 4_000);
+    const timer = setInterval(() => void checkPayos(), 10_000);
+    const appState = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void checkPayos();
+    });
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+      appState.remove();
+    };
+  }, [checkPayos, order, paidOrder, qrPayment]);
 
   const total = Number(order?.totalAmount ?? 0);
   const tenderedAmount = Number(tendered.replace(/[^0-9]/g, ''));
@@ -148,6 +241,9 @@ export function ServerCheckoutDialog({
       setSubmitting(true);
       try {
         await cancelUnpaidOrder(order.id, 'Thu ngân quay lại sửa đơn');
+        if (user && selectedStation) {
+          await clearPendingPayosCheckout(user.id, selectedStation.branchId);
+        }
         if (selectedStation) void updateCustomerDisplay(selectedStation.id, cartSnapshot);
       } catch (reason) {
         toast.fail(reason instanceof Error ? reason.message : 'Không thể hủy đơn', 2, undefined, false);
@@ -188,6 +284,16 @@ export function ServerCheckoutDialog({
     try {
       const payment = await createPayosPayment(order.id, selectedStation.id);
       setQrPayment(payment);
+      if (user) {
+        await savePendingPayosCheckout({
+          userId: user.id,
+          branchId: selectedStation.branchId,
+          stationId: selectedStation.id,
+          order,
+          payment,
+          savedAt: new Date().toISOString(),
+        });
+      }
       if (payment.qrCode) {
         void updateCustomerDisplay(selectedStation.id, {
           ...cartSnapshot,
@@ -300,6 +406,20 @@ export function ServerCheckoutDialog({
             <View style={styles.qrArea}>
               <View style={styles.qrFrame}><QRCode value={qrPayment.qrCode} size={210} /></View>
               <Txt variant="caption" muted>Đang chờ PayOS xác nhận thanh toán…</Txt>
+              {lastCheckedAt ? (
+                <Txt variant="caption" muted>
+                  Kiểm tra gần nhất: {lastCheckedAt.toLocaleTimeString('vi-VN')}
+                </Txt>
+              ) : null}
+              {recheckError ? <Txt variant="caption" color="#C0392B">{recheckError}</Txt> : null}
+              <Btn
+                label="Kiểm tra lại"
+                icon="refresh"
+                variant="ghost"
+                loading={rechecking}
+                disabled={rechecking}
+                onPress={() => void checkPayos(true)}
+              />
             </View>
           ) : (
             <Btn label="Tạo mã QR" icon="qr" block loading={submitting} onPress={() => void showQr()} />

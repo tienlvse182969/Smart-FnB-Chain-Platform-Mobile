@@ -114,10 +114,18 @@ export type ReceiptDocument = {
 
 export type PayosPayment = {
   id: string;
-  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'EXPIRED' | 'AMOUNT_MISMATCH' | 'REQUIRES_ATTENTION';
   qrCode: string | null;
   checkoutUrl: string | null;
   expiresAt: string | null;
+  receivedAmount?: string | null;
+  paidAt?: string | null;
+  failureReason?: string | null;
+};
+
+export type PayosRecheckResult = PayosPayment & {
+  order?: CounterOrder;
+  tracking?: { token: string; url: string };
 };
 
 async function loadMenu(path: '/cashier/context' | '/barista/context'): Promise<{
@@ -238,6 +246,13 @@ export async function createPayosPayment(orderId: string, stationId: string) {
 
 export async function getCounterOrder(orderId: string) {
   const { data } = await apiClient.get<CounterOrder>(`/cashier/orders/${orderId}`);
+  return data;
+}
+
+export async function recheckPayosPayment(paymentId: string) {
+  const { data } = await apiClient.post<PayosRecheckResult>(
+    `/cashier/payments/${paymentId}/payos/recheck`,
+  );
   return data;
 }
 
