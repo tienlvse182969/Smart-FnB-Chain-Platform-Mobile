@@ -14,7 +14,7 @@ import { Txt } from '@/src/components/ui/txt';
 import { clockAt, formatVnd } from '@/src/data/format';
 import type { HistoryOrder } from '@/src/data/types';
 import { paymentMethodKey } from '@/src/i18n/labels';
-import { loadTodayOrders } from '@/src/services/cashier-api';
+import { listCashRefundApprovals, loadTodayOrders, type RefundApprovalRequest } from '@/src/services/cashier-api';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 
@@ -28,6 +28,8 @@ export default function OrdersScreen() {
   const theme = useAppTheme();
   const { t } = useTranslation();
   const [orders, setOrders] = useState<HistoryOrder[]>([]);
+  const [approvalRequests, setApprovalRequests] = useState<RefundApprovalRequest[]>([]);
+  const [range, setRange] = useState<'today' | 'recent'>('today');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,9 +43,11 @@ export default function OrdersScreen() {
       if (mode === 'initial') setLoading(true);
       if (mode === 'pull') setRefreshing(true);
       try {
-        const next = await loadTodayOrders();
+        const next = await loadTodayOrders(range === 'today' ? 1 : 30);
+        const requests = await listCashRefundApprovals().catch(() => null);
         if (current !== requestId.current) return;
         setOrders(next);
+        if (requests) setApprovalRequests(requests);
         setError(null);
       } catch (reason) {
         if (current !== requestId.current || mode === 'silent') return;
@@ -55,7 +59,7 @@ export default function OrdersScreen() {
         }
       }
     },
-    [t],
+    [t, range],
   );
 
   useFocusEffect(
@@ -82,6 +86,15 @@ export default function OrdersScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
       <View style={styles.pad}>
         <ScreenHeader title={t('orders.title')} subtitle={t('orders.subtitle', { count: data.length })} />
+        <Segmented<'today' | 'recent'>
+          value={range}
+          onChange={setRange}
+          style={styles.filter}
+          options={[
+            { value: 'today', label: t('refund.todayRange') },
+            { value: 'recent', label: t('refund.recentRange') },
+          ]}
+        />
         <Segmented<Filter>
           value={filter}
           onChange={setFilter}
@@ -159,6 +172,7 @@ export default function OrdersScreen() {
 
       <OrderDetailDialog
         order={openOrder}
+        approvalRequest={approvalRequests.find((request) => request.orderId === openOrder?.id && (request.status === 'PENDING' || request.status === 'APPROVED')) ?? approvalRequests.find((request) => request.orderId === openOrder?.id) ?? null}
         onClose={() => setOpenId(null)}
         onRefunded={() => void load('silent')}
       />

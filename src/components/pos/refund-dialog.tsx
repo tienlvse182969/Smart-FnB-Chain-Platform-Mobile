@@ -7,6 +7,7 @@ import { formatVnd } from '@/src/data/format';
 import type { HistoryOrder, OrderLine } from '@/src/data/types';
 import {
   createCashRefund,
+  requestCashRefundApproval,
   REFUND_NOTE_MAX_LENGTH,
   REFUND_NOTE_MIN_LENGTH,
   REFUND_REASON_CODES,
@@ -53,11 +54,15 @@ export function RefundDialog({
   visible,
   onClose,
   onRefunded,
+  onRequested,
+  requiresApproval,
 }: {
   order: HistoryOrder;
   visible: boolean;
   onClose: () => void;
   onRefunded: (result: CashRefundResult) => void;
+  onRequested: () => void;
+  requiresApproval: boolean;
 }) {
   const theme = useAppTheme();
   const { t } = useTranslation();
@@ -99,12 +104,19 @@ export function RefundDialog({
     if (!valid || !reason || submitting) return;
     setSubmitting(true);
     try {
-      const result = await createCashRefund(order.id, {
+      const input = {
         reasonCode: reason,
         note: note.trim() || undefined,
         orderItemIds: scope === 'items' ? [...selected] : undefined,
-      });
-      onRefunded(result);
+      };
+      if (requiresApproval) {
+        await requestCashRefundApproval(order.id, input);
+        toast.success(t('refund.requested'), 2, undefined, false);
+        onRequested();
+      } else {
+        const result = await createCashRefund(order.id, input);
+        onRefunded(result);
+      }
     } catch (failure) {
       toast.fail(failure instanceof Error ? failure.message : t('refund.failed'), 3, undefined, false);
     } finally {
@@ -122,7 +134,7 @@ export function RefundDialog({
       actions={[
         { text: t('common.cancel'), onPress: onClose, disabled: submitting },
         {
-          text: t('refund.confirm', { amount: formatVnd(amount) }),
+          text: requiresApproval ? t('refund.requestApproval') : t('refund.confirm', { amount: formatVnd(amount) }),
           onPress: submit,
           primary: true,
           disabled: !valid || submitting,
@@ -215,11 +227,11 @@ export function RefundDialog({
         ) : null}
 
         <View style={[styles.amountBox, { borderColor: theme.border_color_base }]}>
-          <Txt variant="title">{t('refund.amountLabel')}</Txt>
+          <Txt variant="title">{requiresApproval ? t('refund.requestAmountLabel') : t('refund.amountLabel')}</Txt>
           <Txt variant="title">{formatVnd(amount)}</Txt>
         </View>
         <Txt variant="tiny" muted>
-          {t('refund.irreversibleNote')}
+          {t(requiresApproval ? 'refund.requestNote' : 'refund.irreversibleNote')}
         </Txt>
       </ScrollView>
     </AppModal>

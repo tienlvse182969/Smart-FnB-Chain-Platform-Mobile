@@ -406,8 +406,8 @@ function mapHistoryOrder(order: ApiHistoryOrder): HistoryOrder {
 }
 
 /** Đơn quầy hôm nay của chi nhánh (đã thanh toán + đã huỷ), mới nhất trước. */
-export async function loadTodayOrders(): Promise<HistoryOrder[]> {
-  const { data } = await apiClient.get<ApiHistoryOrder[]>('/cashier/orders');
+export async function loadTodayOrders(days = 1): Promise<HistoryOrder[]> {
+  const { data } = await apiClient.get<ApiHistoryOrder[]>('/cashier/orders', { params: { days } });
   return data.map(mapHistoryOrder).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
@@ -488,6 +488,22 @@ export type CashRefundResult = {
   fullCancellation: boolean;
 };
 
+export type RefundApprovalRequest = {
+  id: string;
+  orderId: string;
+  branchId: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED';
+  orderItemIds: string[];
+  amount: string;
+  reason: string;
+  requestedAt: string;
+  reviewNote: string | null;
+  reviewedAt: string | null;
+  completedAt: string | null;
+  refundId: string | null;
+  order: { id: string; orderCode: string; callNumber: number | null; paidAt: string | null };
+};
+
 /** Dữ liệu cố định của phiếu hoàn tiền. */
 export type CashRefundReceipt = CashRefund & {
   payment: { method: string };
@@ -510,6 +526,33 @@ export async function createCashRefund(
       : {}),
     ...(note ? { note } : {}),
   });
+  return data;
+}
+
+export async function requestCashRefundApproval(
+  orderId: string,
+  input: { orderItemIds?: string[]; reasonCode: RefundReasonCode; note?: string },
+) {
+  const { data } = await apiClient.post<RefundApprovalRequest>(
+    `/cashier/orders/${orderId}/refund-approval-requests`,
+    {
+      reasonCode: input.reasonCode,
+      ...(input.orderItemIds?.length ? { items: input.orderItemIds.map((orderItemId) => ({ orderItemId })) } : {}),
+      ...(input.note?.trim() ? { note: input.note.trim().slice(0, REFUND_NOTE_MAX_LENGTH) } : {}),
+    },
+  );
+  return data;
+}
+
+export async function listCashRefundApprovals() {
+  const { data } = await apiClient.get<RefundApprovalRequest[]>('/cashier/refund-approval-requests');
+  return data;
+}
+
+export async function completeApprovedCashRefund(requestId: string) {
+  const { data } = await apiClient.post<CashRefundResult>(
+    `/cashier/refund-approval-requests/${requestId}/complete`,
+  );
   return data;
 }
 

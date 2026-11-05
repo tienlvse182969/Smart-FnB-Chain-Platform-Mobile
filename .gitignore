@@ -33,6 +33,12 @@ yarn-error.*
 # local env files
 .env*.local
 .env
+.env.*
+!.env.example
+
+# local code intelligence index
+.gitnexus/
+.claude/skills/gitnexus-*/
 
 # typescript
 *.tsbuildinfo

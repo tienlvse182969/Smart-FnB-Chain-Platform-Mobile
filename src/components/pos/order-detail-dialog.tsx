@@ -7,12 +7,14 @@ import { toast } from '@/src/components/ui/toast';
 import { clockAt, formatVnd } from '@/src/data/format';
 import type { HistoryOrder } from '@/src/data/types';
 import {
+  completeApprovedCashRefund,
   getOrderReceipt,
   listPrintJobs,
   reprintOrder,
   type CashRefundResult,
   type OrderReceipt,
   type PrintJob,
+  type RefundApprovalRequest,
 } from '@/src/services/cashier-api';
 import { toPrintFailure, type PrintFailure } from '@/src/services/printer/bluetooth-printer';
 import { printReceipt, printRefundReceipt } from '@/src/services/printer/print-service';
@@ -45,11 +47,13 @@ export function OrderDetailDialog({
   order,
   onClose,
   onRefunded,
+  approvalRequest,
 }: {
   order: HistoryOrder | null;
   onClose: () => void;
   /** Gọi sau khi backend ghi nhận hoàn tiền để màn hình tải lại danh sách đơn. */
   onRefunded?: () => void;
+  approvalRequest?: RefundApprovalRequest | null;
 }) {
   const { t } = useTranslation();
   const theme = useAppTheme();
@@ -65,6 +69,8 @@ export function OrderDetailDialog({
   const [printFailure, setPrintFailure] = useState<PrintFailure | null>(null);
   const [pendingReprint, setPendingReprint] = useState<PendingReprint | null>(null);
   const [refundOpen, setRefundOpen] = useState(false);
+  const [confirmPayout, setConfirmPayout] = useState(false);
+  const [completingPayout, setCompletingPayout] = useState(false);
   const [pendingRefundPrint, setPendingRefundPrint] = useState<PendingRefundPrint | null>(null);
 
   const loadPrintJobs = useCallback(async (id: string) => {
@@ -85,6 +91,7 @@ export function OrderDetailDialog({
     setPendingReprint(null);
     setPendingRefundPrint(null);
     setRefundOpen(false);
+    setConfirmPayout(false);
     setReasonOpen(false);
     setReason('');
     if (!orderId || !paid) return;
@@ -145,7 +152,13 @@ export function OrderDetailDialog({
   };
 
   const cashierName = receipt?.cashier ?? order.cashierName;
-  const canRefund = paid && order.status !== 'Đã huỷ' && refundableLines(order).length > 0;
+  const paidAt = order.paidAt ?? order.payment?.paidAt;
+  const businessDay = (value: string | Date) => new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date(value));
+  const requiresApproval = !!paidAt && businessDay(paidAt) !== businessDay(new Date());
+  const hasOpenRequest = approvalRequest?.status === 'PENDING' || approvalRequest?.status === 'APPROVED';
+  const canRefund = paid && order.status !== 'Đã huỷ' && refundableLines(order).length > 0 && !hasOpenRequest;
 
   /** In phiếu hoàn tiền; lỗi máy in không ảnh hưởng lượt hoàn đã được backend ghi nhận. */
   const runRefundPrint = async (job: PendingRefundPrint) => {
@@ -180,6 +193,20 @@ export function OrderDetailDialog({
     });
   };
 
+  const confirmApprovedPayout = async () => {
+    if (!approvalRequest || completingPayout) return;
+    setCompletingPayout(true);
+    try {
+      const result = await completeApprovedCashRefund(approvalRequest.id);
+      setConfirmPayout(false);
+      handleRefunded(result);
+    } catch (failure) {
+      toast.fail(failure instanceof Error ? failure.message : t('refund.failed'), 3, undefined, false);
+    } finally {
+      setCompletingPayout(false);
+    }
+  };
+
   return (
     <>
     <PrintErrorDialog
@@ -208,9 +235,22 @@ export function OrderDetailDialog({
       visible={refundOpen}
       onClose={() => setRefundOpen(false)}
       onRefunded={handleRefunded}
+      requiresApproval={requiresApproval}
+      onRequested={() => { setRefundOpen(false); onRefunded?.(); }}
     />
     <AppModal
-      visible={!refundOpen}
+      visible={confirmPayout}
+      title={t('refund.payoutTitle')}
+      onClose={() => { if (!completingPayout) setConfirmPayout(false); }}
+      maxWidth={440}
+      actions={[
+        { text: t('common.cancel'), onPress: () => setConfirmPayout(false), disabled: completingPayout },
+        { text: t('refund.confirmPayout'), onPress: () => void confirmApprovedPayout(), primary: true, disabled: completingPayout },
+      ]}>
+      <Txt variant="body">{t('refund.payoutWarning', { amount: formatVnd(Number(approvalRequest?.amount ?? 0)) })}</Txt>
+    </AppModal>
+    <AppModal
+      visible={!refundOpen && !confirmPayout}
       title={t('orders.detailTitle', { code: order.orderCode })}
       onClose={onClose}
       maxWidth={520}
@@ -308,6 +348,21 @@ export function OrderDetailDialog({
                 onPress={() => setReasonOpen(true)}
               />
             )}
+            {approvalRequest?.status === 'PENDING' ? (
+              <Txt variant="caption" muted>{t('refund.pendingApproval')}</Txt>
+            ) : null}
+            {approvalRequest?.status === 'REJECTED' ? (
+              <Txt variant="caption" color={theme.brand_error}>{t('refund.rejected', { note: approvalRequest.reviewNote || '—' })}</Txt>
+            ) : null}
+            {approvalRequest?.status === 'APPROVED' ? (
+              <Btn
+                label={t('refund.confirmPayout')}
+                icon="refund"
+                block
+                disabled={printing || completingPayout}
+                onPress={() => setConfirmPayout(true)}
+              />
+            ) : null}
             {canRefund ? (
               <Btn
                 label={t('refund.open')}
@@ -318,9 +373,7 @@ export function OrderDetailDialog({
                 onPress={() => setRefundOpen(true)}
               />
             ) : null}
-            <Txt variant="tiny" muted style={styles.note}>
-              {t('refund.todayOnlyNote')}
-            </Txt>
+            <Txt variant="tiny" muted style={styles.note}>{t('refund.refundPolicyNote')}</Txt>
           </>
         ) : null}
       </ScrollView>
