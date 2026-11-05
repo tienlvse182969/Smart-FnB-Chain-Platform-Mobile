@@ -1,4 +1,5 @@
 import {
+  getCashRefundReceipt,
   getOrderReceipt,
   getReceiptPrintImage,
   listPrintJobs,
@@ -14,7 +15,12 @@ import {
 } from './bluetooth-printer';
 import { renderReceiptImages, renderTestImages } from './print-images';
 import { buildRasterPayload } from './raster';
-import { buildReceiptPayload, buildTestPayload } from './receipt-layout';
+import {
+  buildReceiptPayload,
+  buildRefundPayload,
+  buildTestPayload,
+  type RefundSlipHeader,
+} from './receipt-layout';
 
 /** Nghỉ giữa các gói khi gửi ảnh; tăng nếu máy in bị mất dòng hoặc in lỗi. */
 const IMAGE_CHUNK_DELAY_MS = 20;
@@ -110,6 +116,33 @@ export async function printOrderReceipt(orderId: string, station: PosStation | n
     const printer = await resolvePrinter(station);
     await print(printer, await getOrderReceipt(orderId));
   });
+}
+
+/**
+ * In phiếu hoàn tiền mặt bằng chế độ chữ (mọi máy in đều in được) từ dữ liệu cố định backend lưu cho lượt hoàn.
+ * Backend không tạo PrintJob cho phiếu này nên không báo kết quả in; lỗi được ném lại để UI cho in lại.
+ */
+export async function printRefundReceipt(
+  orderId: string,
+  refundId: string,
+  header: RefundSlipHeader,
+  station: PosStation | null,
+) {
+  const printer = await resolvePrinter(station);
+  const refund = await getCashRefundReceipt(orderId, refundId);
+  let slipHeader = header;
+  if (!header.branchName) {
+    // bill của đơn chưa tải được ở màn chi tiết: lấy lại để phiếu có tên quán / chi nhánh / thu ngân
+    const receipt = await getOrderReceipt(orderId).catch(() => null);
+    if (receipt) {
+      slipHeader = {
+        sellerName: receipt.seller.name,
+        branchName: receipt.seller.branchName,
+        cashier: header.cashier,
+      };
+    }
+  }
+  await sendToPrinter(printer.address, buildRefundPayload(refund, slipHeader));
 }
 
 /** Phiếu in thử theo đúng chế độ đang chọn; ở chế độ ảnh, lỗi dựng ảnh được báo lên để biết mà sửa. */

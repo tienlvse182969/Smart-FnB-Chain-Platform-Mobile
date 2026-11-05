@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { formatVnd } from '@/src/data/format';
 import type { LineStatus, OrderStatus } from '@/src/data/types';
 import { lineStatusKey, orderStatusKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
@@ -29,7 +30,15 @@ const LINE_VISUAL: Record<LineStatus, Visual> = {
 
 const PRINT_FAILED_VISUAL: Visual = { labelKey: 'status.print.failed', icon: 'print', variant: 'danger' };
 
-function Badge({ visual, size }: { visual: Visual; size: 'sm' | 'md' }) {
+function Badge({
+  visual,
+  size,
+  params,
+}: {
+  visual: Visual;
+  size: 'sm' | 'md';
+  params?: Record<string, string>;
+}) {
   const theme = useAppTheme();
   const { t } = useTranslation();
   const small = size === 'sm';
@@ -55,7 +64,7 @@ function Badge({ visual, size }: { visual: Visual; size: 'sm' | 'md' }) {
       ]}>
       <Icon name={visual.icon} size={small ? 11 : 13} color={fg} />
       <Txt variant={small ? 'tiny' : 'label'} color={fg}>
-        {t(visual.labelKey)}
+        {t(visual.labelKey, params)}
       </Txt>
     </View>
   );
@@ -72,6 +81,13 @@ export function LineStatusBadge({ status, size = 'md' }: { status: LineStatus; s
 /** Nhãn đỏ khi in bill/phiếu số thất bại (BR-21) — chỉ hiện khi lỗi, in thành công thì không cần nhãn. */
 export function PrintFailedBadge({ size = 'md' }: { size?: 'sm' | 'md' }) {
   return <Badge visual={PRINT_FAILED_VISUAL} size={size} />;
+}
+
+const REFUND_VISUAL: Visual = { labelKey: 'refund.badge', icon: 'refund', variant: 'danger' };
+
+/** Nhãn "Đã hoàn …" cho đơn đã trả tiền mặt lại cho khách (cả đơn hoặc một số món). */
+export function RefundBadge({ amount, size = 'md' }: { amount: number; size?: 'sm' | 'md' }) {
+  return <Badge visual={REFUND_VISUAL} size={size} params={{ amount: formatVnd(amount) }} />;
 }
 
 const styles = StyleSheet.create({

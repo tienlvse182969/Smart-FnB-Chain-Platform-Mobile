@@ -5,26 +5,25 @@
  * Cách làm: chèn `fontFamily` mặc định vào ĐẦU mảng style của Text, nên style
  * truyền vào sau vẫn ghi đè được (ví dụ đổi sang Medium/Bold).
  *
+ * Chèn vào props ĐẦU VÀO của render (không sửa element đầu ra): trên web,
+ * react-native-web render thẳng ra `<span>`, gán mảng style vào thẻ DOM sẽ
+ * crash ("Failed to set an indexed property [0] on 'CSSStyleDeclaration'").
+ *
  * Import 1 lần ở đầu `app/_layout.tsx`.
  */
-import React from 'react';
+import type React from 'react';
 import { Text as RNText } from 'react-native';
 
 import { HARMONY_FAMILY } from './harmony-fonts';
 
-type Patchable = { render?: (...args: unknown[]) => React.ReactElement } & Record<string, unknown>;
+type TextRender = (props: { style?: unknown }, ...rest: unknown[]) => React.ReactNode;
+type Patchable = { render?: TextRender } & Record<string, unknown>;
 
 const TextComp = RNText as unknown as Patchable;
 
 if (!TextComp.__harmonyPatched && typeof TextComp.render === 'function') {
   const original = TextComp.render.bind(TextComp);
-  TextComp.render = (...args: unknown[]) => {
-    const element = original(...args);
-    if (!React.isValidElement(element)) return element;
-    const el = element as React.ReactElement<{ style?: unknown }>;
-    return React.cloneElement(el, {
-      style: [{ fontFamily: HARMONY_FAMILY.regular }, el.props.style],
-    });
-  };
+  TextComp.render = (props, ...rest) =>
+    original({ ...props, style: [{ fontFamily: HARMONY_FAMILY.regular }, props.style] }, ...rest);
   TextComp.__harmonyPatched = true;
 }
