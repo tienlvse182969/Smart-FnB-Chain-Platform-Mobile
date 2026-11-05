@@ -1,5 +1,5 @@
 import { mapOptions } from '@/src/services/barista-api';
-import type { OrderReceipt } from '@/src/services/cashier-api';
+import type { CashRefundReceipt, OrderReceipt, RefundReasonCode } from '@/src/services/cashier-api';
 import { EscPos, wrap } from './escpos';
 import { dateTime, methodLabel, money } from './format';
 
@@ -59,6 +59,56 @@ export function buildReceiptPayload(receipt: OrderReceipt) {
   const p = new EscPos(WIDTH).init();
   bill(p, receipt);
   queueTicket(p, receipt);
+  return p.toBinaryString();
+}
+
+/** Thông tin quán in ở đầu phiếu hoàn; lấy từ receipt của đơn, thiếu thì chỉ có tên chi nhánh. */
+export type RefundSlipHeader = {
+  sellerName?: string | null;
+  branchName?: string | null;
+  cashier?: string | null;
+};
+
+/** Bill in bằng tiếng Việt cố định (như hoá đơn), không theo ngôn ngữ giao diện. */
+const REFUND_REASON_LABEL: Record<RefundReasonCode, string> = {
+  OUT_OF_STOCK: 'Hết nguyên liệu',
+  WRONG_ITEM: 'Sai món',
+  LONG_WAIT: 'Chờ quá lâu',
+  CHANGE_OF_MIND: 'Khách đổi ý',
+  OTHER: 'Khác',
+};
+
+/** Phiếu hoàn tiền mặt (chữ ASCII không dấu): khách ký nhận để quầy đối soát két cuối ca. */
+export function buildRefundPayload(refund: CashRefundReceipt, header: RefundSlipHeader) {
+  const p = new EscPos(WIDTH).init().align('center');
+  if (header.sellerName) {
+    p.bold(true).size(2, 1);
+    for (const line of wrap(header.sellerName, WIDTH / 2)) p.line(line);
+    p.size(1).bold(false);
+  }
+  if (header.branchName) p.line(header.branchName);
+
+  p.divider().bold(true).line('PHIẾU HOÀN TIỀN').bold(false).align('left');
+  p.row('Mã đơn', refund.order.orderCode);
+  if (refund.order.callNumber !== null) p.row('Số gọi', String(refund.order.callNumber).padStart(3, '0'));
+  p.row('Thời gian', dateTime(refund.completedAt ?? refund.requestedAt));
+  if (header.cashier) p.row('Thu ngân', header.cashier);
+  p.row('Lý do', refund.reasonCode ? REFUND_REASON_LABEL[refund.reasonCode] : 'Khác');
+  const note = refund.reason.includes(': ') ? refund.reason.slice(refund.reason.indexOf(': ') + 2) : '';
+  if (note) for (const line of wrap(note, WIDTH - 2)) p.line(`  ${line}`);
+  p.divider();
+
+  for (const item of refund.items) {
+    const amount = money(item.refundAmount);
+    const [first, ...rest] = wrap(`${item.quantity} x ${item.orderItem.itemName}`, WIDTH - amount.length - 1);
+    p.row(first, amount);
+    for (const line of rest) p.line(line);
+  }
+
+  p.divider();
+  p.bold(true).size(1, 2).row('TIỀN HOÀN', money(refund.amount)).size(1).bold(false);
+  p.row('Hình thức', 'Tiền mặt');
+  p.feed(2).align('center').line('Khách hàng ký nhận').feed(3).line('.'.repeat(20)).feed(3).cut();
   return p.toBinaryString();
 }
 

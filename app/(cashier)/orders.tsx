@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '@/src/components/empty-state';
 import { OrderDetailDialog } from '@/src/components/pos/order-detail-dialog';
 import { ScreenHeader } from '@/src/components/screen-header';
-import { OrderStatusBadge } from '@/src/components/status-badge';
+import { OrderStatusBadge, RefundBadge } from '@/src/components/status-badge';
 import { Btn } from '@/src/components/ui/button';
 import { Segmented } from '@/src/components/ui/segmented';
 import { Txt } from '@/src/components/ui/txt';
@@ -23,7 +23,7 @@ type Filter = 'all' | 'active' | 'cancelled';
 /** Trạng thái đơn đổi khi pha chế xong nên tải lại định kỳ lúc màn hình đang mở. */
 const POLL_INTERVAL_MS = 15_000;
 
-/** Lịch sử đơn trong ngày của chi nhánh (CS-05) — xem lại và in lại bill; không huỷ được đơn đã trả (BR-18). */
+/** Lịch sử đơn trong ngày của chi nhánh (CS-05) — xem lại, in lại bill và hoàn tiền mặt cho đơn đã trả hôm nay. */
 export default function OrdersScreen() {
   const theme = useAppTheme();
   const { t } = useTranslation();
@@ -147,6 +147,7 @@ export default function OrdersScreen() {
                   </Txt>
                   <View style={styles.badges}>
                     <OrderStatusBadge status={o.status} size="sm" />
+                    {o.refundedAmount ? <RefundBadge amount={o.refundedAmount} size="sm" /> : null}
                   </View>
                 </View>
                 <Txt variant="title">{formatVnd(o.total)}</Txt>
@@ -156,7 +157,11 @@ export default function OrdersScreen() {
         )}
       </View>
 
-      <OrderDetailDialog order={openOrder} onClose={() => setOpenId(null)} />
+      <OrderDetailDialog
+        order={openOrder}
+        onClose={() => setOpenId(null)}
+        onRefunded={() => void load('silent')}
+      />
     </SafeAreaView>
   );
 }

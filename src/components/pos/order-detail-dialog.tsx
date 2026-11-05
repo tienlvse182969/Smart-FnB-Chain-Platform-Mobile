@@ -2,20 +2,24 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { useAuth } from '@/src/auth/auth-context';
 import { toast } from '@/src/components/ui/toast';
-import { clockAt } from '@/src/data/format';
+import { clockAt, formatVnd } from '@/src/data/format';
 import type { HistoryOrder } from '@/src/data/types';
 import {
   getOrderReceipt,
   listPrintJobs,
   reprintOrder,
+  type CashRefundResult,
   type OrderReceipt,
   type PrintJob,
 } from '@/src/services/cashier-api';
 import { toPrintFailure, type PrintFailure } from '@/src/services/printer/bluetooth-printer';
-import { printReceipt } from '@/src/services/printer/print-service';
+import { printReceipt, printRefundReceipt } from '@/src/services/printer/print-service';
+import type { RefundSlipHeader } from '@/src/services/printer/receipt-layout';
 import { useStation } from '@/src/stations/station-context';
-import { OrderStatusBadge } from '../status-badge';
+import { useAppTheme } from '@/src/theme/use-theme';
+import { OrderStatusBadge, RefundBadge } from '../status-badge';
 import { AppModal } from '../ui/app-modal';
 import { Btn } from '../ui/button';
 import { Field } from '../ui/field';
@@ -23,15 +27,33 @@ import { Txt } from '../ui/txt';
 import { PrintErrorDialog } from './print-error-dialog';
 import { ReceiptPdfSection } from './receipt-pdf-section';
 import { ReceiptPreview } from './receipt-preview';
+import { formatRefundReason, RefundDialog, refundableLines } from './refund-dialog';
 
 const MIN_REASON_LENGTH = 3;
 
 /** Lượt in lại đã được backend ghi nhận nhưng chưa in được; giữ để "Thử lại" không tạo thêm lượt in lại mới. */
 type PendingReprint = { receipt: Awaited<ReturnType<typeof reprintOrder>>; jobIds?: string[] };
 
-/** Chi tiết một đơn trong lịch sử (CS-05): xem lại bill, in lại kèm lý do — backend ghi nhận mỗi lần in lại (BR-21). */
-export function OrderDetailDialog({ order, onClose }: { order: HistoryOrder | null; onClose: () => void }) {
+/** Phiếu hoàn tiền chưa in được; "Thử lại" chỉ in lại phiếu, không gọi lại API hoàn tiền. */
+type PendingRefundPrint = { orderId: string; refundId: string; header: RefundSlipHeader };
+
+/**
+ * Chi tiết một đơn trong lịch sử (CS-05): xem lại bill, in lại kèm lý do — backend ghi nhận mỗi lần in lại (BR-21) —
+ * và hoàn tiền mặt cho đơn đã thanh toán hôm nay (cả đơn hoặc từng món).
+ */
+export function OrderDetailDialog({
+  order,
+  onClose,
+  onRefunded,
+}: {
+  order: HistoryOrder | null;
+  onClose: () => void;
+  /** Gọi sau khi backend ghi nhận hoàn tiền để màn hình tải lại danh sách đơn. */
+  onRefunded?: () => void;
+}) {
   const { t } = useTranslation();
+  const theme = useAppTheme();
+  const { user } = useAuth();
   const { selectedStation } = useStation();
   const orderId = order?.id;
   const paid = order?.callNumber !== undefined;
@@ -42,6 +64,8 @@ export function OrderDetailDialog({ order, onClose }: { order: HistoryOrder | nu
   const [printing, setPrinting] = useState(false);
   const [printFailure, setPrintFailure] = useState<PrintFailure | null>(null);
   const [pendingReprint, setPendingReprint] = useState<PendingReprint | null>(null);
+  const [refundOpen, setRefundOpen] = useState(false);
+  const [pendingRefundPrint, setPendingRefundPrint] = useState<PendingRefundPrint | null>(null);
 
   const loadPrintJobs = useCallback(async (id: string) => {
     try {
@@ -59,6 +83,8 @@ export function OrderDetailDialog({ order, onClose }: { order: HistoryOrder | nu
     setPrintJobs([]);
     setPrintFailure(null);
     setPendingReprint(null);
+    setPendingRefundPrint(null);
+    setRefundOpen(false);
     setReasonOpen(false);
     setReason('');
     if (!orderId || !paid) return;
@@ -119,6 +145,40 @@ export function OrderDetailDialog({ order, onClose }: { order: HistoryOrder | nu
   };
 
   const cashierName = receipt?.cashier ?? order.cashierName;
+  const canRefund = paid && order.status !== 'Đã huỷ' && refundableLines(order).length > 0;
+
+  /** In phiếu hoàn tiền; lỗi máy in không ảnh hưởng lượt hoàn đã được backend ghi nhận. */
+  const runRefundPrint = async (job: PendingRefundPrint) => {
+    setPrinting(true);
+    try {
+      await printRefundReceipt(job.orderId, job.refundId, job.header, selectedStation);
+      setPendingRefundPrint(null);
+      toast.success(t('refund.slipPrinted'), 1.5, undefined, false);
+    } catch (failure) {
+      setPendingRefundPrint(job);
+      setPrintFailure(toPrintFailure(failure));
+    } finally {
+      setPrinting(false);
+    }
+  };
+
+  const handleRefunded = (result: CashRefundResult) => {
+    setRefundOpen(false);
+    toast.success(t('refund.success', { amount: formatVnd(Number(result.refund.amount)) }), 2, undefined, false);
+    onRefunded?.();
+    void runRefundPrint({
+      orderId: order.id,
+      refundId: result.refund.id,
+      header: {
+        sellerName: receipt?.seller.name,
+        branchName: receipt?.seller.branchName,
+        // người hoàn tiền là thu ngân đang đăng nhập, có thể khác người đã thu tiền đơn này
+        cashier: user?.employee
+          ? `${user.employee.firstName} ${user.employee.lastName}`.trim() || null
+          : null,
+      },
+    });
+  };
 
   return (
     <>
@@ -127,6 +187,7 @@ export function OrderDetailDialog({ order, onClose }: { order: HistoryOrder | nu
       onClose={() => {
         setPrintFailure(null);
         setPendingReprint(null);
+        setPendingRefundPrint(null);
       }}
       onRetry={
         pendingReprint
@@ -134,11 +195,22 @@ export function OrderDetailDialog({ order, onClose }: { order: HistoryOrder | nu
               setPrintFailure(null);
               void runReprint(pendingReprint);
             }
-          : undefined
+          : pendingRefundPrint
+            ? () => {
+                setPrintFailure(null);
+                void runRefundPrint(pendingRefundPrint);
+              }
+            : undefined
       }
     />
+    <RefundDialog
+      order={order}
+      visible={refundOpen}
+      onClose={() => setRefundOpen(false)}
+      onRefunded={handleRefunded}
+    />
     <AppModal
-      visible
+      visible={!refundOpen}
       title={t('orders.detailTitle', { code: order.orderCode })}
       onClose={onClose}
       maxWidth={520}
@@ -157,8 +229,26 @@ export function OrderDetailDialog({ order, onClose }: { order: HistoryOrder | nu
 
         {order.status === 'Đã huỷ' && order.cancelledReason ? (
           <Txt variant="caption" muted>
-            {t('orders.cancelledReason', { reason: order.cancelledReason })}
+            {t('orders.cancelledReason', { reason: formatRefundReason(order.cancelledReason, t) })}
           </Txt>
+        ) : null}
+
+        {order.refundedAmount ? (
+          <View style={[styles.refundBox, { borderColor: theme.border_color_base }]}>
+            <View style={styles.refundHead}>
+              <RefundBadge amount={order.refundedAmount} />
+            </View>
+            {order.lines
+              .filter((line) => line.status === 'Huỷ' && !line.parentId)
+              .map((line) => (
+                <Txt key={line.id} variant="caption" muted numberOfLines={2}>
+                  {line.qty} × {line.name}
+                  {line.cancelledReason && order.status !== 'Đã huỷ'
+                    ? ` · ${formatRefundReason(line.cancelledReason, t)}`
+                    : ''}
+                </Txt>
+              ))}
+          </View>
         ) : null}
 
         <ReceiptPreview
@@ -218,8 +308,18 @@ export function OrderDetailDialog({ order, onClose }: { order: HistoryOrder | nu
                 onPress={() => setReasonOpen(true)}
               />
             )}
+            {canRefund ? (
+              <Btn
+                label={t('refund.open')}
+                icon="refund"
+                block
+                variant="ghost"
+                disabled={printing}
+                onPress={() => setRefundOpen(true)}
+              />
+            ) : null}
             <Txt variant="tiny" muted style={styles.note}>
-              {t('orders.managerOnlyNote')}
+              {t('refund.todayOnlyNote')}
             </Txt>
           </>
         ) : null}
@@ -240,4 +340,6 @@ const styles = StyleSheet.create({
   history: { gap: 6 },
   historyRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   historyMain: { flex: 1 },
+  refundBox: { gap: 4, borderWidth: 1, borderStyle: 'dashed', borderRadius: 6, padding: 10 },
+  refundHead: { flexDirection: 'row', marginBottom: 2 },
 });

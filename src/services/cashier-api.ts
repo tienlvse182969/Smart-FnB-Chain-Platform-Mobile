@@ -277,7 +277,12 @@ type ApiHistoryOrder = {
     itemName: string;
     quantity: number;
     unitPrice: string;
+    /** Thành tiền dòng; Decimal của Prisma về dạng chuỗi. */
+    totalPrice?: string;
+    /** Khác null khi là món con của combo. */
+    parentId?: string | null;
     status: string;
+    cancellationReason?: string | null;
     selectedOptions: unknown;
     specialInstructions: string | null;
   }[];
@@ -340,6 +345,20 @@ function mapHistoryLineStatus(status: string): LineStatus {
   return 'Xong';
 }
 
+function lineTotalOf(item: ApiHistoryOrder['items'][number]) {
+  return item.totalPrice !== undefined ? Number(item.totalPrice) : Number(item.unitPrice) * item.quantity;
+}
+
+/** Lịch sử không kèm refund: suy ra tiền đã hoàn từ các dòng gốc bị huỷ của đơn đã thanh toán. */
+function refundedAmountOf(order: ApiHistoryOrder): number | undefined {
+  if (!order.paidAt) return undefined;
+  if (order.status === 'CANCELLED') return Number(order.totalAmount);
+  const refunded = order.items
+    .filter((item) => !item.parentId && item.status === 'CANCELLED')
+    .reduce((sum, item) => sum + lineTotalOf(item), 0);
+  return refunded > 0 ? refunded : undefined;
+}
+
 function mapHistoryOrder(order: ApiHistoryOrder): HistoryOrder {
   const paidPayment = order.payments.find((payment) => payment.status === 'SUCCESS');
   return {
@@ -354,6 +373,7 @@ function mapHistoryOrder(order: ApiHistoryOrder): HistoryOrder {
     cancelledReason: order.cancellationReason ?? undefined,
     cashierName: '',
     reprintCount: 0,
+    refundedAmount: refundedAmountOf(order),
     payment: paidPayment
       ? {
           method: paidPayment.method === 'CASH' ? 'Tiền mặt' : 'Chuyển khoản QR',
@@ -377,6 +397,9 @@ function mapHistoryOrder(order: ApiHistoryOrder): HistoryOrder {
         options,
         note: item.specialInstructions ?? undefined,
         status: mapHistoryLineStatus(item.status),
+        parentId: item.parentId ?? undefined,
+        lineTotal: lineTotalOf(item),
+        cancelledReason: item.cancellationReason ?? undefined,
       };
     }),
   };
@@ -420,6 +443,80 @@ export async function reportPrintResult(
       ? { errorMessage: (errorMessage?.trim() || 'Không in được').slice(0, PRINT_ERROR_MAX_LENGTH) }
       : {}),
   });
+  return data;
+}
+
+/** Mã lý do hoàn tiền backend chấp nhận; `OTHER` bắt buộc kèm ghi chú ≥ 5 ký tự. */
+export const REFUND_REASON_CODES = [
+  'OUT_OF_STOCK',
+  'WRONG_ITEM',
+  'LONG_WAIT',
+  'CHANGE_OF_MIND',
+  'OTHER',
+] as const;
+export type RefundReasonCode = (typeof REFUND_REASON_CODES)[number];
+export const REFUND_NOTE_MIN_LENGTH = 5;
+/** Validator backend giới hạn 450 ký tự (Swagger ghi 500). */
+export const REFUND_NOTE_MAX_LENGTH = 450;
+
+export type CashRefund = {
+  id: string;
+  orderId: string;
+  paymentId: string;
+  /** Decimal dạng chuỗi */
+  amount: string;
+  status: 'PENDING' | 'COMPLETED';
+  method: 'CASH' | 'BANK_TRANSFER';
+  reason: string;
+  reasonCode: RefundReasonCode | null;
+  requestedAt: string;
+  completedAt: string | null;
+  items: {
+    id: string;
+    orderItemId: string;
+    quantity: number;
+    refundAmount: string;
+    isWastage: boolean;
+    orderItem: { id: string; itemName: string; quantity: number; status: string };
+  }[];
+};
+
+export type CashRefundResult = {
+  order: { id: string; status: string };
+  refund: CashRefund;
+  /** true khi không còn món nào: đơn chuyển sang CANCELLED */
+  fullCancellation: boolean;
+};
+
+/** Dữ liệu cố định của phiếu hoàn tiền. */
+export type CashRefundReceipt = CashRefund & {
+  payment: { method: string };
+  order: { orderCode: string; callNumber: number | null };
+};
+
+/**
+ * Thu ngân xác nhận đã trả tiền mặt cho khách (đơn thanh toán hôm nay của chi nhánh). Không truyền `orderItemIds`
+ * (hoặc mảng rỗng) là hoàn mọi món còn lại và huỷ đơn; chỉ truyền id dòng gốc, hoàn combo sẽ hoàn luôn món con.
+ */
+export async function createCashRefund(
+  orderId: string,
+  input: { orderItemIds?: string[]; reasonCode: RefundReasonCode; note?: string },
+) {
+  const note = input.note?.trim().slice(0, REFUND_NOTE_MAX_LENGTH);
+  const { data } = await apiClient.post<CashRefundResult>(`/cashier/orders/${orderId}/refunds`, {
+    reasonCode: input.reasonCode,
+    ...(input.orderItemIds?.length
+      ? { items: input.orderItemIds.map((orderItemId) => ({ orderItemId })) }
+      : {}),
+    ...(note ? { note } : {}),
+  });
+  return data;
+}
+
+export async function getCashRefundReceipt(orderId: string, refundId: string) {
+  const { data } = await apiClient.get<CashRefundReceipt>(
+    `/cashier/orders/${orderId}/refunds/${refundId}/receipt`,
+  );
   return data;
 }
 

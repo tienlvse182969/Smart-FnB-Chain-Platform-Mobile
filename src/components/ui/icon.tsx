@@ -41,6 +41,7 @@ import {
   Sun,
   Timer,
   Trash2,
+  Undo2,
   User,
   Users,
   UtensilsCrossed,
@@ -99,6 +100,7 @@ export const Icons = {
   displayPaired: MonitorCheck,
   displayOff: MonitorOff,
   backspace: Delete,
+  refund: Undo2,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof Icons;

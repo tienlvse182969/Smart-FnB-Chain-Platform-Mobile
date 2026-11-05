@@ -137,7 +137,6 @@
     "reprint": "In lại bill và phiếu số",
     "reprinted": "Đã in lại (lần {{count}})",
     "cancelledReason": "Lý do huỷ: {{reason}}",
-    "managerOnlyNote": "Đơn đã thanh toán chỉ Quản lý chi nhánh mới huỷ được.",
     "printFailedToast": "In thất bại, kiểm tra máy in",
     "loadError": "Không thể tải danh sách đơn",
     "reprintReason": "Lý do in lại",
@@ -304,5 +303,33 @@
       },
       "orderPaid": "Thanh toán vẫn đã được ghi nhận. Bạn có thể in lại bất cứ lúc nào trong màn Đơn hôm nay."
     }
+  },
+  "refund": {
+    "open": "Hoàn tiền",
+    "title": "Hoàn tiền · Đơn #{{code}}",
+    "scopeLabel": "Hoàn cho",
+    "scopeAll": "Cả đơn",
+    "scopeItems": "Chọn món",
+    "scopeAllHint": "Hoàn tất cả {{count}} dòng món còn lại. Đơn sẽ chuyển sang Đã huỷ.",
+    "reasonLabel": "Lý do",
+    "reason": {
+      "OUT_OF_STOCK": "Hết nguyên liệu",
+      "WRONG_ITEM": "Sai món",
+      "LONG_WAIT": "Chờ quá lâu",
+      "CHANGE_OF_MIND": "Khách đổi ý",
+      "OTHER": "Khác"
+    },
+    "noteOptional": "Ghi chú (không bắt buộc)",
+    "noteRequired": "Ghi chú (bắt buộc)",
+    "notePlaceholder": "Ví dụ: hết đào, khách gọi nhầm size",
+    "noteTooShort": "Nhập ít nhất {{min}} ký tự khi chọn lý do Khác.",
+    "amountLabel": "Tiền mặt trả khách",
+    "confirm": "Đã trả {{amount}} cho khách",
+    "irreversibleNote": "Chỉ bấm xác nhận sau khi đã đưa tiền mặt cho khách. Thao tác không hoàn tác được và sẽ trừ vào doanh thu.",
+    "success": "Đã hoàn {{amount}} tiền mặt",
+    "failed": "Không hoàn tiền được",
+    "slipPrinted": "Đã in phiếu hoàn tiền",
+    "badge": "Đã hoàn {{amount}}",
+    "todayOnlyNote": "Chỉ hoàn được tiền mặt cho đơn thanh toán hôm nay. Đơn ngày trước vui lòng báo Quản lý."
   }
 }

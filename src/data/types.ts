@@ -104,6 +104,12 @@ export type OrderLine = {
   options: OrderOption[];
   note?: string;
   status: LineStatus;
+  /** Dòng con của combo; chỉ hoàn tiền được cả combo (dòng gốc), không hoàn lẻ món con. */
+  parentId?: string;
+  /** Thành tiền của dòng do backend chốt (đã trừ giảm giá), dùng để tính tiền hoàn. */
+  lineTotal?: number;
+  /** Lý do huỷ dòng (vd. khi thu ngân hoàn tiền món này). */
+  cancelledReason?: string;
   /** mẻ mà dòng này thuộc về sau khi bấm Bắt đầu mẻ */
   batchId?: string;
   startedAt?: string;
@@ -154,7 +160,14 @@ export type Order = {
 };
 
 /** Đơn lấy từ backend cho lịch sử trong ngày — mã đơn là chuỗi (`CTR-<ms>-<hex>`) thay vì số của đơn mock. */
-export type HistoryOrder = Omit<Order, 'orderCode'> & { orderCode: string };
+export type HistoryOrder = Omit<Order, 'orderCode'> & {
+  orderCode: string;
+  /**
+   * Tiền mặt đã hoàn cho khách. Lịch sử của thu ngân không trả về refund nên suy ra từ dữ liệu đơn: đơn đã trả rồi
+   * huỷ thì hoàn cả đơn, còn lại là tổng thành tiền các dòng gốc đã huỷ.
+   */
+  refundedAmount?: number;
+};
 
 /** Một dòng món trong mẻ, kèm số gọi để pha chế biết ly nào của đơn nào. */
 export type BatchEntry = {

@@ -137,7 +137,6 @@
     "reprint": "Reprint bill and number slip",
     "reprinted": "Reprinted (time {{count}})",
     "cancelledReason": "Reason: {{reason}}",
-    "managerOnlyNote": "Only the branch manager can cancel a paid order.",
     "printFailedToast": "Print failed, check the printer",
     "loadError": "Could not load orders",
     "reprintReason": "Reprint reason",
@@ -304,5 +303,33 @@
       },
       "orderPaid": "The payment is still recorded. You can reprint any time from Today’s orders."
     }
+  },
+  "refund": {
+    "open": "Refund",
+    "title": "Refund · Order #{{code}}",
+    "scopeLabel": "Refund",
+    "scopeAll": "Whole order",
+    "scopeItems": "Select items",
+    "scopeAllHint": "Refunds all {{count}} remaining lines. The order will be cancelled.",
+    "reasonLabel": "Reason",
+    "reason": {
+      "OUT_OF_STOCK": "Out of ingredients",
+      "WRONG_ITEM": "Wrong item",
+      "LONG_WAIT": "Waited too long",
+      "CHANGE_OF_MIND": "Changed mind",
+      "OTHER": "Other"
+    },
+    "noteOptional": "Note (optional)",
+    "noteRequired": "Note (required)",
+    "notePlaceholder": "e.g. out of peach, wrong size ordered",
+    "noteTooShort": "Enter at least {{min}} characters for Other.",
+    "amountLabel": "Cash to return",
+    "confirm": "Returned {{amount}} to customer",
+    "irreversibleNote": "Confirm only after handing the cash to the customer. This cannot be undone and is deducted from revenue.",
+    "success": "Refunded {{amount}} in cash",
+    "failed": "Could not refund",
+    "slipPrinted": "Refund slip printed",
+    "badge": "Refunded {{amount}}",
+    "todayOnlyNote": "Only orders paid today can be refunded in cash. For older orders, ask the manager."
   }
 }
