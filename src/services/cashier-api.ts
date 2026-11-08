@@ -1,4 +1,4 @@
-import { apiClient } from '@/src/lib/api-client';
+import { absoluteAssetUrl, apiClient } from '@/src/lib/api-client';
 import { sizeOf } from '@/src/data/order-utils';
 import type {
   HistoryOrder,
@@ -172,7 +172,7 @@ async function loadMenu(path: '/cashier/context' | '/barista/context'): Promise<
                 ? 'NO_REMAINING_PORTIONS'
                 : null
       ),
-      image: menuItem.imageUrl ?? '',
+      image: absoluteAssetUrl(menuItem.imageUrl) ?? '',
       batchable: menuItem.allowBatching ?? true,
       options: menuItem.optionGroups.map(({ group }) => ({
         // UI uses the literal `size` to highlight Size; API still receives the option UUID.
