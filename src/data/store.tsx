@@ -19,6 +19,7 @@ import type {
   OrderLine,
   OrderOption,
   Payment,
+  SelectedExtra,
   StaffRole,
 } from './types';
 
@@ -55,7 +56,27 @@ export type CartLine = {
   qty: number;
   note?: string;
   options: OrderOption[];
+  /** giá một phần đã gồm tuỳ chọn, topping (và với combo: phụ thu của từng thành phần) */
   unitPrice: number;
+  extras?: SelectedExtra[];
+  /** Có khi dòng là combo; khi đó `menuItemId` là id combo. */
+  combo?: CartCombo;
+};
+
+/** Món đã chọn cho một thành phần của combo, kèm tuỳ chọn/topping riêng. */
+export type CartComboComponent = {
+  componentId: string;
+  componentName: string;
+  quantity: number;
+  menuItemId: string;
+  itemName: string;
+  options: OrderOption[];
+  extras: SelectedExtra[];
+};
+
+export type CartCombo = {
+  comboId: string;
+  components: CartComboComponent[];
 };
 
 type Action =

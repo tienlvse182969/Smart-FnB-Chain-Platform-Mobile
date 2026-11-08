@@ -88,7 +88,8 @@
     "allCategories": "All",
     "searchPlaceholder": "Search items…",
     "noResultsTitle": "No items found",
-    "noResultsHint": "Try another keyword or pick \"All\"."
+    "noResultsHint": "Try another keyword or pick \"All\".",
+    "comboTab": "Combos"
   },
   "itemOptionsDialog": {
     "qtyLabel": "Quantity",
@@ -97,7 +98,8 @@
     "addBtn": "Add · {{total}}",
     "required": "Required",
     "maxHint": "Choose up to {{max}}",
-    "soldOut": "Out"
+    "soldOut": "Out",
+    "toppingTitle": "Toppings · up to {{max}}"
   },
   "checkout": {
     "title": "Payment · Order #{{code}}",

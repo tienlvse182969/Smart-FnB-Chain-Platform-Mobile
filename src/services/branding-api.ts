@@ -1,4 +1,4 @@
-import { apiClient, API_ORIGIN } from '@/src/lib/api-client';
+import { absoluteAssetUrl, apiClient } from '@/src/lib/api-client';
 import { ApiError } from '@/src/services/auth-types';
 
 /** `GET /restaurant-chains/:chainId/branding` — nhận diện do Owner cấu hình trên web. */
@@ -27,8 +27,4 @@ export async function getBranding(chainId: string): Promise<RawBranding | null> 
 }
 
 /** Đường dẫn tương đối → URL tuyệt đối theo gốc máy chủ; URL tuyệt đối/`data:` giữ nguyên; rỗng → `undefined`. */
-export function absoluteLogoUrl(logoUrl: string | null | undefined): string | undefined {
-  if (!logoUrl) return undefined;
-  if (/^(https?:|data:)/i.test(logoUrl)) return logoUrl;
-  return `${API_ORIGIN}${logoUrl.startsWith('/') ? '' : '/'}${logoUrl}`;
-}
+export const absoluteLogoUrl = absoluteAssetUrl;

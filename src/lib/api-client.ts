@@ -7,6 +7,16 @@ export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://loca
 /** Gốc máy chủ (không có `/api/v1`): socket và file tĩnh như logo `/uploads/...` nằm ngoài prefix API. */
 export const API_ORIGIN = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
 
+/**
+ * File tải lên (logo, ảnh món) được BE trả về dạng tương đối `/uploads/...`; `<Image>` cần URL tuyệt đối.
+ * URL tuyệt đối/`data:` giữ nguyên; rỗng → `undefined`.
+ */
+export function absoluteAssetUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  if (/^(https?:|data:)/i.test(url)) return url;
+  return `${API_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
 export const apiClient = create({ baseURL: API_BASE_URL, timeout: 15_000 });
 const refreshClient = create({ baseURL: API_BASE_URL, timeout: 15_000 });
 

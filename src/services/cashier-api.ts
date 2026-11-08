@@ -1,12 +1,15 @@
-import { apiClient } from '@/src/lib/api-client';
+import { absoluteAssetUrl, apiClient } from '@/src/lib/api-client';
 import { sizeOf } from '@/src/data/order-utils';
+import type { CartCombo } from '@/src/data/store';
 import type {
   HistoryOrder,
   LineStatus,
   MenuCategory,
+  MenuCombo,
   MenuItem,
   OrderOption,
   OrderStatus,
+  SelectedExtra,
 } from '@/src/data/types';
 import { mapOptions } from './barista-api';
 
@@ -57,13 +60,73 @@ type ApiBranchMenuItem = {
     isAvailable: boolean;
     category: { id: string; name: string };
     optionGroups: ApiOptionGroupLink[];
+    maxExtras?: number;
+    extras?: {
+      extraId: string;
+      name: string;
+      price: string;
+      maxQuantity: number;
+      isActive: boolean;
+      isAvailable: boolean;
+    }[];
+  };
+};
+
+type ApiBranchCombo = {
+  effectiveAvailable: boolean;
+  combo: {
+    id: string;
+    name: string;
+    description: string | null;
+    imageUrl: string | null;
+    price: string;
+    components: {
+      id: string;
+      name: string;
+      type: 'FIXED' | 'CHOICE';
+      quantity: number;
+      fixedSizeCode: string | null;
+      choices: {
+        menuItemId: string;
+        itemName: string;
+        surcharge: string;
+        isDefault: boolean;
+        effectiveAvailable: boolean;
+      }[];
+    }[];
   };
 };
 
 type CashierContextResponse = {
   branch: { id: string; name: string; timezone: string; chain: { currency: string } };
   menuItems: ApiBranchMenuItem[];
+  combos?: ApiBranchCombo[];
 };
+
+function mapCombo({ combo, effectiveAvailable }: ApiBranchCombo): MenuCombo {
+  return {
+    id: combo.id,
+    name: combo.name,
+    description: combo.description ?? undefined,
+    price: Number(combo.price),
+    image: absoluteAssetUrl(combo.imageUrl) ?? '',
+    available: effectiveAvailable,
+    components: combo.components.map((c) => ({
+      id: c.id,
+      name: c.name,
+      type: c.type,
+      quantity: c.quantity,
+      fixedSizeCode: c.fixedSizeCode,
+      choices: c.choices.map((x) => ({
+        menuItemId: x.menuItemId,
+        name: x.itemName,
+        surcharge: Number(x.surcharge),
+        isDefault: x.isDefault,
+        available: x.effectiveAvailable,
+      })),
+    })),
+  };
+}
 
 export type CounterOrder = {
   id: string;
@@ -132,6 +195,7 @@ async function loadMenu(path: '/cashier/context' | '/barista/context'): Promise<
   branch: CashierContextResponse['branch'];
   categories: MenuCategory[];
   menu: MenuItem[];
+  combos: MenuCombo[];
 }> {
   const { data } = await apiClient.get<CashierContextResponse>(path);
   const categoryMap = new Map<string, MenuCategory>();
@@ -172,8 +236,18 @@ async function loadMenu(path: '/cashier/context' | '/barista/context'): Promise<
                 ? 'NO_REMAINING_PORTIONS'
                 : null
       ),
-      image: menuItem.imageUrl ?? '',
+      image: absoluteAssetUrl(menuItem.imageUrl) ?? '',
       batchable: menuItem.allowBatching ?? true,
+      maxExtras: menuItem.maxExtras ?? 0,
+      extras: (menuItem.extras ?? [])
+        .filter((e) => e.isActive)
+        .map((e) => ({
+          id: e.extraId,
+          label: e.name,
+          price: Number(e.price),
+          maxQuantity: e.maxQuantity,
+          available: e.isAvailable,
+        })),
       options: menuItem.optionGroups.map(({ group }) => ({
         // UI uses the literal `size` to highlight Size; API still receives the option UUID.
         id: group.code.toLowerCase() === 'size' ? 'size' : group.id,
@@ -197,7 +271,12 @@ async function loadMenu(path: '/cashier/context' | '/barista/context'): Promise<
       })),
     } satisfies MenuItem;
   });
-  return { branch: data.branch, categories: [...categoryMap.values()], menu };
+  return {
+    branch: data.branch,
+    categories: [...categoryMap.values()],
+    menu,
+    combos: (data.combos ?? []).map(mapCombo),
+  };
 }
 
 export const loadCashierMenu = () => loadMenu('/cashier/context');
@@ -208,16 +287,42 @@ type CheckoutCartLine = {
   qty: number;
   note?: string;
   options: OrderOption[];
+  extras?: SelectedExtra[];
+  combo?: CartCombo;
 };
+
+const extrasPayload = (extras: SelectedExtra[] = []) =>
+  extras.filter((e) => e.qty > 0).map((e) => ({ extraId: e.extraId, quantity: e.qty }));
 
 export async function checkoutCart(cart: CheckoutCartLine[]) {
   const { data } = await apiClient.post<CounterOrder>('/cashier/checkout', {
-    items: cart.map((line) => ({
-      menuItemId: line.menuItemId,
-      quantity: line.qty,
-      optionIds: line.options.map((option) => option.choiceId),
-      specialInstructions: line.note,
-    })),
+    items: cart
+      .filter((line) => !line.combo)
+      .map((line) => ({
+        menuItemId: line.menuItemId,
+        quantity: line.qty,
+        optionIds: line.options.map((option) => option.choiceId),
+        extras: extrasPayload(line.extras),
+        specialInstructions: line.note,
+      })),
+    combos: cart.flatMap((line) =>
+      line.combo
+        ? [
+            {
+              comboId: line.combo.comboId,
+              quantity: line.qty,
+              components: line.combo.components.map((c, index) => ({
+                componentId: c.componentId,
+                menuItemId: c.menuItemId,
+                optionIds: c.options.map((option) => option.choiceId),
+                extras: extrasPayload(c.extras),
+                // ghi chú của cả combo đi kèm thành phần đầu để pha chế vẫn thấy
+                specialInstructions: index === 0 ? line.note : undefined,
+              })),
+            },
+          ]
+        : [],
+    ),
   });
   return data;
 }
