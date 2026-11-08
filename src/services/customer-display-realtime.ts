@@ -1,5 +1,6 @@
 import { io, type Socket } from 'socket.io-client';
 
+import { extraLabel } from '@/src/data/order-utils';
 import type { CartLine } from '@/src/data/store';
 import { API_ORIGIN } from '@/src/lib/api-client';
 import { me } from '@/src/services/auth-api';
@@ -90,7 +91,15 @@ export function snapshotFromCart(cart: CartLine[]): DisplaySnapshot {
       quantity: line.qty,
       unitPrice: line.unitPrice,
       lineTotal: line.unitPrice * line.qty,
-      options: line.options.map((option) => option.label),
+      options: line.combo
+        ? line.combo.components.map((c) =>
+            [
+              `${c.quantity > 1 ? `${c.quantity}× ` : ''}${c.itemName}`,
+              ...c.options.map((option) => option.label),
+              ...c.extras.map(extraLabel),
+            ].join(' · '),
+          )
+        : [...line.options.map((option) => option.label), ...(line.extras ?? []).map(extraLabel)],
       note: line.note,
     })),
     totalAmount: cart.reduce((sum, line) => sum + line.unitPrice * line.qty, 0),

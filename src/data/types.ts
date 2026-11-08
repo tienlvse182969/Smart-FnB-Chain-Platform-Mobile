@@ -40,11 +40,62 @@ export type MenuOptionGroup = {
   choices: MenuOptionChoice[];
 };
 
+/** Topping gắn với món: giá cộng thêm tính theo từng phần, mỗi loại tối đa `maxQuantity` phần/ly. */
+export type MenuExtra = {
+  id: string;
+  label: string;
+  price: number;
+  maxQuantity: number;
+  available: boolean;
+};
+
+/** Topping đã chọn cho một ly (số lượng tính theo ly, không theo dòng). */
+export type SelectedExtra = {
+  extraId: string;
+  label: string;
+  price: number;
+  qty: number;
+};
+
+export type MenuComboChoice = {
+  menuItemId: string;
+  name: string;
+  /** phụ thu khi chọn món này thay cho món mặc định */
+  surcharge: number;
+  isDefault: boolean;
+  available: boolean;
+};
+
+export type MenuComboComponent = {
+  id: string;
+  name: string;
+  type: 'FIXED' | 'CHOICE';
+  /** số ly/phần của thành phần trong một combo */
+  quantity: number;
+  /** combo cố định size (vd. luôn size M): ẩn nhóm Size khi chọn món */
+  fixedSizeCode: string | null;
+  choices: MenuComboChoice[];
+};
+
+export type MenuCombo = {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  image: string;
+  available: boolean;
+  components: MenuComboComponent[];
+};
+
 export type MenuItem = {
   id: string;
   name: string;
   categoryId: string;
   price: number;
+  /** Topping bán kèm món (rỗng nếu món không có topping). */
+  extras?: MenuExtra[];
+  /** Tổng số phần topping tối đa cho một ly. */
+  maxExtras?: number;
   /** Món có bán được thực tế trên POS sau khi gộp mọi điều kiện. */
   available: boolean;
   /** Cờ kinh doanh cấp chuỗi do Owner quản lý. */

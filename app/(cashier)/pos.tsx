@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmptyState } from '@/src/components/empty-state';
 import { CustomerDisplayBar } from '@/src/components/pos/customer-display-bar';
 import { ServerCheckoutDialog } from '@/src/components/pos/server-checkout-dialog';
+import { ComboOptionsDialog, type ComboDraft } from '@/src/components/pos/combo-options-dialog';
 import { ItemOptionsDialog, type ItemDraft } from '@/src/components/pos/item-options-dialog';
 import { ALL_CATEGORIES, MenuCategoryTabs } from '@/src/components/pos/menu-category-tabs';
 import { MenuItemCard } from '@/src/components/pos/menu-item-card';
@@ -16,9 +17,9 @@ import { Icon, IconButton } from '@/src/components/ui/icon';
 import { Stepper } from '@/src/components/ui/stepper';
 import { Txt } from '@/src/components/ui/txt';
 import { formatVnd } from '@/src/data/format';
-import { normalizeText } from '@/src/data/order-utils';
-import { useStore } from '@/src/data/store';
-import type { MenuItem } from '@/src/data/types';
+import { extraLabel, normalizeText } from '@/src/data/order-utils';
+import { useStore, type CartLine } from '@/src/data/store';
+import type { MenuCategory, MenuCombo, MenuItem } from '@/src/data/types';
 import {
   checkoutCart,
   getCounterOrder,
@@ -40,6 +41,45 @@ import {
 
 const GRID_GAP = 10;
 const GRID_PADDING = 12;
+/** Tab ảo chứa các combo (combo không thuộc danh mục món trong context của thu ngân). */
+const COMBO_CATEGORY = '__combo';
+
+/** Combo hiển thị trên lưới bằng chính thẻ món. */
+const comboCard = (combo: MenuCombo): MenuItem => ({
+  id: combo.id,
+  name: combo.name,
+  categoryId: COMBO_CATEGORY,
+  price: combo.price,
+  available: combo.available,
+  image: combo.image,
+  options: [],
+  batchable: true,
+});
+
+/** Dòng mô tả dưới tên món trong giỏ: tuỳ chọn (trừ size), topping, món trong combo, ghi chú. */
+function cartLineDetail(l: CartLine): string[] {
+  if (l.combo) {
+    return [
+      ...l.combo.components.map((c) => {
+        const size = c.options.find((o) => o.groupId === 'size');
+        const rest = [
+          ...c.options.filter((o) => o.groupId !== 'size').map((o) => o.label),
+          ...c.extras.map(extraLabel),
+        ].join(' · ');
+        return `• ${c.quantity > 1 ? `${c.quantity}× ` : ''}${c.itemName}${size ? ` (${size.label})` : ''}${rest ? ` · ${rest}` : ''}`;
+      }),
+      ...(l.note ? [`“${l.note}”`] : []),
+    ];
+  }
+  const detail = [
+    ...l.options.filter((o) => o.groupId !== 'size').map((o) => o.label),
+    ...(l.extras ?? []).map(extraLabel),
+    l.note ? `“${l.note}”` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  return detail ? [detail] : [];
+}
 
 /** POS tạo đơn tại quầy (CS-01): chọn món + tuỳ chọn, giỏ ở cột phải, chốt đơn rồi thu tiền. */
 export default function PosScreen() {
@@ -63,6 +103,8 @@ export default function PosScreen() {
   const [category, setCategory] = useState(ALL_CATEGORIES);
   const [query, setQuery] = useState('');
   const [picking, setPicking] = useState<MenuItem | null>(null);
+  const [combos, setCombos] = useState<MenuCombo[]>([]);
+  const [pickingCombo, setPickingCombo] = useState<MenuCombo | null>(null);
   const [checkoutOrder, setCheckoutOrder] = useState<CounterOrder | null>(null);
   const [checkingOut, setCheckingOut] = useState(false);
   const [menuLoading, setMenuLoading] = useState(true);
@@ -111,9 +153,12 @@ export default function PosScreen() {
     setMenuLoading(true);
     setMenuError(null);
     replaceMenu([], []);
+    setCombos([]);
     loadCashierMenu()
       .then((result) => {
-        if (active) replaceMenu(result.menu, result.categories);
+        if (!active) return;
+        replaceMenu(result.menu, result.categories);
+        setCombos(result.combos);
       })
       .catch((reason) => {
         if (active) setMenuError(reason instanceof Error ? reason.message : 'Không thể tải thực đơn');
@@ -129,17 +174,25 @@ export default function PosScreen() {
   const columns = menuWidth >= 760 ? 4 : menuWidth >= 520 ? 3 : 2;
   const itemWidth = (menuWidth - GRID_PADDING * 2 - GRID_GAP * (columns - 1)) / columns;
 
-  const categoryLabel = (id: string) => categories.find((c) => c.id === id)?.label ?? '';
-  // lọc theo danh mục ("Tất cả" = mọi món) VÀ từ khoá; tìm không phân biệt hoa/thường, không dấu
+  const comboById = useMemo(() => new Map(combos.map((c) => [c.id, c])), [combos]);
+  const tabs = useMemo<MenuCategory[]>(
+    () =>
+      combos.length
+        ? [{ id: COMBO_CATEGORY, label: t('pos.comboTab'), kind: 'drink' }, ...categories]
+        : categories,
+    [combos.length, categories, t],
+  );
+  const categoryLabel = (id: string) => tabs.find((c) => c.id === id)?.label ?? '';
+  // lọc theo danh mục ("Tất cả" = mọi món + combo) VÀ từ khoá; tìm không phân biệt hoa/thường, không dấu
   const visibleMenu = useMemo(() => {
     const q = normalizeText(query);
-    return menu.filter((m) => {
+    return [...combos.map(comboCard), ...menu].filter((m) => {
       if (category !== ALL_CATEGORIES && m.categoryId !== category) return false;
       if (!q) return true;
-      const label = categories.find((c) => c.id === m.categoryId)?.label ?? '';
+      const label = tabs.find((c) => c.id === m.categoryId)?.label ?? '';
       return normalizeText(`${m.name} ${label}`).includes(q);
     });
-  }, [menu, categories, category, query]);
+  }, [menu, combos, tabs, category, query]);
   const searching = query.trim().length > 0;
   const total = cart.reduce((s, l) => s + l.unitPrice * l.qty, 0);
   const cartCount = cart.reduce((s, l) => s + l.qty, 0);
@@ -157,9 +210,24 @@ export default function PosScreen() {
       qty: draft.qty,
       note: draft.note || undefined,
       options: draft.options,
+      extras: draft.extras,
       unitPrice: draft.unitPrice,
     });
     setPicking(null);
+  };
+
+  const addComboFromDraft = (draft: ComboDraft) => {
+    if (!pickingCombo) return;
+    addCartLine({
+      menuItemId: pickingCombo.id,
+      name: pickingCombo.name,
+      qty: draft.qty,
+      note: draft.note || undefined,
+      options: [],
+      unitPrice: draft.unitPrice,
+      combo: { comboId: pickingCombo.id, components: draft.components },
+    });
+    setPickingCombo(null);
   };
 
   const checkout = async () => {
@@ -192,7 +260,7 @@ export default function PosScreen() {
           </View>
           <View style={styles.tabsWrap}>
             <MenuCategoryTabs
-              categories={categories}
+              categories={tabs}
               value={category}
               onChange={setCategory}
               allLabel={t('pos.allCategories')}
@@ -226,9 +294,13 @@ export default function PosScreen() {
                 <MenuItemCard
                   item={item}
                   categoryLabel={categoryLabel(item.categoryId)}
-                  available={isMenuAvailable(item.id)}
+                  available={comboById.get(item.id)?.available ?? isMenuAvailable(item.id)}
                   qtyInCart={qtyByMenuItem[item.id] ?? 0}
-                  onPress={() => setPicking(item)}
+                  onPress={() => {
+                    const combo = comboById.get(item.id);
+                    if (combo) setPickingCombo(combo);
+                    else setPicking(item);
+                  }}
                   onDecrement={() => decrementMenuItem(item.id)}
                 />
               </View>
@@ -267,12 +339,7 @@ export default function PosScreen() {
               contentContainerStyle={styles.cartListContent}
               renderItem={({ item: l }) => {
                 const size = l.options.find((o) => o.groupId === 'size');
-                const detail = [
-                  ...l.options.filter((o) => o.groupId !== 'size').map((o) => o.label),
-                  l.note ? `“${l.note}”` : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ');
+                const detail = cartLineDetail(l).join('\n');
                 return (
                   <View style={[styles.cartLine, { borderBottomColor: theme.border_color_thin }]}>
                     <View style={styles.cartLineTitleRow}>
@@ -283,7 +350,7 @@ export default function PosScreen() {
                       <Txt variant="bodyStrong">{formatVnd(l.unitPrice * l.qty)}</Txt>
                     </View>
                     {detail ? (
-                      <Txt variant="caption" muted numberOfLines={3}>
+                      <Txt variant="caption" muted numberOfLines={l.combo ? 8 : 3}>
                         {detail}
                       </Txt>
                     ) : null}
@@ -319,6 +386,12 @@ export default function PosScreen() {
         item={picking}
         onDismiss={() => setPicking(null)}
         onConfirm={addFromDraft}
+      />
+      <ComboOptionsDialog
+        visible={!!pickingCombo}
+        combo={pickingCombo}
+        onDismiss={() => setPickingCombo(null)}
+        onConfirm={addComboFromDraft}
       />
       <ServerCheckoutDialog
         order={checkoutOrder}

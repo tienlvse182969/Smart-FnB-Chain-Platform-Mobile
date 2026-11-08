@@ -1,4 +1,11 @@
-import { SIZE_GROUP_ID, type MenuItem, type OrderOption } from './types';
+import { SIZE_GROUP_ID, type MenuItem, type OrderOption, type SelectedExtra } from './types';
+
+/** Tiền topping của một ly. */
+export const extrasTotal = (extras: SelectedExtra[] = []) =>
+  extras.reduce((sum, e) => sum + e.price * e.qty, 0);
+
+/** Nhãn ngắn cho topping, vd. "+Pudding trứng ×2". */
+export const extraLabel = (e: SelectedExtra) => `+${e.label}${e.qty > 1 ? ` ×${e.qty}` : ''}`;
 
 /** groupId → các choiceId đã chọn */
 export type OptionSelection = Record<string, string[]>;
@@ -56,9 +63,9 @@ export function optionsFromSelection(item: MenuItem, selected: OptionSelection):
   return out;
 }
 
-/** BR-19: giá một ly = giá món + giá cộng thêm của từng tuỳ chọn. Tính lại ở backend khi có API. */
-export const unitPriceOf = (item: MenuItem, options: OrderOption[]) =>
-  item.price + options.reduce((sum, o) => sum + o.priceDelta, 0);
+/** BR-19: giá một ly = giá món + giá cộng thêm của từng tuỳ chọn và topping. Backend tính lại khi chốt đơn. */
+export const unitPriceOf = (item: MenuItem, options: OrderOption[], extras: SelectedExtra[] = []) =>
+  item.price + options.reduce((sum, o) => sum + o.priceDelta, 0) + extrasTotal(extras);
 
 export const sizeOf = (options: OrderOption[]) => options.find((o) => o.groupId === SIZE_GROUP_ID);
 

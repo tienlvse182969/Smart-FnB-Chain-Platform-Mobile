@@ -88,7 +88,8 @@
     "allCategories": "Tất cả",
     "searchPlaceholder": "Tìm món…",
     "noResultsTitle": "Không tìm thấy món",
-    "noResultsHint": "Thử từ khoá khác hoặc chọn \"Tất cả\"."
+    "noResultsHint": "Thử từ khoá khác hoặc chọn \"Tất cả\".",
+    "comboTab": "Combo"
   },
   "itemOptionsDialog": {
     "qtyLabel": "Số lượng",
@@ -97,7 +98,8 @@
     "addBtn": "Thêm · {{total}}",
     "required": "Bắt buộc",
     "maxHint": "Chọn tối đa {{max}}",
-    "soldOut": "Hết"
+    "soldOut": "Hết",
+    "toppingTitle": "Topping · tối đa {{max}} phần"
   },
   "checkout": {
     "title": "Thanh toán · Đơn #{{code}}",
