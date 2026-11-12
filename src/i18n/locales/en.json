@@ -157,6 +157,8 @@
   "orders": {
     "title": "Today's orders",
     "subtitle": "{{count}} orders",
+    "dayToday": "Today",
+    "dayYesterday": "Yesterday",
     "emptyTitle": "No orders yet",
     "emptyHint": "Orders created on the Sales screen will show up here.",
     "orderCode": "Order #{{code}}",

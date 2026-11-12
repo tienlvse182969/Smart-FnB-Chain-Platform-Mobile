@@ -157,6 +157,8 @@
   "orders": {
     "title": "Đơn hôm nay",
     "subtitle": "{{count}} đơn",
+    "dayToday": "Hôm nay",
+    "dayYesterday": "Hôm qua",
     "emptyTitle": "Chưa có đơn nào",
     "emptyHint": "Đơn tạo ở màn hình Bán hàng sẽ hiện ở đây.",
     "orderCode": "Đơn #{{code}}",
