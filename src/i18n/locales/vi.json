@@ -8,6 +8,33 @@
     "gotIt": "Đã hiểu",
     "retry": "Thử lại"
   },
+  "pager": {
+    "title": "Máy báo rung",
+    "label": "Số máy báo rung",
+    "placeholder": "1 – 999",
+    "hint": "Nhập số trên máy báo rung đưa cho khách (không bắt buộc).",
+    "assign": "Gán máy",
+    "change": "Đổi máy",
+    "remove": "Gỡ máy",
+    "save": "Lưu",
+    "short": "Máy #{{number}}",
+    "assigned": "Đã gán máy báo rung #{{number}}",
+    "removed": "Đã gỡ máy báo rung",
+    "notify": "Đã gọi máy",
+    "notifyLong": "Ghi nhận đã gọi máy báo rung",
+    "notified": "Đã gọi lúc {{time}}",
+    "notifiedToast": "Đã ghi nhận gọi máy #{{number}}",
+    "readyHint": "Món đã xong — bấm gọi trên bộ phát máy báo rung rồi ghi nhận tại đây.",
+    "errors": {
+      "range": "Số máy báo rung phải là số nguyên từ 1 đến 999.",
+      "taken": "Máy #{{number}} đang gán cho một đơn khác chưa hoàn tất.",
+      "notOpen": "Chỉ gán được máy báo rung cho đơn đã thanh toán và chưa hoàn tất.",
+      "notReady": "Chỉ ghi nhận gọi khi đơn đã sẵn sàng và vẫn gán đúng máy này.",
+      "notFound": "Không tìm thấy đơn trong chi nhánh của bạn.",
+      "forbidden": "Tài khoản không có quyền thao tác máy báo rung.",
+      "generic": "Không cập nhật được máy báo rung"
+    }
+  },
   "account": {
     "screenTitle": "Tài khoản",
     "settingsSection": "Cài đặt thiết bị",

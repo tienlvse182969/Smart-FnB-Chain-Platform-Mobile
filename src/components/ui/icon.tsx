@@ -46,6 +46,7 @@ import {
   User,
   Users,
   UtensilsCrossed,
+  Vibrate,
   X,
   type LucideIcon,
 } from 'lucide-react-native';
@@ -103,6 +104,7 @@ export const Icons = {
   backspace: Delete,
   refund: Undo2,
   mail: Mail,
+  pager: Vibrate,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof Icons;

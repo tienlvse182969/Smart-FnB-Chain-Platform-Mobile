@@ -23,6 +23,7 @@ import { printReceipt, printRefundSlip, type RefundSlipPrintJob } from '@/src/se
 import { useStation } from '@/src/stations/station-context';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { OrderStatusBadge, RefundBadge } from '../status-badge';
+import { PagerPanel } from './pager-panel';
 import { AppModal } from '../ui/app-modal';
 import { Btn } from '../ui/button';
 import { Field } from '../ui/field';
@@ -67,6 +68,7 @@ export function OrderDetailDialog({
   order,
   onClose,
   onRefunded,
+  onPagerChanged,
   approvalRequest,
   knownRefunds,
 }: {
@@ -74,6 +76,8 @@ export function OrderDetailDialog({
   onClose: () => void;
   /** Gọi sau khi backend ghi nhận hoàn tiền để màn hình tải lại danh sách đơn. */
   onRefunded?: () => void;
+  /** Gọi sau khi gán / đổi / gỡ / ghi nhận gọi máy báo rung để màn hình tải lại danh sách đơn. */
+  onPagerChanged?: () => void;
   approvalRequest?: RefundApprovalRequest | null;
   /** Lượt hoàn đã biết từ nguồn khác (vd. yêu cầu duyệt hoàn tiền đã hoàn tất). */
   knownRefunds?: OrderRefundRef[];
@@ -361,6 +365,15 @@ export function OrderDetailDialog({
             {t('orders.cancelledReason', { reason: formatRefundReason(order.cancelledReason, t) })}
           </Txt>
         ) : null}
+
+        <PagerPanel
+          orderId={order.id}
+          pagerNumber={order.pagerNumber}
+          pagerNotifiedAt={order.pagerNotifiedAt}
+          editable={!!order.pagerEligible}
+          ready={order.status === 'Sẵn sàng'}
+          onChanged={() => onPagerChanged?.()}
+        />
 
         {order.refundedAmount ? (
           <View style={[styles.refundBox, { borderColor: theme.border_color_base }]}>

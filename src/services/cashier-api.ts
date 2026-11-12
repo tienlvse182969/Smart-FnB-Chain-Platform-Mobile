@@ -136,6 +136,9 @@ export type CounterOrder = {
   paymentStatus: string;
   totalAmount: string;
   callNumber: number | null;
+  /** Số máy báo rung đã gán (1–999); chỉ có sau khi thanh toán. */
+  pagerNumber?: number | null;
+  pagerNotifiedAt?: string | null;
   createdAt: string;
   items: {
     id: string;
@@ -373,6 +376,8 @@ type ApiHistoryOrder = {
   paymentStatus: string;
   totalAmount: string;
   callNumber: number | null;
+  pagerNumber?: number | null;
+  pagerNotifiedAt?: string | null;
   createdAt: string;
   paidAt: string | null;
   readyAt: string | null;
@@ -503,6 +508,10 @@ function mapHistoryOrder(order: ApiHistoryOrder): HistoryOrder {
     reprintCount: 0,
     refundedAmount: refundedAmountOf(order),
     refunds: mapOrderRefunds(order.refunds),
+    pagerNumber: order.pagerNumber ?? undefined,
+    pagerNotifiedAt: order.pagerNotifiedAt ?? undefined,
+    pagerEligible:
+      order.paymentStatus === 'PAID' && ['SUBMITTED', 'PREPARING', 'READY'].includes(order.status),
     payment: paidPayment
       ? {
           method: paidPayment.method === 'CASH' ? 'Tiền mặt' : 'Chuyển khoản QR',

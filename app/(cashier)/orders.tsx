@@ -9,6 +9,7 @@ import { OrderDetailDialog } from '@/src/components/pos/order-detail-dialog';
 import { ScreenHeader } from '@/src/components/screen-header';
 import { OrderStatusBadge, RefundBadge } from '@/src/components/status-badge';
 import { Btn } from '@/src/components/ui/button';
+import { Icon } from '@/src/components/ui/icon';
 import { Segmented } from '@/src/components/ui/segmented';
 import { Txt } from '@/src/components/ui/txt';
 import { clockAt, formatVnd } from '@/src/data/format';
@@ -173,6 +174,12 @@ export default function OrdersScreen() {
                   <View style={styles.badges}>
                     <OrderStatusBadge status={o.status} size="sm" />
                     {o.refundedAmount ? <RefundBadge amount={o.refundedAmount} size="sm" /> : null}
+                    {o.pagerNumber !== undefined ? (
+                      <View style={[styles.pagerTag, { borderColor: theme.border_color_base }]}>
+                        <Icon name="pager" size={11} />
+                        <Txt variant="tiny">{t('pager.short', { number: o.pagerNumber })}</Txt>
+                      </View>
+                    ) : null}
                   </View>
                 </View>
                 <Txt variant="title">{formatVnd(o.total)}</Txt>
@@ -188,6 +195,7 @@ export default function OrdersScreen() {
         knownRefunds={openOrderRefunds}
         onClose={() => setOpenId(null)}
         onRefunded={() => void load('silent')}
+        onPagerChanged={() => void load('silent')}
       />
     </SafeAreaView>
   );
@@ -219,4 +227,13 @@ const styles = StyleSheet.create({
   callNumber: { fontFamily: fontFamily.black, fontSize: 24, lineHeight: 30 },
   info: { flex: 1, gap: 3 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  pagerTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
 });

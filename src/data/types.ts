@@ -220,6 +220,12 @@ export type HistoryOrder = Omit<Order, 'orderCode'> & {
   refundedAmount?: number;
   /** Các lượt hoàn tiền đã hoàn tất (mỗi lượt có một PDF phiếu hoàn trên backend), nếu backend trả kèm. */
   refunds?: OrderRefundRef[];
+  /** Số máy báo rung đang gán cho đơn (1–999). */
+  pagerNumber?: number;
+  /** Lúc nhân viên ghi nhận đã gọi máy báo rung. */
+  pagerNotifiedAt?: string;
+  /** Đơn đã thanh toán và chưa hoàn tất (SUBMITTED / PREPARING / READY) → được gán / đổi / gỡ máy báo rung. */
+  pagerEligible?: boolean;
 };
 
 /** Tham chiếu một lượt hoàn tiền của đơn — đủ để lấy PDF phiếu hoàn đã lưu trên backend. */
