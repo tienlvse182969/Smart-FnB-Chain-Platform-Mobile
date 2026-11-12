@@ -28,10 +28,17 @@ type ModalAction = { text: string; onPress: () => void; primary?: boolean; disab
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 
-/** Độ blur của khung dialog (kính mờ) khi mở hết. */
-const GLASS_BLUR = 60;
-/** Lớp trắng mờ phủ trên blur — giữ chữ dễ đọc; giảm để "trong" hơn, tăng để "đục" hơn. */
-const GLASS_VEIL = 'rgba(255,255,255,0.75)';
+/**
+ * Lớp trắng của kính lấy từ chính `tint` của BlurView, KHÔNG dùng View trắng riêng đè lên:
+ * expo-blur SDK 54 trên Android chụp cả các view nằm trên BlurView vào ảnh blur, nên một lớp
+ * trắng riêng sẽ bị blur ngược vào nền → khung trắng đục, mất hiệu ứng. Overlay của `tint` do
+ * native tự vẽ nên không bị chụp.
+ *
+ * Với tint này lớp trắng ≈ 0.97 × intensity / 100 (Android, web); iOS dùng material tương ứng.
+ * Tăng intensity → đục hơn, dễ đọc hơn; giảm → trong hơn. Android blur bán kính = intensity / 4.
+ */
+const GLASS_TINT = 'systemChromeMaterialLight';
+const GLASS_INTENSITY = 82;
 const GLASS_BORDER = 'rgba(255,255,255,0.7)';
 /** Lớp tối phủ phần màn hình phía sau (không blur). */
 const BACKDROP = 'rgba(0,0,0,0.3)';
@@ -95,9 +102,9 @@ export function AppModal({
 
   const fadeStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
   // Khung chỉ scale, không đổi opacity: iOS render sai blur khi opacity của view cha thay đổi.
-  // Blur hiện dần qua `intensity`, lớp trắng + nội dung hiện dần qua opacity của chính chúng.
+  // Blur + lớp trắng của tint hiện dần qua `intensity`, nội dung hiện dần qua opacity của chính nó.
   const scaleStyle = useAnimatedStyle(() => ({ transform: [{ scale: 0.96 + progress.value * 0.04 }] }));
-  const blurProps = useAnimatedProps(() => ({ intensity: progress.value * GLASS_BLUR }));
+  const blurProps = useAnimatedProps(() => ({ intensity: progress.value * GLASS_INTENSITY }));
 
   if (!mounted) return null;
 
@@ -113,11 +120,10 @@ export function AppModal({
           <Animated.View style={[styles.dialog, { width: dialogWidth }, scaleStyle]}>
             <AnimatedBlurView
               animatedProps={blurProps}
-              tint="light"
+              tint={GLASS_TINT}
               experimentalBlurMethod="dimezisBlurView"
               style={StyleSheet.absoluteFill}
             />
-            <Animated.View style={[StyleSheet.absoluteFill, styles.veil, fadeStyle]} />
             <Animated.View style={[styles.body, fadeStyle]}>
               {icon ? (
                 <View style={styles.icon}>
@@ -153,10 +159,9 @@ const styles = StyleSheet.create({
   backdrop: { backgroundColor: BACKDROP },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   // borderRadius đặt lên BlurView không có tác dụng — bo góc bằng overflow: 'hidden' ở khung cha.
-  dialog: { borderRadius: 24, overflow: 'hidden' },
-  veil: {
-    backgroundColor: GLASS_VEIL,
+  dialog: {
     borderRadius: 24,
+    overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: GLASS_BORDER,
   },
