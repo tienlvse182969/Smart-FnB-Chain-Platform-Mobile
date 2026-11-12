@@ -344,6 +344,13 @@
     "failed": "Could not refund",
     "slipPrinted": "Refund slip printed",
     "badge": "Refunded {{amount}}",
-    "todayOnlyNote": "Only orders paid today can be refunded in cash. For older orders, ask the manager."
+    "todayOnlyNote": "Only orders paid today can be refunded in cash. For older orders, ask the manager.",
+    "pdf": {
+      "title": "PDF refund slip",
+      "index": "Refund {{index}}",
+      "reprint": "Reprint refund slip",
+      "reprinted": "Refund slip reprinted",
+      "notFound": "No refund slip PDF found on the server for this order yet."
+    }
   }
 }

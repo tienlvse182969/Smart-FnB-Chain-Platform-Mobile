@@ -81,6 +81,18 @@ export default function OrdersScreen() {
     [orders, filter],
   );
   const openOrder = useMemo(() => orders.find((o) => o.id === openId) ?? null, [orders, openId]);
+  // yêu cầu hoàn tiền ngày trước đã chi trả có `refundId` → dùng để mở PDF phiếu hoàn của đơn
+  const openOrderRefunds = useMemo(
+    () =>
+      approvalRequests
+        .filter((request) => request.orderId === openId && request.status === 'COMPLETED' && request.refundId)
+        .map((request) => ({
+          id: request.refundId as string,
+          amount: Number(request.amount),
+          at: request.completedAt ?? undefined,
+        })),
+    [approvalRequests, openId],
+  );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
@@ -173,6 +185,7 @@ export default function OrdersScreen() {
       <OrderDetailDialog
         order={openOrder}
         approvalRequest={approvalRequests.find((request) => request.orderId === openOrder?.id && (request.status === 'PENDING' || request.status === 'APPROVED')) ?? approvalRequests.find((request) => request.orderId === openOrder?.id) ?? null}
+        knownRefunds={openOrderRefunds}
         onClose={() => setOpenId(null)}
         onRefunded={() => void load('silent')}
       />

@@ -218,7 +218,12 @@ export type HistoryOrder = Omit<Order, 'orderCode'> & {
    * huỷ thì hoàn cả đơn, còn lại là tổng thành tiền các dòng gốc đã huỷ.
    */
   refundedAmount?: number;
+  /** Các lượt hoàn tiền đã hoàn tất (mỗi lượt có một PDF phiếu hoàn trên backend), nếu backend trả kèm. */
+  refunds?: OrderRefundRef[];
 };
+
+/** Tham chiếu một lượt hoàn tiền của đơn — đủ để lấy PDF phiếu hoàn đã lưu trên backend. */
+export type OrderRefundRef = { id: string; amount?: number; at?: string };
 
 /** Một dòng món trong mẻ, kèm số gọi để pha chế biết ly nào của đơn nào. */
 export type BatchEntry = {

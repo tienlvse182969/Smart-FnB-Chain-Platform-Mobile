@@ -8,6 +8,7 @@ import type {
   MenuCombo,
   MenuItem,
   OrderOption,
+  OrderRefundRef,
   OrderStatus,
   SelectedExtra,
 } from '@/src/data/types';
@@ -397,7 +398,29 @@ type ApiHistoryOrder = {
     amount: string;
     paidAt: string | null;
   }[];
+  /** Chỉ có khi backend trả kèm các lượt hoàn của đơn. */
+  refunds?: ApiOrderRefund[];
 };
+
+/** Lượt hoàn tiền rút gọn mà backend có thể trả kèm đơn; chỉ cần `id` để lấy PDF phiếu hoàn. */
+type ApiOrderRefund = {
+  id: string;
+  status?: string;
+  amount?: string | number;
+  completedAt?: string | null;
+  requestedAt?: string | null;
+};
+
+function mapOrderRefunds(refunds: ApiOrderRefund[] | undefined): OrderRefundRef[] {
+  if (!Array.isArray(refunds)) return [];
+  return refunds
+    .filter((refund) => refund?.id && (refund.status === undefined || refund.status === 'COMPLETED'))
+    .map((refund) => ({
+      id: refund.id,
+      amount: refund.amount !== undefined ? Number(refund.amount) : undefined,
+      at: refund.completedAt ?? refund.requestedAt ?? undefined,
+    }));
+}
 
 export type OrderReceipt = {
   orderId: string;
@@ -479,6 +502,7 @@ function mapHistoryOrder(order: ApiHistoryOrder): HistoryOrder {
     cashierName: '',
     reprintCount: 0,
     refundedAmount: refundedAmountOf(order),
+    refunds: mapOrderRefunds(order.refunds),
     payment: paidPayment
       ? {
           method: paidPayment.method === 'CASH' ? 'Tiền mặt' : 'Chuyển khoản QR',
@@ -702,5 +726,93 @@ export async function retryReceiptDocument(orderId: string) {
   const { data } = await apiClient.post<ReceiptDocument>(
     `/cashier/orders/${orderId}/receipt-document/retry`,
   );
+  return data;
+}
+
+/**
+ * Lượt hoàn tiền đã hoàn tất của một đơn, đọc từ chi tiết đơn (`refunds` nếu backend trả kèm). Không có / lỗi → mảng
+ * rỗng; caller gộp thêm id lấy từ yêu cầu duyệt hoàn tiền và từ lượt hoàn vừa tạo.
+ */
+export async function loadOrderRefunds(orderId: string): Promise<OrderRefundRef[]> {
+  const { data } = await apiClient.get<{ refunds?: ApiOrderRefund[] }>(`/cashier/orders/${orderId}`);
+  return mapOrderRefunds(data?.refunds);
+}
+
+/** PDF phiếu hoàn tiền bất biến backend lưu cho từng lượt hoàn (mỗi lượt hoàn một PDF). */
+export type RefundDocument = Omit<ReceiptDocument, 'orderId'> & {
+  id?: string;
+  refundId: string;
+  orderId: string;
+  checksum?: string | null;
+  attempts?: number;
+  printImageUrl?: string | null;
+};
+
+const refundDocumentPath = (orderId: string, refundId: string) =>
+  `/cashier/orders/${orderId}/refunds/${refundId}/document`;
+
+export async function getRefundDocument(orderId: string, refundId: string) {
+  const { data } = await apiClient.get<RefundDocument>(refundDocumentPath(orderId, refundId));
+  return data;
+}
+
+/** Tạo lại PDF sau khi lỗi; backend không bao giờ tạo PDF thứ hai hay lượt hoàn thứ hai. */
+export async function retryRefundDocument(orderId: string, refundId: string) {
+  const { data } = await apiClient.post<RefundDocument>(`${refundDocumentPath(orderId, refundId)}/retry`);
+  return data;
+}
+
+/** Ảnh PNG (rộng 768px) render từ chính PDF phiếu hoàn đã lưu để in máy nhiệt 58mm. */
+export async function getRefundPrintImage(orderId: string, refundId: string) {
+  const { data } = await apiClient.get<ArrayBuffer>(
+    `${refundDocumentPath(orderId, refundId)}/print-image`,
+    { responseType: 'arraybuffer', timeout: PRINT_IMAGE_TIMEOUT_MS },
+  );
+  return bytesToBase64(new Uint8Array(data));
+}
+
+/** Một lượt in / in lại phiếu hoàn tiền; mobile báo kết quả in thật qua `reportRefundPrintResult`. */
+export type RefundPrintLog = {
+  id: string;
+  refundId?: string;
+  isReprint: boolean;
+  reason: string | null;
+  status?: PrintJobStatus;
+  printedAt?: string | null;
+  errorMessage?: string | null;
+  createdAt?: string;
+};
+
+/** Ghi nhận lượt in phiếu hoàn; in lại bắt buộc lý do ≥ 3 ký tự (BR-53). */
+export async function recordRefundSlipPrint(
+  orderId: string,
+  refundId: string,
+  input: { isReprint: boolean; reason?: string },
+) {
+  const reason = input.reason?.trim();
+  const { data } = await apiClient.post<RefundPrintLog>(`${refundDocumentPath(orderId, refundId)}/prints`, {
+    isReprint: input.isReprint,
+    ...(reason ? { reason } : {}),
+  });
+  return data;
+}
+
+export async function listRefundSlipPrints(orderId: string, refundId: string) {
+  const { data } = await apiClient.get<RefundPrintLog[]>(`${refundDocumentPath(orderId, refundId)}/prints`);
+  return data;
+}
+
+/** Báo kết quả in vật lý của phiếu hoàn; không bao giờ làm đổi lượt hoàn. */
+export async function reportRefundPrintResult(
+  printLogId: string,
+  status: 'PRINTED' | 'FAILED',
+  errorMessage?: string,
+) {
+  const { data } = await apiClient.post<RefundPrintLog>(`/cashier/refund-print-logs/${printLogId}/result`, {
+    status,
+    ...(status === 'FAILED'
+      ? { errorMessage: (errorMessage?.trim() || 'Không in được').slice(0, PRINT_ERROR_MAX_LENGTH) }
+      : {}),
+  });
   return data;
 }

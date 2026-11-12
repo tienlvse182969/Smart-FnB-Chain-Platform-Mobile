@@ -344,6 +344,13 @@
     "failed": "Không hoàn tiền được",
     "slipPrinted": "Đã in phiếu hoàn tiền",
     "badge": "Đã hoàn {{amount}}",
-    "todayOnlyNote": "Chỉ hoàn được tiền mặt cho đơn thanh toán hôm nay. Đơn ngày trước vui lòng báo Quản lý."
+    "todayOnlyNote": "Chỉ hoàn được tiền mặt cho đơn thanh toán hôm nay. Đơn ngày trước vui lòng báo Quản lý.",
+    "pdf": {
+      "title": "Phiếu hoàn tiền PDF",
+      "index": "Lượt hoàn {{index}}",
+      "reprint": "In lại phiếu hoàn",
+      "reprinted": "Đã in lại phiếu hoàn tiền",
+      "notFound": "Chưa tìm thấy PDF phiếu hoàn tiền của đơn này trên máy chủ."
+    }
   }
 }
