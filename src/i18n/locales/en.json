@@ -39,6 +39,7 @@
     "screenTitle": "Account",
     "settingsSection": "Device settings",
     "logout": "Sign out",
+    "version": "Version {{version}}",
     "language": {
       "label": "Language",
       "description": "Choose the display language for the app",

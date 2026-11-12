@@ -14,6 +14,7 @@ import { staffByRole } from '@/src/data/mock';
 import { useStore } from '@/src/data/store';
 import type { StaffRole } from '@/src/data/types';
 import { setAppLanguage, type AppLanguage } from '@/src/i18n';
+import { APP_VERSION } from '@/src/lib/app-version';
 import { staffRoleKey } from '@/src/i18n/labels';
 import { useAppTheme } from '@/src/theme/use-theme';
 
@@ -96,6 +97,10 @@ export function AccountScreen({ role, children }: { role: StaffRole; children?: 
             router.replace('/login');
           }}
         />
+
+        <Txt variant="tiny" muted style={styles.version}>
+          {t('account.version', { version: APP_VERSION })}
+        </Txt>
       </ScrollView>
     </SafeAreaView>
   );
@@ -121,4 +126,5 @@ const styles = StyleSheet.create({
   settingText: { flex: 1, gap: 2 },
   languageSegmented: { marginTop: 12 },
   logout: { marginTop: 12 },
+  version: { textAlign: 'center', marginTop: 4 },
 });

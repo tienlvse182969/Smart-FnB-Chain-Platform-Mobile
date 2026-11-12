@@ -12,7 +12,9 @@ import { Field } from '@/src/components/ui/field';
 import { Icon } from '@/src/components/ui/icon';
 import { Txt } from '@/src/components/ui/txt';
 import { useStore } from '@/src/data/store';
+import { APP_VERSION } from '@/src/lib/app-version';
 import { ApiError } from '@/src/services/auth-types';
+import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 
 const AVATAR_COLORS = ['#1677ff', '#52a41a', '#fa8c16', '#eb2f96', '#722ed1', '#13a8a8'];
@@ -184,6 +186,7 @@ export default function LoginScreen() {
                 {accounts.length ? <Btn label="Chọn từ tài khoản đã đăng nhập" variant="plain" block onPress={showPicker} /> : null}
               </>
             )}
+            <Txt variant="tiny" muted style={styles.version}>Phiên bản {APP_VERSION}</Txt>
           </BlurView>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -207,7 +210,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   logo: { width: 220, height: 90, alignSelf: 'center' },
-  title: { textAlign: 'center' },
+  title: { textAlign: 'center', fontFamily: fontFamily.bold, fontSize: 20, lineHeight: 26 },
   subtitle: { textAlign: 'center', marginTop: -10 },
   accounts: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 16 },
   accountWrap: { width: 120 },
@@ -216,4 +219,5 @@ const styles = StyleSheet.create({
   avatar: { alignItems: 'center', justifyContent: 'center' },
   removeBadge: { position: 'absolute', top: 4, right: 12, width: 20, height: 20, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   selected: { alignItems: 'center', gap: 4 },
+  version: { textAlign: 'center', marginTop: -4 },
 });

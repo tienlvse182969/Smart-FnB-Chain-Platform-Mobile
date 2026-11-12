@@ -32,7 +32,7 @@ export function Field({
   const styles: Partial<InputItemStyle> = {
     container: {
       borderWidth: 1,
-      borderRadius: 2,
+      borderRadius: 8,
       height: 46,
       borderColor: focused ? theme.brand_primary : theme.border_color_base,
       backgroundColor: theme.fill_base,

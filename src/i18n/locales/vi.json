@@ -39,6 +39,7 @@
     "screenTitle": "Tài khoản",
     "settingsSection": "Cài đặt thiết bị",
     "logout": "Đăng xuất",
+    "version": "Phiên bản {{version}}",
     "language": {
       "label": "Ngôn ngữ",
       "description": "Chọn ngôn ngữ hiển thị cho ứng dụng",

@@ -23,7 +23,11 @@ export function Stepper({
   const styles: Partial<StepperStyle> = {
     container: { width: size === 'sm' ? 96 : 116 },
     stepWrap: {
+      // Ghi đè `flex: 1` mặc định của antd. Trên web react-native-web xuất thẳng CSS `flex: 0`
+      // (= `0 1 0%`) → nút bị ép cao 0px; khai báo rõ shrink/basis để giữ đúng 36×36 như native.
       flex: 0,
+      flexShrink: 0,
+      flexBasis: 'auto',
       width: s,
       height: s,
       borderRadius: 8,
@@ -47,6 +51,7 @@ export function Stepper({
         fontFamily: fontFamily.regular,
         fontSize: size === 'sm' ? 15 : 17,
         color: theme.color_text_base,
+        borderRadius: 8,
       }}
       onChange={(v) => onChange(v ?? min)}
     />
