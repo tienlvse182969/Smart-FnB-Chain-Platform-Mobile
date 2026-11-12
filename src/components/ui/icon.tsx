@@ -21,6 +21,7 @@ import {
   Lock,
   LogIn,
   LogOut,
+  Mail,
   MonitorCheck,
   MonitorOff,
   MonitorSmartphone,
@@ -101,6 +102,7 @@ export const Icons = {
   displayOff: MonitorOff,
   backspace: Delete,
   refund: Undo2,
+  mail: Mail,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof Icons;

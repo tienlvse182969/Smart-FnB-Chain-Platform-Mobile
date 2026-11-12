@@ -5,6 +5,7 @@ import { Image, ImageBackground, KeyboardAvoidingView, Platform, Pressable, Scro
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/auth/auth-context';
+import { ForgotPasswordForm } from '@/src/components/auth/forgot-password-form';
 import { forgetAccount, loadRecentAccounts, rememberAccount, type RecentAccount } from '@/src/auth/recent-accounts';
 import { Btn } from '@/src/components/ui/button';
 import { Field } from '@/src/components/ui/field';
@@ -49,6 +50,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Màn "Quên mật khẩu" chồng lên mode hiện tại — quay lại thì giữ nguyên tài khoản đang chọn.
+  const [forgot, setForgot] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -81,6 +84,12 @@ export default function LoginScreen() {
     setPassword('');
     setError(null);
     setMode('manual');
+  };
+
+  const openForgot = () => {
+    setPassword('');
+    setError(null);
+    setForgot(true);
   };
 
   const remove = async (account: RecentAccount) => {
@@ -123,9 +132,11 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={styles.center} keyboardShouldPersistTaps="handled">
           <BlurView intensity={60} tint="light" experimentalBlurMethod="dimezisBlurView" style={styles.card}>
             <Image source={require('@/assets/logo/logo1.png')} style={styles.logo} resizeMode="contain" />
-            <Txt variant="title" style={styles.title}>Đăng nhập nhân viên</Txt>
+            <Txt variant="title" style={styles.title}>{forgot ? 'Quên mật khẩu' : 'Đăng nhập nhân viên'}</Txt>
 
-            {mode === 'pick' && !selected ? (
+            {forgot ? (
+              <ForgotPasswordForm initialEmail={selected?.email ?? email} onBack={() => setForgot(false)} />
+            ) : mode === 'pick' && !selected ? (
               <>
                 <Txt variant="body" muted style={styles.subtitle}>Chọn tài khoản để đăng nhập</Txt>
                 <View style={styles.accounts}>
@@ -159,6 +170,7 @@ export default function LoginScreen() {
                 <Field label="Mật khẩu" value={password} onChangeText={setPassword} secureTextEntry autoFocus left={<Icon name="lock" size={17} color={theme.color_text_caption} />} />
                 {error ? <Txt variant="caption" color={theme.brand_error}>{error}</Txt> : null}
                 <Btn label="Đăng nhập" icon="login" block loading={submitting} onPress={submit} />
+                <Btn label="Quên mật khẩu?" variant="plain" block onPress={openForgot} />
                 <Btn label="Chọn tài khoản khác" variant="plain" block onPress={showPicker} />
               </>
             ) : (
@@ -168,6 +180,7 @@ export default function LoginScreen() {
                 <Field label="Mật khẩu" value={password} onChangeText={setPassword} secureTextEntry left={<Icon name="lock" size={17} color={theme.color_text_caption} />} />
                 {error ? <Txt variant="caption" color={theme.brand_error}>{error}</Txt> : null}
                 <Btn label="Đăng nhập" icon="login" block loading={submitting} onPress={submit} />
+                <Btn label="Quên mật khẩu?" variant="plain" block onPress={openForgot} />
                 {accounts.length ? <Btn label="Chọn từ tài khoản đã đăng nhập" variant="plain" block onPress={showPicker} /> : null}
               </>
             )}
