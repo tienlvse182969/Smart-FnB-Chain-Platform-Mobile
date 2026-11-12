@@ -1,12 +1,14 @@
 import * as WebBrowser from 'expo-web-browser';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { toast } from '@/src/components/ui/toast';
 import {
   getReceiptDocument,
+  getRefundDocument,
   retryReceiptDocument,
+  retryRefundDocument,
   type ReceiptDocument,
 } from '@/src/services/cashier-api';
 import { useAppTheme } from '@/src/theme/use-theme';
@@ -15,14 +17,29 @@ import { Txt } from '../ui/txt';
 
 const isAbsoluteUrl = (url: string) => /^https?:\/\//i.test(url);
 
+type PdfDoc = Pick<ReceiptDocument, 'status' | 'downloadUrl' | 'errorMessage'>;
+
 /**
- * Phiếu PDF bất biến do backend lưu cho đơn đã thanh toán. Mobile chỉ hiển thị trạng thái và mở URL backend trả về;
- * không tự dựng PDF khác để tránh lệch snapshot.
+ * Khung hiển thị một PDF bất biến do backend lưu (bill thanh toán hoặc phiếu hoàn tiền). Mobile chỉ hiển thị trạng
+ * thái và mở URL backend trả về; không tự dựng PDF khác để tránh lệch snapshot.
  */
-export function ReceiptPdfSection({ orderId }: { orderId: string }) {
+function PdfDocumentSection({
+  title,
+  subtitle,
+  fetchDoc,
+  retryDoc,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  fetchDoc: () => Promise<PdfDoc>;
+  retryDoc: () => Promise<PdfDoc>;
+  /** Thao tác thêm hiển thị dưới nút xem (vd. in lại phiếu hoàn). */
+  children?: ReactNode;
+}) {
   const theme = useAppTheme();
   const { t } = useTranslation();
-  const [doc, setDoc] = useState<ReceiptDocument | null>(null);
+  const [doc, setDoc] = useState<PdfDoc | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,13 +48,13 @@ export function ReceiptPdfSection({ orderId }: { orderId: string }) {
     setLoading(true);
     setError(null);
     try {
-      setDoc(await getReceiptDocument(orderId));
+      setDoc(await fetchDoc());
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : t('orders.pdf.loadError'));
     } finally {
       setLoading(false);
     }
-  }, [orderId, t]);
+  }, [fetchDoc, t]);
 
   useEffect(() => {
     setDoc(null);
@@ -49,7 +66,7 @@ export function ReceiptPdfSection({ orderId }: { orderId: string }) {
     setBusy(true);
     try {
       // presigned URL chỉ sống 10 phút nên lấy lại ngay lúc mở
-      const fresh = await getReceiptDocument(orderId);
+      const fresh = await fetchDoc();
       setDoc(fresh);
       if (fresh.status !== 'READY' || !fresh.downloadUrl) return;
       if (!isAbsoluteUrl(fresh.downloadUrl)) {
@@ -69,7 +86,7 @@ export function ReceiptPdfSection({ orderId }: { orderId: string }) {
     if (busy) return;
     setBusy(true);
     try {
-      setDoc(await retryReceiptDocument(orderId));
+      setDoc(await retryDoc());
     } catch (failure) {
       toast.fail(failure instanceof Error ? failure.message : t('orders.pdf.loadError'), 3, undefined, false);
     } finally {
@@ -122,9 +139,45 @@ export function ReceiptPdfSection({ orderId }: { orderId: string }) {
 
   return (
     <View style={[styles.box, { borderColor: theme.border_color_thin }]}>
-      <Txt variant="bodyStrong">{t('orders.pdf.title')}</Txt>
+      <Txt variant="bodyStrong">{title}</Txt>
+      {subtitle ? (
+        <Txt variant="caption" muted>
+          {subtitle}
+        </Txt>
+      ) : null}
       {content}
+      {children}
     </View>
+  );
+}
+
+/** PDF bill thanh toán của đơn. */
+export function ReceiptPdfSection({ orderId }: { orderId: string }) {
+  const { t } = useTranslation();
+  const fetchDoc = useCallback(() => getReceiptDocument(orderId), [orderId]);
+  const retryDoc = useCallback(() => retryReceiptDocument(orderId), [orderId]);
+  return <PdfDocumentSection title={t('orders.pdf.title')} fetchDoc={fetchDoc} retryDoc={retryDoc} />;
+}
+
+/** PDF phiếu hoàn tiền của một lượt hoàn (backend lưu sau khi thu ngân xác nhận đã trả tiền). */
+export function RefundPdfSection({
+  orderId,
+  refundId,
+  subtitle,
+  children,
+}: {
+  orderId: string;
+  refundId: string;
+  subtitle?: string;
+  children?: ReactNode;
+}) {
+  const { t } = useTranslation();
+  const fetchDoc = useCallback(() => getRefundDocument(orderId, refundId), [orderId, refundId]);
+  const retryDoc = useCallback(() => retryRefundDocument(orderId, refundId), [orderId, refundId]);
+  return (
+    <PdfDocumentSection title={t('refund.pdf.title')} subtitle={subtitle} fetchDoc={fetchDoc} retryDoc={retryDoc}>
+      {children}
+    </PdfDocumentSection>
   );
 }
 

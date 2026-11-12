@@ -1,7 +1,7 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, SectionList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/src/components/empty-state';
@@ -9,6 +9,7 @@ import { OrderDetailDialog } from '@/src/components/pos/order-detail-dialog';
 import { ScreenHeader } from '@/src/components/screen-header';
 import { OrderStatusBadge, RefundBadge } from '@/src/components/status-badge';
 import { Btn } from '@/src/components/ui/button';
+import { Icon } from '@/src/components/ui/icon';
 import { Segmented } from '@/src/components/ui/segmented';
 import { Txt } from '@/src/components/ui/txt';
 import { clockAt, formatVnd } from '@/src/data/format';
@@ -22,6 +23,40 @@ type Filter = 'all' | 'active' | 'cancelled';
 
 /** Trạng thái đơn đổi khi pha chế xong nên tải lại định kỳ lúc màn hình đang mở. */
 const POLL_INTERVAL_MS = 15_000;
+
+type DaySection = { key: string; title: string; data: HistoryOrder[] };
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/** Khoá ngày theo giờ máy (yyyy-MM-dd) để nhóm đơn. */
+function dayKey(date: Date): string {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+/** Nhóm đơn theo ngày tạo, ngày mới nhất lên đầu; giữ nguyên thứ tự đơn trong từng ngày. */
+function groupByDay(orders: HistoryOrder[], labels: { today: string; yesterday: string }): DaySection[] {
+  const now = new Date();
+  const todayKey = dayKey(now);
+  const yesterdayKey = dayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
+  const groups = new Map<string, DaySection>();
+  for (const order of orders) {
+    const created = new Date(order.createdAt);
+    const key = dayKey(created);
+    let section = groups.get(key);
+    if (!section) {
+      const title =
+        key === todayKey
+          ? labels.today
+          : key === yesterdayKey
+            ? labels.yesterday
+            : `${pad2(created.getDate())}/${pad2(created.getMonth() + 1)}/${created.getFullYear()}`;
+      section = { key, title, data: [] };
+      groups.set(key, section);
+    }
+    section.data.push(order);
+  }
+  return [...groups.values()].sort((a, b) => (a.key < b.key ? 1 : a.key > b.key ? -1 : 0));
+}
 
 /** Lịch sử đơn trong ngày của chi nhánh (CS-05) — xem lại, in lại bill và hoàn tiền mặt cho đơn đã trả hôm nay. */
 export default function OrdersScreen() {
@@ -80,7 +115,30 @@ export default function OrdersScreen() {
       ),
     [orders, filter],
   );
+  // "Hôm nay" chỉ có một ngày nên không cần tiêu đề nhóm; "30 ngày gần đây" nhóm theo từng ngày
+  const grouped = range === 'recent';
+  const sections = useMemo<DaySection[]>(
+    () =>
+      grouped
+        ? groupByDay(data, { today: t('orders.dayToday'), yesterday: t('orders.dayYesterday') })
+        : data.length > 0
+          ? [{ key: 'today', title: '', data }]
+          : [],
+    [data, grouped, t],
+  );
   const openOrder = useMemo(() => orders.find((o) => o.id === openId) ?? null, [orders, openId]);
+  // yêu cầu hoàn tiền ngày trước đã chi trả có `refundId` → dùng để mở PDF phiếu hoàn của đơn
+  const openOrderRefunds = useMemo(
+    () =>
+      approvalRequests
+        .filter((request) => request.orderId === openId && request.status === 'COMPLETED' && request.refundId)
+        .map((request) => ({
+          id: request.refundId as string,
+          amount: Number(request.amount),
+          at: request.completedAt ?? undefined,
+        })),
+    [approvalRequests, openId],
+  );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
@@ -118,10 +176,26 @@ export default function OrdersScreen() {
         {loading && orders.length === 0 ? (
           <ActivityIndicator style={styles.loader} color={theme.brand_primary} />
         ) : (
-          <FlatList
-            data={data}
+          <SectionList
+            sections={sections}
             keyExtractor={(o) => o.id}
             contentContainerStyle={styles.list}
+            stickySectionHeadersEnabled={false}
+            renderSectionHeader={({ section }) =>
+              grouped ? (
+                <View
+                  style={[
+                    styles.sectionHeader,
+                    section.key !== sections[0]?.key && styles.sectionHeaderSpaced,
+                    { borderBottomColor: theme.border_color_thin },
+                  ]}>
+                  <Txt variant="bodyStrong">{section.title}</Txt>
+                  <Txt variant="caption" muted>
+                    {t('orders.subtitle', { count: section.data.length })}
+                  </Txt>
+                </View>
+              ) : null
+            }
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -161,6 +235,12 @@ export default function OrdersScreen() {
                   <View style={styles.badges}>
                     <OrderStatusBadge status={o.status} size="sm" />
                     {o.refundedAmount ? <RefundBadge amount={o.refundedAmount} size="sm" /> : null}
+                    {o.pagerNumber !== undefined ? (
+                      <View style={[styles.pagerTag, { borderColor: theme.border_color_base }]}>
+                        <Icon name="pager" size={11} />
+                        <Txt variant="tiny">{t('pager.short', { number: o.pagerNumber })}</Txt>
+                      </View>
+                    ) : null}
                   </View>
                 </View>
                 <Txt variant="title">{formatVnd(o.total)}</Txt>
@@ -173,8 +253,10 @@ export default function OrdersScreen() {
       <OrderDetailDialog
         order={openOrder}
         approvalRequest={approvalRequests.find((request) => request.orderId === openOrder?.id && (request.status === 'PENDING' || request.status === 'APPROVED')) ?? approvalRequests.find((request) => request.orderId === openOrder?.id) ?? null}
+        knownRefunds={openOrderRefunds}
         onClose={() => setOpenId(null)}
         onRefunded={() => void load('silent')}
+        onPagerChanged={() => void load('silent')}
       />
     </SafeAreaView>
   );
@@ -186,6 +268,14 @@ const styles = StyleSheet.create({
   filter: { paddingBottom: 8 },
   notice: { padding: 12, borderWidth: StyleSheet.hairlineWidth, borderRadius: 6, gap: 8, marginBottom: 8 },
   loader: { padding: 20 },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    paddingBottom: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  sectionHeaderSpaced: { marginTop: 12 },
   list: { gap: 10, paddingVertical: 8, paddingBottom: 24, flexGrow: 1 },
   row: {
     flexDirection: 'row',
@@ -206,4 +296,13 @@ const styles = StyleSheet.create({
   callNumber: { fontFamily: fontFamily.black, fontSize: 24, lineHeight: 30 },
   info: { flex: 1, gap: 3 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  pagerTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
 });

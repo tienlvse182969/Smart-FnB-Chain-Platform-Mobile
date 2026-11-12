@@ -10,12 +10,13 @@ import { ScreenHeader } from '@/src/components/screen-header';
 import { Icon } from '@/src/components/ui/icon';
 import { Pill } from '@/src/components/ui/pill';
 import { Txt } from '@/src/components/ui/txt';
-import { durationSince } from '@/src/data/format';
+import { clockAt, durationSince } from '@/src/data/format';
 import { useStore } from '@/src/data/store';
 import type { Batch } from '@/src/data/types';
 import { useNow } from '@/src/data/use-now';
 import { completeUnit, deliverOrder, loadBaristaQueue, loadReadyOrders, startBatch, type ReadyCounterOrder } from '@/src/services/barista-api';
 import { loadBaristaMenu } from '@/src/services/cashier-api';
+import { notifyPager, pagerErrorMessage } from '@/src/services/pager-api';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 
@@ -71,6 +72,21 @@ export default function BaristaQueueScreen() {
     }
   };
 
+  /** Ghi nhận đã bấm gọi máy báo rung trên bộ phát (backend không phát tín hiệu). */
+  const markPagerCalled = async (order: ReadyCounterOrder) => {
+    if (working || order.pagerNumber == null) return;
+    setWorking(true);
+    try {
+      await notifyPager(order.id, order.pagerNumber);
+      toast.success(t('pager.notifiedToast', { number: order.pagerNumber }), 1.5, undefined, false);
+    } catch (reason) {
+      toast.fail(pagerErrorMessage(reason, t, order.pagerNumber), 2, undefined, false);
+    } finally {
+      await refresh();
+      setWorking(false);
+    }
+  };
+
   const wide = width >= 900;
   const kindOf = (categoryId: string) => state.categories.find((c) => c.id === categoryId)?.kind;
 
@@ -109,6 +125,28 @@ export default function BaristaQueueScreen() {
               <Txt variant="tiny" muted>
                 {o.readyAt ? durationSince(o.readyAt) : ''}
               </Txt>
+              {o.pagerNumber != null ? (
+                <View style={styles.pagerRow}>
+                  <Icon name="pager" size={13} />
+                  <Txt variant="caption" style={styles.pagerLabel}>{t('pager.short', { number: o.pagerNumber })}</Txt>
+                  {o.pagerNotifiedAt ? (
+                    <Txt variant="tiny" muted>{t('pager.notified', { time: clockAt(o.pagerNotifiedAt) })}</Txt>
+                  ) : (
+                    <Pressable
+                      disabled={working}
+                      hitSlop={6}
+                      onPress={() => void markPagerCalled(o)}
+                      style={({ pressed }) => [
+                        styles.pagerBtn,
+                        { borderColor: theme.border_color_base },
+                        pressed && { opacity: 0.6 },
+                      ]}>
+                      <Icon name="bell" size={12} />
+                      <Txt variant="tiny">{t('pager.notify')}</Txt>
+                    </Pressable>
+                  )}
+                </View>
+              ) : null}
             </View>
             <Pressable
               disabled={working}
@@ -209,6 +247,17 @@ const styles = StyleSheet.create({
   },
   readyNumber: { fontFamily: fontFamily.black, fontSize: 26, lineHeight: 32 },
   readyInfo: { flex: 1, gap: 1 },
+  pagerRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 2 },
+  pagerLabel: { fontFamily: fontFamily.bold },
+  pagerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
   handOverBtn: {
     minHeight: 52,
     paddingHorizontal: 14,

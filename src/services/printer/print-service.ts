@@ -1,9 +1,12 @@
+import { ApiError } from '@/src/services/auth-types';
 import {
   getCashRefundReceipt,
   getOrderReceipt,
   getReceiptPrintImage,
+  getRefundPrintImage,
   listPrintJobs,
   reportPrintResult,
+  reportRefundPrintResult,
   type OrderReceipt,
 } from '@/src/services/cashier-api';
 import type { PosStation } from '@/src/services/stations-api';
@@ -118,31 +121,79 @@ export async function printOrderReceipt(orderId: string, station: PosStation | n
   });
 }
 
+/** Một lần in phiếu hoàn; `printLogId` là lượt in backend đã ghi nhận (thiếu thì không báo kết quả được). */
+export type RefundSlipPrintJob = {
+  orderId: string;
+  refundId: string;
+  /** Chỉ dùng khi phải in bản chữ dự phòng (không lấy được ảnh từ PDF hoặc máy in đang ở chế độ chữ). */
+  header: RefundSlipHeader;
+  printLogId?: string;
+};
+
+const REFUND_IMAGE_ATTEMPTS = 3;
+const REFUND_IMAGE_RETRY_MS = 1_500;
+
 /**
- * In phiếu hoàn tiền mặt bằng chế độ chữ (mọi máy in đều in được) từ dữ liệu cố định backend lưu cho lượt hoàn.
- * Backend không tạo PrintJob cho phiếu này nên không báo kết quả in; lỗi được ném lại để UI cho in lại.
+ * Ảnh in render từ PDF phiếu hoàn đã lưu. Ngay sau khi hoàn tiền PDF có thể còn đang tạo (404/409) nên thử lại vài
+ * lần; lỗi khác (hết thời gian, mạng...) thì bỏ luôn để in bản chữ dự phòng.
  */
-export async function printRefundReceipt(
-  orderId: string,
-  refundId: string,
-  header: RefundSlipHeader,
-  station: PosStation | null,
-) {
-  const printer = await resolvePrinter(station);
-  const refund = await getCashRefundReceipt(orderId, refundId);
-  let slipHeader = header;
-  if (!header.branchName) {
-    // bill của đơn chưa tải được ở màn chi tiết: lấy lại để phiếu có tên quán / chi nhánh / thu ngân
-    const receipt = await getOrderReceipt(orderId).catch(() => null);
-    if (receipt) {
-      slipHeader = {
-        sellerName: receipt.seller.name,
-        branchName: receipt.seller.branchName,
-        cashier: header.cashier,
-      };
+async function refundPdfImage(orderId: string, refundId: string) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await getRefundPrintImage(orderId, refundId);
+    } catch (failure) {
+      const pending = failure instanceof ApiError && (failure.status === 404 || failure.status === 409);
+      if (!pending || attempt >= REFUND_IMAGE_ATTEMPTS) throw failure;
+      await new Promise((resolve) => setTimeout(resolve, REFUND_IMAGE_RETRY_MS));
     }
   }
-  await sendToPrinter(printer.address, buildRefundPayload(refund, slipHeader));
+}
+
+/** Phiếu chữ không dấu dựng từ dữ liệu cố định của lượt hoàn — chỉ dùng khi không in được từ PDF. */
+async function refundTextPayload(job: RefundSlipPrintJob): Promise<Payload> {
+  const refund = await getCashRefundReceipt(job.orderId, job.refundId);
+  let header = job.header;
+  if (!header.branchName) {
+    // bill của đơn chưa tải được ở màn chi tiết: lấy lại để phiếu có tên quán / chi nhánh
+    const receipt = await getOrderReceipt(job.orderId).catch(() => null);
+    if (receipt) header = { ...header, sellerName: receipt.seller.name, branchName: receipt.seller.branchName };
+  }
+  return { data: buildRefundPayload(refund, header), chunkDelayMs: 0 };
+}
+
+/**
+ * In phiếu hoàn tiền từ chính PDF backend đã lưu cho lượt hoàn (ảnh render từ PDF) để bản in khớp bản lưu. Không lấy
+ * được ảnh (PDF tắt/lỗi, mạng chậm...) hoặc máy in ở chế độ chữ thì in bản chữ để khách vẫn có phiếu ký nhận.
+ * Kết quả in thật được báo về lượt in `printLogId`; lỗi được ném lại để UI cho thử lại.
+ */
+export async function printRefundSlip(job: RefundSlipPrintJob, station: PosStation | null) {
+  let failure: unknown;
+  try {
+    const printer = await resolvePrinter(station);
+    let payload: Payload | null = null;
+    if (printer.printMode === 'image') {
+      try {
+        payload = {
+          data: buildRasterPayload([await refundPdfImage(job.orderId, job.refundId)]),
+          chunkDelayMs: IMAGE_CHUNK_DELAY_MS,
+        };
+      } catch (reason) {
+        console.warn('Không lấy được ảnh phiếu hoàn từ PDF của máy chủ, in bản chữ:', reason);
+      }
+    }
+    payload ??= await refundTextPayload(job);
+    await sendToPrinter(printer.address, payload.data, payload.chunkDelayMs);
+  } catch (reason) {
+    failure = reason ?? 'Không in được';
+  }
+  if (job.printLogId) {
+    const message = failure instanceof Error ? failure.message : String(failure ?? '');
+    await (failure === undefined
+      ? reportRefundPrintResult(job.printLogId, 'PRINTED')
+      : reportRefundPrintResult(job.printLogId, 'FAILED', message)
+    ).catch((reason) => console.warn('Không báo được kết quả in phiếu hoàn về máy chủ:', reason));
+  }
+  if (failure !== undefined) throw failure;
 }
 
 /** Phiếu in thử theo đúng chế độ đang chọn; ở chế độ ảnh, lỗi dựng ảnh được báo lên để biết mà sửa. */

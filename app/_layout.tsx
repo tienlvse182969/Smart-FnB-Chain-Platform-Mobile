@@ -1,5 +1,6 @@
 import '@/src/theme/global-font';
 
+import { useAssets } from 'expo-asset';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -28,41 +29,44 @@ export default function RootLayout() {
     ...harmonyFontMap,
   });
   const [languageLoaded, setLanguageLoaded] = useState(false);
+  // Tải sẵn ảnh nền login để khi splash mờ đi màn login đã có hình, không lộ nền trơn.
+  const [loginBackground, loginBackgroundError] = useAssets(require('@/assets/images/login-background.jpg'));
 
   useEffect(() => {
     loadStoredLanguage().finally(() => setLanguageLoaded(true));
   }, []);
 
-  const ready = fontsLoaded && languageLoaded;
-
-  if (!ready) return <AppSplash visible />;
+  const ready = fontsLoaded && languageLoaded && (!!loginBackground || !!loginBackgroundError);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <AuthProvider>
-          {/* Theme theo thương hiệu chuỗi nằm trong AuthProvider: chưa đăng nhập (màn login) thì dùng theme gốc. */}
-          <BrandingProvider>
+      {ready ? (
+        <SafeAreaProvider>
+          <AuthProvider>
+            {/* Theme theo thương hiệu chuỗi nằm trong AuthProvider: chưa đăng nhập (màn login) thì dùng theme gốc. */}
+            <BrandingProvider>
               <StationProvider>
                 <StoreProvider>
-                <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: appLightTheme.fill_body },
-                }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="login" />
-                <Stack.Screen name="select-station" />
-                <Stack.Screen name="(cashier)" />
-                <Stack.Screen name="(barista)" />
-                </Stack>
-                <StatusBar style="dark" />
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                      contentStyle: { backgroundColor: appLightTheme.fill_body },
+                    }}>
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="login" />
+                    <Stack.Screen name="select-station" />
+                    <Stack.Screen name="(cashier)" />
+                    <Stack.Screen name="(barista)" />
+                  </Stack>
+                  <StatusBar style="dark" />
                 </StoreProvider>
               </StationProvider>
-          </BrandingProvider>
-        </AuthProvider>
-      </SafeAreaProvider>
-      <AppSplash visible={false} />
+            </BrandingProvider>
+          </AuthProvider>
+        </SafeAreaProvider>
+      ) : null}
+      {/* Luôn cùng một instance ở cùng vị trí → không mount lại, ảnh nền không phải load lại. */}
+      <AppSplash visible={!ready} />
     </GestureHandlerRootView>
   );
 }

@@ -32,6 +32,8 @@ export type ReadyCounterOrder = {
   orderCode: string;
   callNumber: number | null;
   readyAt: string | null;
+  pagerNumber?: number | null;
+  pagerNotifiedAt?: string | null;
   items: { id: string; itemName: string; quantity: number }[];
 };
 

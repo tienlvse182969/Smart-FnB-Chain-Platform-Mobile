@@ -27,6 +27,7 @@ import { Btn } from '@/src/components/ui/button';
 import { Field } from '@/src/components/ui/field';
 import { Txt } from '@/src/components/ui/txt';
 import { Segmented } from '@/src/components/ui/segmented';
+import { PagerPanel } from './pager-panel';
 import { PrintErrorDialog } from './print-error-dialog';
 import {
   type DisplaySnapshot,
@@ -346,6 +347,18 @@ export function ServerCheckoutDialog({
           <Txt variant="caption" muted>SỐ GỌI</Txt>
           <Txt style={styles.callNumber}>{String(paidOrder.callNumber ?? 0).padStart(3, '0')}</Txt>
           <Txt variant="body">Đơn đã được chuyển tới màn hình pha chế.</Txt>
+          <PagerPanel
+            orderId={paidOrder.id}
+            pagerNumber={paidOrder.pagerNumber}
+            pagerNotifiedAt={paidOrder.pagerNotifiedAt}
+            onChanged={(update) =>
+              setPaidOrder((prev) =>
+                prev && prev.id === update.id
+                  ? { ...prev, pagerNumber: update.pagerNumber, pagerNotifiedAt: update.pagerNotifiedAt }
+                  : prev,
+              )
+            }
+          />
           {printState === 'printing' ? <Txt variant="caption" muted>Đang in hóa đơn và phiếu số…</Txt> : null}
           {printState === 'done' ? <Txt variant="caption" muted>Đã in hóa đơn và phiếu số.</Txt> : null}
           {printState === 'unconfigured' ? (

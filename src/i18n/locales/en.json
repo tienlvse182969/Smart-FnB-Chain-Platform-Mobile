@@ -8,10 +8,38 @@
     "gotIt": "Got it",
     "retry": "Retry"
   },
+  "pager": {
+    "title": "Pager",
+    "label": "Pager number",
+    "placeholder": "1 – 999",
+    "hint": "Enter the number on the pager handed to the customer (optional).",
+    "assign": "Assign",
+    "change": "Change",
+    "remove": "Remove",
+    "save": "Save",
+    "short": "Pager #{{number}}",
+    "assigned": "Pager #{{number}} assigned",
+    "removed": "Pager removed",
+    "notify": "Called",
+    "notifyLong": "Mark pager as called",
+    "notified": "Called at {{time}}",
+    "notifiedToast": "Pager #{{number}} marked as called",
+    "readyHint": "Order is ready — trigger the pager on its transmitter, then record it here.",
+    "errors": {
+      "range": "Pager number must be a whole number from 1 to 999.",
+      "taken": "Pager #{{number}} is already assigned to another open order.",
+      "notOpen": "Pagers can only be assigned to paid orders that are still open.",
+      "notReady": "Only ready orders still holding this pager can be marked as called.",
+      "notFound": "Order not found in your branch.",
+      "forbidden": "Your account cannot manage pagers.",
+      "generic": "Could not update the pager"
+    }
+  },
   "account": {
     "screenTitle": "Account",
     "settingsSection": "Device settings",
     "logout": "Sign out",
+    "version": "Version {{version}}",
     "language": {
       "label": "Language",
       "description": "Choose the display language for the app",
@@ -129,6 +157,8 @@
   "orders": {
     "title": "Today's orders",
     "subtitle": "{{count}} orders",
+    "dayToday": "Today",
+    "dayYesterday": "Yesterday",
     "emptyTitle": "No orders yet",
     "emptyHint": "Orders created on the Sales screen will show up here.",
     "orderCode": "Order #{{code}}",
@@ -344,6 +374,13 @@
     "failed": "Could not refund",
     "slipPrinted": "Refund slip printed",
     "badge": "Refunded {{amount}}",
-    "todayOnlyNote": "Only orders paid today can be refunded in cash. For older orders, ask the manager."
+    "todayOnlyNote": "Only orders paid today can be refunded in cash. For older orders, ask the manager.",
+    "pdf": {
+      "title": "PDF refund slip",
+      "index": "Refund {{index}}",
+      "reprint": "Reprint refund slip",
+      "reprinted": "Refund slip reprinted",
+      "notFound": "No refund slip PDF found on the server for this order yet."
+    }
   }
 }

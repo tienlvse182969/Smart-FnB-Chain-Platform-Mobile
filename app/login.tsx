@@ -5,13 +5,16 @@ import { Image, ImageBackground, KeyboardAvoidingView, Platform, Pressable, Scro
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/auth/auth-context';
+import { ForgotPasswordForm } from '@/src/components/auth/forgot-password-form';
 import { forgetAccount, loadRecentAccounts, rememberAccount, type RecentAccount } from '@/src/auth/recent-accounts';
 import { Btn } from '@/src/components/ui/button';
 import { Field } from '@/src/components/ui/field';
 import { Icon } from '@/src/components/ui/icon';
 import { Txt } from '@/src/components/ui/txt';
 import { useStore } from '@/src/data/store';
+import { APP_VERSION } from '@/src/lib/app-version';
 import { ApiError } from '@/src/services/auth-types';
+import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 
 const AVATAR_COLORS = ['#1677ff', '#52a41a', '#fa8c16', '#eb2f96', '#722ed1', '#13a8a8'];
@@ -49,6 +52,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Màn "Quên mật khẩu" chồng lên mode hiện tại — quay lại thì giữ nguyên tài khoản đang chọn.
+  const [forgot, setForgot] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -81,6 +86,12 @@ export default function LoginScreen() {
     setPassword('');
     setError(null);
     setMode('manual');
+  };
+
+  const openForgot = () => {
+    setPassword('');
+    setError(null);
+    setForgot(true);
   };
 
   const remove = async (account: RecentAccount) => {
@@ -123,9 +134,11 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={styles.center} keyboardShouldPersistTaps="handled">
           <BlurView intensity={60} tint="light" experimentalBlurMethod="dimezisBlurView" style={styles.card}>
             <Image source={require('@/assets/logo/logo1.png')} style={styles.logo} resizeMode="contain" />
-            <Txt variant="title" style={styles.title}>Đăng nhập nhân viên</Txt>
+            <Txt variant="title" style={styles.title}>{forgot ? 'Quên mật khẩu' : 'Đăng nhập nhân viên'}</Txt>
 
-            {mode === 'pick' && !selected ? (
+            {forgot ? (
+              <ForgotPasswordForm initialEmail={selected?.email ?? email} onBack={() => setForgot(false)} />
+            ) : mode === 'pick' && !selected ? (
               <>
                 <Txt variant="body" muted style={styles.subtitle}>Chọn tài khoản để đăng nhập</Txt>
                 <View style={styles.accounts}>
@@ -159,6 +172,7 @@ export default function LoginScreen() {
                 <Field label="Mật khẩu" value={password} onChangeText={setPassword} secureTextEntry autoFocus left={<Icon name="lock" size={17} color={theme.color_text_caption} />} />
                 {error ? <Txt variant="caption" color={theme.brand_error}>{error}</Txt> : null}
                 <Btn label="Đăng nhập" icon="login" block loading={submitting} onPress={submit} />
+                <Btn label="Quên mật khẩu?" variant="plain" block onPress={openForgot} />
                 <Btn label="Chọn tài khoản khác" variant="plain" block onPress={showPicker} />
               </>
             ) : (
@@ -168,9 +182,11 @@ export default function LoginScreen() {
                 <Field label="Mật khẩu" value={password} onChangeText={setPassword} secureTextEntry left={<Icon name="lock" size={17} color={theme.color_text_caption} />} />
                 {error ? <Txt variant="caption" color={theme.brand_error}>{error}</Txt> : null}
                 <Btn label="Đăng nhập" icon="login" block loading={submitting} onPress={submit} />
+                <Btn label="Quên mật khẩu?" variant="plain" block onPress={openForgot} />
                 {accounts.length ? <Btn label="Chọn từ tài khoản đã đăng nhập" variant="plain" block onPress={showPicker} /> : null}
               </>
             )}
+            <Txt variant="tiny" muted style={styles.version}>Phiên bản {APP_VERSION}</Txt>
           </BlurView>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -194,7 +210,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   logo: { width: 220, height: 90, alignSelf: 'center' },
-  title: { textAlign: 'center' },
+  title: { textAlign: 'center', fontFamily: fontFamily.bold, fontSize: 20, lineHeight: 26 },
   subtitle: { textAlign: 'center', marginTop: -10 },
   accounts: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 16 },
   accountWrap: { width: 120 },
@@ -203,4 +219,5 @@ const styles = StyleSheet.create({
   avatar: { alignItems: 'center', justifyContent: 'center' },
   removeBadge: { position: 'absolute', top: 4, right: 12, width: 20, height: 20, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   selected: { alignItems: 'center', gap: 4 },
+  version: { textAlign: 'center', marginTop: -4 },
 });
