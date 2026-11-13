@@ -25,9 +25,9 @@ export default function BaristaLayout() {
       href: '/(barista)/queue',
       match: '/queue',
       label: t('nav.barista.queue'),
-      icon: 'drink',
+      icon: 'queue',
     },
-    { href: '/(barista)/menu', match: '/menu', label: t('nav.barista.menu'), icon: 'receipt' },
+    { href: '/(barista)/menu', match: '/menu', label: t('nav.barista.menu'), icon: 'grid' },
   ];
   const staffName = state.currentUser?.name ?? user.email;
 

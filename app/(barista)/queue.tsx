@@ -97,6 +97,12 @@ export default function BaristaQueueScreen() {
   );
   const cups = shown.reduce((s, b) => s + b.cupCount, 0);
 
+  // Grid 2 cột trên màn rộng; thứ tự FIFO đọc theo hàng ngang. Thêm ô trống khi lẻ để thẻ cuối
+  // không bị kéo giãn hết chiều ngang.
+  const columns = wide ? 2 : 1;
+  const gridData: (Batch | null)[] =
+    columns > 1 && shown.length % columns !== 0 ? [...shown, null] : shown;
+
   const readyPanel = (
     <View
       style={[
@@ -188,18 +194,27 @@ export default function BaristaQueueScreen() {
               <EmptyState icon="bellOff" title={t('baristaQueue.emptyTitle')} hint={t('baristaQueue.emptyHint')} />
             ) : (
               <FlatList
-                data={shown}
-                keyExtractor={(b) => b.key}
+                key={`cols-${columns}`}
+                data={gridData}
+                numColumns={columns}
+                keyExtractor={(b, i) => b?.key ?? `filler-${i}`}
                 contentContainerStyle={styles.list}
+                columnWrapperStyle={columns > 1 ? styles.gridRow : undefined}
                 ListFooterComponent={wide ? null : readyPanel}
-                renderItem={({ item }) => (
-                  <BatchCard
-                    batch={item}
-                    now={now}
-                    onStart={(unitIds) => void mutate(() => startBatch(unitIds))}
-                    onFinish={(unitIds) => void mutate(() => Promise.all(unitIds.map(completeUnit)))}
-                  />
-                )}
+                renderItem={({ item }) =>
+                  item ? (
+                    <View style={columns > 1 ? styles.gridCell : null}>
+                      <BatchCard
+                        batch={item}
+                        now={now}
+                        onStart={(unitIds) => void mutate(() => startBatch(unitIds))}
+                        onFinish={(unitIds) => void mutate(() => Promise.all(unitIds.map(completeUnit)))}
+                      />
+                    </View>
+                  ) : (
+                    <View style={styles.gridCell} />
+                  )
+                }
               />
             )}
             {shown.length === 0 && !wide ? <ScrollView>{readyPanel}</ScrollView> : null}
@@ -230,6 +245,8 @@ const styles = StyleSheet.create({
   bodyWide: { flexDirection: 'row', gap: 16 },
   queueCol: { flex: 1 },
   list: { gap: 12, paddingVertical: 8, paddingBottom: 24 },
+  gridRow: { gap: 12, alignItems: 'flex-start' },
+  gridCell: { flex: 1, flexBasis: 0, minWidth: 0 },
   readyPanel: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 6, padding: 14, gap: 10 },
   readyPanelWide: { width: 320, alignSelf: 'flex-start' },
   readyPanelStacked: { marginTop: 8 },

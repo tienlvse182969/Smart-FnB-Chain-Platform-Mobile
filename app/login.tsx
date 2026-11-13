@@ -141,7 +141,7 @@ export default function LoginScreen() {
     }
   };
 
-  const roleLabel = (role: RecentAccount['role']) => (role === 'CASHIER' ? 'Thu ngân' : 'Pha chế');
+  const roleLabel = (role: RecentAccount['role']) => (role === 'CASHIER' ? 'Thu ngân' : 'Bếp & pha chế');
 
   return (
     <ImageBackground source={LOGIN_BACKGROUND} style={styles.safe} resizeMode="cover">

@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const response = await loginRequest(email.trim().toLowerCase(), password);
     if (response.user.role !== 'CASHIER' && response.user.role !== 'BARISTA') {
-      throw new Error('Ứng dụng này chỉ dành cho Thu ngân và Pha chế');
+      throw new Error('Ứng dụng này chỉ dành cho Thu ngân và Bếp & pha chế');
     }
     if (!response.user.employee) throw new Error('Tài khoản chưa được gán chi nhánh');
     await saveTokens({ accessToken: response.accessToken, refreshToken: response.refreshToken });

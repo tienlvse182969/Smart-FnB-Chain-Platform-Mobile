@@ -71,7 +71,7 @@
     },
     "role": {
       "cashier": "Cashier",
-      "barista": "Barista"
+      "barista": "Kitchen & bar"
     },
     "print": {
       "failed": "Print failed"
@@ -93,7 +93,7 @@
     },
     "barista": {
       "queue": "Queue",
-      "menu": "Items & toppings"
+      "menu": "Item check"
     }
   },
   "login": {
@@ -121,8 +121,8 @@
   },
   "itemOptionsDialog": {
     "qtyLabel": "Quantity",
-    "noteLabel": "Note for the barista",
-    "notePlaceholder": "Second cup less sweet…",
+    "noteLabel": "Note for the kitchen & bar",
+    "notePlaceholder": "e.g. less sweet, no onions…",
     "addBtn": "Add · {{total}}",
     "required": "Required",
     "maxHint": "Choose up to {{max}}",
@@ -151,7 +151,7 @@
     "expired": "The QR code expired and the order was cancelled.",
     "cancelled": "The order was cancelled.",
     "printFailedTitle": "Print failed",
-    "printFailedHint": "The order is still paid and sent to the bar. Check the printer, then reprint.",
+    "printFailedHint": "The order is still paid and sent to the kitchen & bar. Check the printer, then reprint.",
     "reprint": "Reprint"
   },
   "orders": {
@@ -206,13 +206,13 @@
   },
   "baristaQueue": {
     "title": "Preparation queue",
-    "subtitle": "{{batches}} batches · {{cups}} cups",
+    "subtitle": "{{batches}} items · {{cups}} servings",
     "filterAll": "All",
     "filterDrink": "Drinks",
     "filterFood": "Food",
-    "emptyTitle": "No batches",
+    "emptyTitle": "Nothing to prepare",
     "emptyHint": "Orders show up here once they are paid.",
-    "cupCount": "{{count}} cups",
+    "cupCount": "{{count}} servings",
     "defaultOptions": "Default",
     "waited": "Waiting {{duration}}",
     "startBatch": "Start batch",
@@ -225,13 +225,28 @@
     "outOfStockTitle": "Paid but out of stock — tell the manager",
     "outOfStockItem": "#{{call}} · {{name}}",
     "newOrderBanner": "New order #{{call}}",
-    "newOrderMore": "+{{count}} more"
+    "newOrderMore": "+{{count}} more",
+    "showMoreCups": "+{{count}} more servings",
+    "showLessCups": "Show less"
   },
   "baristaMenu": {
-    "title": "Items & toppings",
+    "title": "Item check",
     "subtitle": "Mark items or toppings as out of stock — the cashier can no longer sell them.",
-    "itemsSection": "Items",
-    "optionsSection": "Options"
+    "searchPlaceholder": "Search items or toppings…",
+    "toppingTab": "Toppings",
+    "extraGroup": "Add-on topping",
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "filterAll": "All ({{count}})",
+    "filterAvailable": "Available ({{count}})",
+    "filterUnavailable": "Unavailable ({{count}})",
+    "noStatusMatch": "Nothing in this status",
+    "chainDisabled": "Disabled by owner",
+    "notAssigned": "Not assigned to branch",
+    "noPortions": "No portions left",
+    "loadFailed": "Could not load the menu",
+    "updateItemFailed": "Could not update the item",
+    "updateOptionFailed": "Could not update the option"
   },
   "customerDisplay": {
     "label": "Customer display",

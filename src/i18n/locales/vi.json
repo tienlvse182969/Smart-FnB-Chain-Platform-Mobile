@@ -51,8 +51,8 @@
   },
   "status": {
     "line": {
-      "queued": "Chờ pha",
-      "preparing": "Đang pha",
+      "queued": "Chờ làm",
+      "preparing": "Đang làm",
       "done": "Xong",
       "outOfStock": "Hết món",
       "cancelled": "Đã huỷ"
@@ -60,7 +60,7 @@
     "order": {
       "pendingPayment": "Chờ thanh toán",
       "paid": "Đã thanh toán",
-      "preparing": "Đang pha",
+      "preparing": "Đang làm",
       "ready": "Sẵn sàng",
       "completed": "Hoàn tất",
       "cancelled": "Đã huỷ"
@@ -71,7 +71,7 @@
     },
     "role": {
       "cashier": "Thu ngân",
-      "barista": "Pha chế"
+      "barista": "Bếp & pha chế"
     },
     "print": {
       "failed": "In thất bại"
@@ -93,19 +93,19 @@
     },
     "barista": {
       "queue": "Hàng đợi",
-      "menu": "Món & topping"
+      "menu": "Kiểm tra món"
     }
   },
   "login": {
     "subtitle": "Đăng nhập tại {{branch}}",
     "chooseAccount": "Chọn tài khoản",
     "cashierHint": "Tạo đơn, thu tiền, in bill",
-    "baristaHint": "Hàng đợi pha chế, gọi số",
+    "baristaHint": "Hàng đợi làm món, gọi số",
     "demoNote": "Bản mô phỏng: chưa kết nối máy chủ, dữ liệu chỉ nằm trên thiết bị này."
   },
   "pos": {
     "cartTitle": "Đơn đang tạo",
-    "cartCount": "{{count}} ly/món",
+    "cartCount": "{{count}} món",
     "emptyCartTitle": "Chưa có món nào",
     "emptyCart": "Chọn món ở bên trái để thêm vào đơn.",
     "emptyMenu": "Danh mục này chưa có món nào.",
@@ -121,8 +121,8 @@
   },
   "itemOptionsDialog": {
     "qtyLabel": "Số lượng",
-    "noteLabel": "Ghi chú cho pha chế",
-    "notePlaceholder": "Ly thứ hai ít ngọt hơn…",
+    "noteLabel": "Ghi chú cho bếp & pha chế",
+    "notePlaceholder": "Ví dụ: ít ngọt, không hành…",
     "addBtn": "Thêm · {{total}}",
     "required": "Bắt buộc",
     "maxHint": "Chọn tối đa {{max}}",
@@ -151,7 +151,7 @@
     "expired": "Mã QR đã hết hạn, đơn đã bị huỷ.",
     "cancelled": "Đơn đã được huỷ.",
     "printFailedTitle": "In thất bại",
-    "printFailedHint": "Đơn vẫn đã thanh toán và đã xuống pha chế. Kiểm tra máy in rồi in lại.",
+    "printFailedHint": "Đơn vẫn đã thanh toán và đã chuyển xuống bếp & pha chế. Kiểm tra máy in rồi in lại.",
     "reprint": "In lại"
   },
   "orders": {
@@ -205,33 +205,48 @@
     "scanToTrack": "Quét để nhận thông báo khi món xong."
   },
   "baristaQueue": {
-    "title": "Hàng đợi pha chế",
-    "subtitle": "{{batches}} đơn · {{cups}} ly",
+    "title": "Hàng đợi làm món",
+    "subtitle": "{{batches}} món · {{cups}} phần",
     "filterAll": "Tất cả",
     "filterDrink": "Đồ uống",
     "filterFood": "Đồ ăn",
-    "emptyTitle": "Không có đơn nào",
+    "emptyTitle": "Chưa có món nào cần làm",
     "emptyHint": "Đơn nào thanh toán xong sẽ hiện ở đây.",
-    "cupCount": "{{count}} ly",
+    "cupCount": "{{count}} phần",
     "defaultOptions": "Mặc định",
     "waited": "Chờ {{duration}}",
-    "startBatch": "Bắt đầu pha",
-    "finishBatch": "Xong cả đơn",
+    "startBatch": "Bắt đầu làm",
+    "finishBatch": "Xong tất cả",
     "finishCup": "Xong",
-    "inProgress": "Đang pha",
+    "inProgress": "Đang làm",
     "readyTitle": "Sẵn sàng nhận",
     "readyEmpty": "Chưa có đơn nào chờ khách nhận.",
     "handOver": "Đã giao",
     "outOfStockTitle": "Đã trả tiền nhưng hết món — báo Quản lý",
     "outOfStockItem": "#{{call}} · {{name}}",
     "newOrderBanner": "Đơn mới #{{call}}",
-    "newOrderMore": "+{{count}} món khác"
+    "newOrderMore": "+{{count}} món khác",
+    "showMoreCups": "+{{count}} phần nữa",
+    "showLessCups": "Thu gọn"
   },
   "baristaMenu": {
-    "title": "Món & topping",
+    "title": "Kiểm tra món",
     "subtitle": "Báo hết món hoặc hết topping — quầy thu ngân sẽ không bán được ngay.",
-    "itemsSection": "Món",
-    "optionsSection": "Tuỳ chọn"
+    "searchPlaceholder": "Tìm món hoặc topping…",
+    "toppingTab": "Topping",
+    "extraGroup": "Topping thêm",
+    "available": "Có sẵn",
+    "unavailable": "Không có sẵn",
+    "filterAll": "Tất cả ({{count}})",
+    "filterAvailable": "Có sẵn ({{count}})",
+    "filterUnavailable": "Không có sẵn ({{count}})",
+    "noStatusMatch": "Không có món nào ở trạng thái này",
+    "chainDisabled": "Owner đã tắt món",
+    "notAssigned": "Chưa gán cho chi nhánh",
+    "noPortions": "Đã hết số lượng",
+    "loadFailed": "Không thể tải danh sách món",
+    "updateItemFailed": "Không thể cập nhật món",
+    "updateOptionFailed": "Không thể cập nhật tuỳ chọn"
   },
   "customerDisplay": {
     "label": "Màn hình khách",
