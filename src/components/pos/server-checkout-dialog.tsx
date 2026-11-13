@@ -5,6 +5,7 @@ import QRCode from 'react-native-qrcode-svg';
 
 import { formatVnd } from '@/src/data/format';
 import {
+  cancelPayosPayment,
   cancelUnpaidOrder,
   collectCash,
   createPayosPayment,
@@ -67,6 +68,8 @@ export function ServerCheckoutDialog({
   const [rechecking, setRechecking] = useState(false);
   const [recheckError, setRecheckError] = useState<string | null>(null);
   const [lastCheckedAt, setLastCheckedAt] = useState<Date | null>(null);
+  /** Xác nhận khi đang có QR chờ thanh toán: đổi sang tiền mặt hoặc thoát (hủy đơn). */
+  const [confirming, setConfirming] = useState<'cash' | 'dismiss' | null>(null);
   const printedOrderId = useRef<string | null>(null);
   const recheckRunning = useRef(false);
   /** PrintJob backend tạo khi thu tiền mặt; nhánh PayOS không có nên tự tìm theo đơn. */
@@ -85,6 +88,7 @@ export function ServerCheckoutDialog({
     setRechecking(false);
     setRecheckError(null);
     setLastCheckedAt(null);
+    setConfirming(null);
     printedOrderId.current = null;
     if (!order || !user || !selectedStation) return;
     if (order.paymentStatus === 'PAID') {
@@ -236,8 +240,19 @@ export function ServerCheckoutDialog({
   const change = useMemo(() => Math.max(0, tenderedAmount - total), [tenderedAmount, total]);
   if (!order) return null;
 
+  /** Thoát modal; đơn chưa thanh toán sẽ bị hủy. Đang có QR chờ thì hỏi lại trước. */
   const dismiss = async () => {
     if (submitting) return;
+    if (!paidOrder && qrPayment) {
+      setConfirming('dismiss');
+      return;
+    }
+    await cancelOrderAndClose();
+  };
+
+  const cancelOrderAndClose = async () => {
+    if (submitting) return;
+    setConfirming(null);
     if (!paidOrder) {
       setSubmitting(true);
       try {
@@ -285,6 +300,7 @@ export function ServerCheckoutDialog({
     try {
       const payment = await createPayosPayment(order.id, selectedStation.id);
       setQrPayment(payment);
+      setRecheckError(null);
       if (user) {
         await savePendingPayosCheckout({
           userId: user.id,
@@ -314,10 +330,42 @@ export function ServerCheckoutDialog({
 
   const changeTab = (next: PaymentTab) => {
     if (qrPayment && next === 'cash') {
-      toast.info('Mã QR đang hoạt động. Hãy chờ thanh toán hoặc mã hết hạn.', 2, undefined, false);
+      setConfirming('cash');
       return;
     }
     setTab(next);
+  };
+
+  /** Khách đổi ý: hủy QR PayOS đang chờ (không hủy đơn) rồi chuyển sang thu tiền mặt. */
+  const switchToCash = async () => {
+    if (!qrPayment || submitting) return;
+    setSubmitting(true);
+    try {
+      await cancelPayosPayment(qrPayment.id, 'Khách đổi sang tiền mặt');
+    } catch (reason) {
+      // QR có thể vừa được thanh toán: đối chiếu lại với PayOS để không thu tiền hai lần.
+      setConfirming(null);
+      setSubmitting(false);
+      toast.fail(reason instanceof Error ? reason.message : 'Không thể hủy mã QR', 3, undefined, false);
+      void checkPayos(true);
+      return;
+    }
+    setQrPayment(null);
+    setRecheckError(null);
+    setLastCheckedAt(null);
+    setTab('cash');
+    setConfirming(null);
+    if (user && selectedStation) {
+      await clearPendingPayosCheckout(user.id, selectedStation.branchId).catch(() => undefined);
+    }
+    if (selectedStation) {
+      void updateCustomerDisplay(selectedStation.id, {
+        ...cartSnapshot,
+        state: 'PAYMENT_PENDING',
+        orderCode: order.orderCode,
+      });
+    }
+    setSubmitting(false);
   };
 
   return (
@@ -437,11 +485,27 @@ export function ServerCheckoutDialog({
           ) : (
             <Btn label="Tạo mã QR" icon="qr" block loading={submitting} onPress={() => void showQr()} />
           )}
-          {!qrPayment ? (
-            <Btn label="Quay lại sửa đơn" variant="plain" disabled={submitting} onPress={() => void dismiss()} />
-          ) : null}
+          <Btn label="Quay lại sửa đơn" variant="plain" disabled={submitting} onPress={() => void dismiss()} />
         </View>
       )}
+    </AppModal>
+    <AppModal
+      visible={confirming !== null && !paidOrder}
+      title={confirming === 'cash' ? 'Đổi sang tiền mặt?' : 'Hủy đơn để sửa lại?'}
+      icon={confirming === 'cash' ? 'cash' : undefined}
+      onClose={() => setConfirming(null)}
+      maxWidth={420}
+      actions={[
+        { text: 'Giữ mã QR', onPress: () => setConfirming(null), disabled: submitting },
+        confirming === 'cash'
+          ? { text: 'Hủy QR, thu tiền mặt', onPress: () => void switchToCash(), primary: true, disabled: submitting }
+          : { text: 'Hủy đơn', onPress: () => void cancelOrderAndClose(), primary: true, disabled: submitting },
+      ]}>
+      <Txt variant="body" style={styles.confirmText}>
+        {confirming === 'cash'
+          ? 'Mã QR hiện tại sẽ bị hủy, khách không thể quét để thanh toán nữa. Đơn được giữ lại để thu tiền mặt.'
+          : 'Mã QR đang chờ thanh toán sẽ bị hủy cùng đơn này. Giỏ hàng được giữ lại để bạn sửa.'}
+      </Txt>
     </AppModal>
     </>
   );
@@ -458,4 +522,5 @@ const styles = StyleSheet.create({
   callNumber: { fontFamily: fontFamily.black, fontSize: 64, lineHeight: 72 },
   trackingQr: { alignItems: 'center', gap: 8, marginTop: 12 },
   printError: { textAlign: 'center' },
+  confirmText: { textAlign: 'center' },
 });

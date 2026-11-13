@@ -365,6 +365,11 @@ export async function recheckPayosPayment(paymentId: string) {
   return data;
 }
 
+/** Hủy QR PayOS đang chờ (ở PayOS + local) để đổi sang tiền mặt mà không hủy đơn. */
+export async function cancelPayosPayment(paymentId: string, reason: string) {
+  await apiClient.post(`/cashier/payments/${paymentId}/payos/cancel`, { reason });
+}
+
 export async function cancelUnpaidOrder(orderId: string, reason: string) {
   await apiClient.post(`/cashier/orders/${orderId}/cancel`, { reason });
 }
