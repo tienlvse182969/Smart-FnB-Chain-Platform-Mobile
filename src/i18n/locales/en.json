@@ -89,7 +89,7 @@
   "nav": {
     "cashier": {
       "pos": "Sales",
-      "orders": "Today's orders"
+      "orders": "Order history"
     },
     "barista": {
       "queue": "Queue",
@@ -155,8 +155,9 @@
     "reprint": "Reprint"
   },
   "orders": {
-    "title": "Today's orders",
+    "title": "Order history",
     "subtitle": "{{count}} orders",
+    "filterRefunded": "Refunded",
     "dayToday": "Today",
     "dayYesterday": "Yesterday",
     "emptyTitle": "No orders yet",
@@ -333,7 +334,7 @@
           "2": "Tap Try again once it is sorted."
         }
       },
-      "orderPaid": "The payment is still recorded. You can reprint any time from Today’s orders."
+      "orderPaid": "The payment is still recorded. You can reprint any time from Order history."
     }
   },
   "refund": {

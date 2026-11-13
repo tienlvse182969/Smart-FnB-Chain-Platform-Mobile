@@ -19,7 +19,7 @@ import { listCashRefundApprovals, loadTodayOrders, type RefundApprovalRequest } 
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 
-type Filter = 'all' | 'active' | 'cancelled';
+type Filter = 'all' | 'active' | 'refunded' | 'cancelled';
 
 /** Trạng thái đơn đổi khi pha chế xong nên tải lại định kỳ lúc màn hình đang mở. */
 const POLL_INTERVAL_MS = 15_000;
@@ -58,7 +58,7 @@ function groupByDay(orders: HistoryOrder[], labels: { today: string; yesterday: 
   return [...groups.values()].sort((a, b) => (a.key < b.key ? 1 : a.key > b.key ? -1 : 0));
 }
 
-/** Lịch sử đơn trong ngày của chi nhánh (CS-05) — xem lại, in lại bill và hoàn tiền mặt cho đơn đã trả hôm nay. */
+/** Lịch sử đơn của chi nhánh (CS-05): hôm nay hoặc 30 ngày gần đây — xem lại, in lại bill và hoàn tiền mặt. */
 export default function OrdersScreen() {
   const theme = useAppTheme();
   const { t } = useTranslation();
@@ -110,9 +110,12 @@ export default function OrdersScreen() {
 
   const data = useMemo(
     () =>
-      orders.filter((o) =>
-        filter === 'all' ? true : filter === 'cancelled' ? o.status === 'Đã huỷ' : o.status !== 'Đã huỷ',
-      ),
+      orders.filter((o) => {
+        if (filter === 'all') return true;
+        if (filter === 'cancelled') return o.status === 'Đã huỷ';
+        if (filter === 'refunded') return (o.refundedAmount ?? 0) > 0;
+        return o.status !== 'Đã huỷ';
+      }),
     [orders, filter],
   );
   // "Hôm nay" chỉ có một ngày nên không cần tiêu đề nhóm; "30 ngày gần đây" nhóm theo từng ngày
@@ -160,6 +163,7 @@ export default function OrdersScreen() {
           options={[
             { value: 'all', label: t('baristaQueue.filterAll') },
             { value: 'active', label: t('status.order.paid') },
+            { value: 'refunded', label: t('orders.filterRefunded') },
             { value: 'cancelled', label: t('status.order.cancelled') },
           ]}
         />

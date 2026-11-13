@@ -89,7 +89,7 @@
   "nav": {
     "cashier": {
       "pos": "Bán hàng",
-      "orders": "Đơn hôm nay"
+      "orders": "Lịch sử đơn"
     },
     "barista": {
       "queue": "Hàng đợi",
@@ -155,8 +155,9 @@
     "reprint": "In lại"
   },
   "orders": {
-    "title": "Đơn hôm nay",
+    "title": "Lịch sử đơn",
     "subtitle": "{{count}} đơn",
+    "filterRefunded": "Đã hoàn tiền",
     "dayToday": "Hôm nay",
     "dayYesterday": "Hôm qua",
     "emptyTitle": "Chưa có đơn nào",
@@ -333,7 +334,7 @@
           "2": "Bấm Thử lại sau khi xử lý xong."
         }
       },
-      "orderPaid": "Thanh toán vẫn đã được ghi nhận. Bạn có thể in lại bất cứ lúc nào trong màn Đơn hôm nay."
+      "orderPaid": "Thanh toán vẫn đã được ghi nhận. Bạn có thể in lại bất cứ lúc nào trong màn Lịch sử đơn."
     }
   },
   "refund": {
