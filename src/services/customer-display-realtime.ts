@@ -1,12 +1,38 @@
 import { io, type Socket } from 'socket.io-client';
 
-import { extraLabel } from '@/src/data/order-utils';
+import { extraLabel, sizeOf } from '@/src/data/order-utils';
 import type { CartLine } from '@/src/data/store';
+import { SIZE_GROUP_ID, type OrderOption, type SelectedExtra } from '@/src/data/types';
 import { API_ORIGIN } from '@/src/lib/api-client';
 import { me } from '@/src/services/auth-api';
 import { getTokens } from '@/src/services/token-storage';
 
 export type DisplayState = 'IDLE' | 'CART' | 'PAYMENT_PENDING' | 'PAYMENT_QR' | 'PAID';
+
+/** Tuỳ chọn (trừ size); `isDefault` để màn hình khách chỉ in đậm cái khác mặc định. */
+export type DisplayDetailOption = { label: string; isDefault: boolean };
+/** Topping của một ly/phần, `quantity` tính theo ly. */
+export type DisplayDetailTopping = { name: string; quantity: number };
+
+export type DisplayComboComponentDetail = {
+  name: string;
+  quantity: number;
+  size?: string;
+  options: DisplayDetailOption[];
+  toppings: DisplayDetailTopping[];
+};
+
+/**
+ * Chi tiết có cấu trúc cho màn hình khách: size tách riêng, topping, các món trong combo.
+ * `options` dạng chữ vẫn giữ cho màn hình khách bản cũ.
+ */
+export type DisplayItemDetail = {
+  size?: string;
+  options: DisplayDetailOption[];
+  toppings: DisplayDetailTopping[];
+  /** có khi dòng là combo */
+  components?: DisplayComboComponentDetail[];
+};
 
 export type DisplaySnapshot = {
   state: DisplayState;
@@ -17,6 +43,7 @@ export type DisplaySnapshot = {
     unitPrice: number;
     lineTotal: number;
     options: string[];
+    detail?: DisplayItemDetail;
     note?: string;
   }[];
   totalAmount: number;
@@ -82,6 +109,35 @@ function connection() {
   return active;
 }
 
+const detailOptions = (options: OrderOption[]): DisplayDetailOption[] =>
+  options
+    .filter((o) => o.groupId !== SIZE_GROUP_ID)
+    .map((o) => ({ label: o.label, isDefault: o.isDefault }));
+
+const detailToppings = (extras: SelectedExtra[] = []): DisplayDetailTopping[] =>
+  extras.map((e) => ({ name: e.label, quantity: e.qty }));
+
+function detailOf(line: CartLine): DisplayItemDetail {
+  if (line.combo) {
+    return {
+      options: [],
+      toppings: [],
+      components: line.combo.components.map((c) => ({
+        name: c.itemName,
+        quantity: c.quantity,
+        size: sizeOf(c.options)?.label,
+        options: detailOptions(c.options),
+        toppings: detailToppings(c.extras),
+      })),
+    };
+  }
+  return {
+    size: sizeOf(line.options)?.label,
+    options: detailOptions(line.options),
+    toppings: detailToppings(line.extras),
+  };
+}
+
 export function snapshotFromCart(cart: CartLine[]): DisplaySnapshot {
   return {
     state: cart.length ? 'CART' : 'IDLE',
@@ -100,6 +156,7 @@ export function snapshotFromCart(cart: CartLine[]): DisplaySnapshot {
             ].join(' · '),
           )
         : [...line.options.map((option) => option.label), ...(line.extras ?? []).map(extraLabel)],
+      detail: detailOf(line),
       note: line.note,
     })),
     totalAmount: cart.reduce((sum, line) => sum + line.unitPrice * line.qty, 0),

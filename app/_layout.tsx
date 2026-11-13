@@ -12,6 +12,7 @@ import 'react-native-reanimated';
 import { AuthProvider } from '@/src/auth/auth-context';
 import { BrandingProvider } from '@/src/branding/branding-context';
 import { AppSplash } from '@/src/components/app-splash';
+import { BackdropSnapshotRoot } from '@/src/components/ui/glass/backdrop-snapshot';
 import { StoreProvider } from '@/src/data/store';
 import { loadStoredLanguage } from '@/src/i18n';
 import { StationProvider } from '@/src/stations/station-context';
@@ -41,6 +42,8 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       {ready ? (
+        // Vùng AppModal chụp làm nền kính mờ. AppSplash nằm ngoài để không bị chụp vào.
+        <BackdropSnapshotRoot>
         <SafeAreaProvider>
           <AuthProvider>
             {/* Theme theo thương hiệu chuỗi nằm trong AuthProvider: chưa đăng nhập (màn login) thì dùng theme gốc. */}
@@ -64,6 +67,7 @@ export default function RootLayout() {
             </BrandingProvider>
           </AuthProvider>
         </SafeAreaProvider>
+        </BackdropSnapshotRoot>
       ) : null}
       {/* Luôn cùng một instance ở cùng vị trí → không mount lại, ảnh nền không phải load lại. */}
       <AppSplash visible={!ready} />

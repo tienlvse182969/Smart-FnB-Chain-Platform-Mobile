@@ -1,6 +1,8 @@
-import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+// Cố ý dùng Image của React Native (Fresco), KHÔNG dùng expo-image: Glide của expo-image mặc định tạo
+// hardware bitmap, mà ảnh chụp màn hình cho nền kính mờ của AppModal (react-native-view-shot) vẽ bằng
+// software canvas → hardware bitmap làm lần chụp thất bại trên Android (dialog mất blur).
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { formatVnd } from '@/src/data/format';
 import type { MenuItem } from '@/src/data/types';
@@ -43,8 +45,10 @@ export function MenuItemCard({
           <Image
             source={{ uri: item.image }}
             style={[styles.image, !available && styles.imageOff]}
-            contentFit="cover"
-            transition={150}
+            resizeMode="cover"
+            // Ảnh menu là ảnh gốc upload (tới 5MB): giải nén theo kích thước ô thay vì full-size.
+            resizeMethod="resize"
+            fadeDuration={150}
           />
         ) : (
           <View

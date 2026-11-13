@@ -1,7 +1,6 @@
 import { Badge } from '@ant-design/react-native';
 import type { Href } from 'expo-router';
 import { router, usePathname } from 'expo-router';
-import { Image as RemoteImage } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,10 +33,11 @@ function BrandLogo({ compact }: { compact: boolean }) {
 
   if (logo && !failed) {
     return (
-      <RemoteImage
+      // Image của React Native thay vì expo-image: tránh hardware bitmap khi AppModal chụp màn hình (xem menu-item-card).
+      <Image
         source={{ uri: logo }}
         style={compact ? styles.brandIconCompact : styles.brandLogoCustom}
-        contentFit="contain"
+        resizeMode="contain"
         onError={() => setFailed(true)}
       />
     );

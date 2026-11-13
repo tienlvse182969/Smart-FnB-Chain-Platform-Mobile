@@ -1,6 +1,5 @@
-import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image, ImageBackground, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,6 +8,9 @@ import { ForgotPasswordForm } from '@/src/components/auth/forgot-password-form';
 import { forgetAccount, loadRecentAccounts, rememberAccount, type RecentAccount } from '@/src/auth/recent-accounts';
 import { Btn } from '@/src/components/ui/button';
 import { Field } from '@/src/components/ui/field';
+import { measureWindowRect } from '@/src/components/ui/glass/backdrop-snapshot';
+import { GlassLayer } from '@/src/components/ui/glass/glass-layer';
+import type { WindowRect } from '@/src/components/ui/glass/types';
 import { Icon } from '@/src/components/ui/icon';
 import { Txt } from '@/src/components/ui/txt';
 import { useStore } from '@/src/data/store';
@@ -17,7 +19,9 @@ import { ApiError } from '@/src/services/auth-types';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 
-const AVATAR_COLORS = ['#1677ff', '#52a41a', '#fa8c16', '#eb2f96', '#722ed1', '#13a8a8'];
+const LOGIN_BACKGROUND = require('@/assets/images/login-background.jpg');
+
+const AVATAR_COLORS =['#1677ff', '#52a41a', '#fa8c16', '#eb2f96', '#722ed1', '#13a8a8'];
 
 const initialsOf = (name: string) => {
   const words = name.trim().split(/\s+/).filter(Boolean);
@@ -54,6 +58,18 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
   // Màn "Quên mật khẩu" chồng lên mode hiện tại — quay lại thì giữ nguyên tài khoản đang chọn.
   const [forgot, setForgot] = useState(false);
+
+  // Kính mờ của thẻ đăng nhập: vẽ lại chính ảnh nền (đã blur) đúng phần nằm sau thẻ.
+  const backgroundRef = useRef<View>(null);
+  const cardRef = useRef<View>(null);
+  const [backgroundRect, setBackgroundRect] = useState<WindowRect | null>(null);
+  const [cardFrame, setCardFrame] = useState<Pick<WindowRect, 'x' | 'y'> | null>(null);
+  const measureBackground = () => {
+    if (backgroundRef.current) void measureWindowRect(backgroundRef.current).then(setBackgroundRect);
+  };
+  const measureCard = () => {
+    if (cardRef.current) void measureWindowRect(cardRef.current).then(({ x, y }) => setCardFrame({ x, y }));
+  };
 
   useEffect(() => {
     let active = true;
@@ -128,11 +144,17 @@ export default function LoginScreen() {
   const roleLabel = (role: RecentAccount['role']) => (role === 'CASHIER' ? 'Thu ngân' : 'Pha chế');
 
   return (
-    <ImageBackground source={require('@/assets/images/login-background.jpg')} style={styles.safe} resizeMode="cover">
+    <ImageBackground source={LOGIN_BACKGROUND} style={styles.safe} resizeMode="cover">
+    <View ref={backgroundRef} collapsable={false} pointerEvents="none" style={StyleSheet.absoluteFill} onLayout={measureBackground} />
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView style={styles.safe} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView contentContainerStyle={styles.center} keyboardShouldPersistTaps="handled">
-          <BlurView intensity={60} tint="light" experimentalBlurMethod="dimezisBlurView" style={styles.card}>
+        <ScrollView
+          contentContainerStyle={styles.center}
+          keyboardShouldPersistTaps="handled"
+          onScroll={measureCard}
+          scrollEventThrottle={32}>
+          <View ref={cardRef} collapsable={false} style={styles.card} onLayout={measureCard}>
+            <GlassLayer frame={cardFrame} source={LOGIN_BACKGROUND} sourceRect={backgroundRect} blur={20} veil="rgba(255,255,255,0.6)" />
             <Image source={require('@/assets/logo/logo1.png')} style={styles.logo} resizeMode="contain" />
             <Txt variant="title" style={styles.title}>{forgot ? 'Quên mật khẩu' : 'Đăng nhập nhân viên'}</Txt>
 
@@ -187,7 +209,7 @@ export default function LoginScreen() {
               </>
             )}
             <Txt variant="tiny" muted style={styles.version}>Phiên bản {APP_VERSION}</Txt>
-          </BlurView>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -205,7 +227,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.55)',
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.35)',
     overflow: 'hidden',
     gap: 16,
   },

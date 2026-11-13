@@ -7,38 +7,26 @@ import {
   StyleSheet,
   useWindowDimensions,
   View,
+  type LayoutChangeEvent,
 } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedProps,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { Portal } from '@ant-design/react-native';
-import { BlurView } from 'expo-blur';
 
 import { fontFamily } from '@/src/theme/typography';
 import { Btn } from './button';
+import { useBackdropCapture } from './glass/backdrop-snapshot';
+import { GlassLayer } from './glass/glass-layer';
+import type { GlassBackdrop, WindowRect } from './glass/types';
 import { Icon, type IconName } from './icon';
 import { Txt } from './txt';
 
 type ModalAction = { text: string; onPress: () => void; primary?: boolean; disabled?: boolean };
 
-const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
-
-/**
- * Lớp trắng của kính lấy từ chính `tint` của BlurView, KHÔNG dùng View trắng riêng đè lên:
- * expo-blur SDK 54 trên Android chụp cả các view nằm trên BlurView vào ảnh blur, nên một lớp
- * trắng riêng sẽ bị blur ngược vào nền → khung trắng đục, mất hiệu ứng. Overlay của `tint` do
- * native tự vẽ nên không bị chụp.
- *
- * Với tint này lớp trắng ≈ 0.97 × intensity / 100 (Android, web); iOS dùng material tương ứng.
- * Tăng intensity → đục hơn, dễ đọc hơn; giảm → trong hơn. Android blur bán kính = intensity / 4.
- */
-const GLASS_TINT = 'systemChromeMaterialLight';
-const GLASS_INTENSITY = 82;
+/** Độ nhoè của nền kính (dp trên màn hình / px blur trên web). */
+const GLASS_BLUR = 26;
+/** Lớp trắng phủ trên nền đã blur — tăng để đục hơn/dễ đọc hơn, giảm để trong hơn. */
+const GLASS_VEIL = 'rgba(255,255,255,0.78)';
 const GLASS_BORDER = 'rgba(255,255,255,0.7)';
 /** Lớp tối phủ phần màn hình phía sau (không blur). */
 const BACKDROP = 'rgba(0,0,0,0.3)';
@@ -46,8 +34,10 @@ const ENTER_MS = 220;
 const EXIT_MS = 160;
 
 /**
- * Modal dựng trên antd `Portal` — khung dialog kiểu kính mờ (expo-blur blur phần nằm sau khung),
- * nền phía sau chỉ phủ tối nhẹ thay cho mask đen 50% cố định của antd `Modal`.
+ * Modal dựng trên antd `Portal` — khung dialog kiểu kính mờ, nền phía sau chỉ phủ tối nhẹ.
+ *
+ * Kính mờ: lúc mở, chụp màn hình phía sau MỘT lần rồi blur ảnh tĩnh đó trong khung
+ * (xem `glass/`). Web dùng CSS `backdrop-filter`.
  *
  * Vẫn render qua portal của antd `Provider` như trước, nên nội dung modal nằm ngoài các provider
  * bọc bên trong `Provider` (vd. `StoreProvider`) — component con không được gọi `useStore()`.
@@ -71,24 +61,52 @@ export function AppModal({
 }) {
   const { width } = useWindowDimensions();
   const dialogWidth = Math.min(maxWidth, width - 48);
+  const capture = useBackdropCapture();
 
   // Giữ modal trong cây thêm một nhịp sau khi `visible` = false để chạy hiệu ứng đóng.
-  const [mounted, setMounted] = useState(visible);
+  const [mounted, setMounted] = useState(false);
+  const mountedRef = useRef(false);
+  mountedRef.current = mounted;
+  const [backdrop, setBackdrop] = useState<GlassBackdrop | null>(null);
+  const [frame, setFrame] = useState<Pick<WindowRect, 'x' | 'y'> | null>(null);
+  const wrapperRef = useRef<View>(null);
   const progress = useSharedValue(0);
 
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
+  // Mở: chụp màn hình phía sau TRƯỚC khi dialog xuất hiện (nếu không ảnh chụp sẽ dính chính dialog).
+  // Mở lại khi đang chạy hiệu ứng đóng thì giữ ảnh cũ.
   useEffect(() => {
-    if (visible) {
+    if (!visible || mountedRef.current) return;
+    let cancelled = false;
+    capture().then((shot) => {
+      if (cancelled) return;
+      setBackdrop(shot);
       setMounted(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, capture]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    if (visible) {
       progress.value = withTiming(1, { duration: ENTER_MS, easing: Easing.out(Easing.cubic) });
       return;
     }
     progress.value = withTiming(0, { duration: EXIT_MS, easing: Easing.in(Easing.quad) });
     const timer = setTimeout(() => setMounted(false), EXIT_MS);
     return () => clearTimeout(timer);
-  }, [visible, progress]);
+  }, [visible, mounted, progress]);
+
+  // Đóng hẳn → bỏ ảnh chụp cũ (lần mở sau chụp lại màn hình mới).
+  useEffect(() => {
+    if (mounted) return;
+    setBackdrop(null);
+    setFrame(null);
+  }, [mounted]);
 
   // Nút back Android: listener đăng ký sau chạy trước → modal chồng trên cùng đóng trước.
   useEffect(() => {
@@ -100,31 +118,32 @@ export function AppModal({
     return () => sub.remove();
   }, [visible]);
 
+  // Vị trí khung trên màn hình = vị trí lớp phủ + layout của khung (chưa tính scale của hiệu ứng mở).
+  const onDialogLayout = (e: LayoutChangeEvent) => {
+    const { x, y } = e.nativeEvent.layout;
+    wrapperRef.current?.measureInWindow((wx, wy) => setFrame({ x: wx + x, y: wy + y }));
+  };
+
   const fadeStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
-  // Khung chỉ scale, không đổi opacity: iOS render sai blur khi opacity của view cha thay đổi.
-  // Blur + lớp trắng của tint hiện dần qua `intensity`, nội dung hiện dần qua opacity của chính nó.
-  const scaleStyle = useAnimatedStyle(() => ({ transform: [{ scale: 0.96 + progress.value * 0.04 }] }));
-  const blurProps = useAnimatedProps(() => ({ intensity: progress.value * GLASS_INTENSITY }));
+  const dialogStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ scale: 0.96 + progress.value * 0.04 }],
+  }));
 
   if (!mounted) return null;
 
   return (
     <Portal>
-      <View style={StyleSheet.absoluteFill} pointerEvents={visible ? 'auto' : 'none'}>
+      <View ref={wrapperRef} style={StyleSheet.absoluteFill} pointerEvents={visible ? 'auto' : 'none'}>
         <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, fadeStyle]} />
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessible={false} />
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.center}
           pointerEvents="box-none">
-          <Animated.View style={[styles.dialog, { width: dialogWidth }, scaleStyle]}>
-            <AnimatedBlurView
-              animatedProps={blurProps}
-              tint={GLASS_TINT}
-              experimentalBlurMethod="dimezisBlurView"
-              style={StyleSheet.absoluteFill}
-            />
-            <Animated.View style={[styles.body, fadeStyle]}>
+          <Animated.View onLayout={onDialogLayout} style={[styles.dialog, { width: dialogWidth }, dialogStyle]}>
+            <GlassLayer frame={frame} backdrop={backdrop} blur={GLASS_BLUR} veil={GLASS_VEIL} />
+            <View style={styles.body}>
               {icon ? (
                 <View style={styles.icon}>
                   <Icon name={icon} size={32} />
@@ -147,7 +166,7 @@ export function AppModal({
                   ))}
                 </View>
               ) : null}
-            </Animated.View>
+            </View>
           </Animated.View>
         </KeyboardAvoidingView>
       </View>
@@ -158,7 +177,6 @@ export function AppModal({
 const styles = StyleSheet.create({
   backdrop: { backgroundColor: BACKDROP },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  // borderRadius đặt lên BlurView không có tác dụng — bo góc bằng overflow: 'hidden' ở khung cha.
   dialog: {
     borderRadius: 24,
     overflow: 'hidden',
