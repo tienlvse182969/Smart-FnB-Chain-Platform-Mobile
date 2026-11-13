@@ -72,20 +72,22 @@ export default function BaristaQueueScreen() {
     }
   };
 
-  /** Ghi nhận đã bấm gọi máy báo rung trên bộ phát (backend không phát tín hiệu). */
-  const markPagerCalled = async (order: ReadyCounterOrder) => {
-    if (working || order.pagerNumber == null) return;
-    setWorking(true);
-    try {
-      await notifyPager(order.id, order.pagerNumber);
-      toast.success(t('pager.notifiedToast', { number: order.pagerNumber }), 1.5, undefined, false);
-    } catch (reason) {
-      toast.fail(pagerErrorMessage(reason, t, order.pagerNumber), 2, undefined, false);
-    } finally {
-      await refresh();
-      setWorking(false);
-    }
-  };
+  /**
+   * Một nút "Đã giao" thay cho "Đã gọi máy" + "Đã giao": nếu đơn có máy báo rung chưa được ghi nhận
+   * gọi thì ghi nhận gọi trước (backend chỉ nhận khi đơn còn READY), rồi mới giao. Ghi nhận gọi máy
+   * lỗi (vd. máy vừa bị đổi số) không chặn việc giao — khách đã nhận đồ rồi.
+   */
+  const handOver = (order: ReadyCounterOrder) =>
+    mutate(async () => {
+      if (order.pagerNumber != null && !order.pagerNotifiedAt) {
+        try {
+          await notifyPager(order.id, order.pagerNumber);
+        } catch (reason) {
+          toast.fail(pagerErrorMessage(reason, t, order.pagerNumber), 2, undefined, false);
+        }
+      }
+      await deliverOrder(order.id);
+    });
 
   const wide = width >= 900;
   const kindOf = (categoryId: string) => state.categories.find((c) => c.id === categoryId)?.kind;
@@ -96,6 +98,11 @@ export default function BaristaQueueScreen() {
     [batches, kind, state.categories],
   );
   const cups = shown.reduce((s, b) => s + b.cupCount, 0);
+  // ảnh món cho thẻ mẻ — menu đã được tải cùng hàng đợi
+  const imageByMenuItem = useMemo(
+    () => new Map(state.menu.filter((m) => m.image).map((m) => [m.id, m.image])),
+    [state.menu],
+  );
 
   // Grid 2 cột trên màn rộng; thứ tự FIFO đọc theo hàng ngang. Thêm ô trống khi lẻ để thẻ cuối
   // không bị kéo giãn hết chiều ngang.
@@ -137,26 +144,13 @@ export default function BaristaQueueScreen() {
                   <Txt variant="caption" style={styles.pagerLabel}>{t('pager.short', { number: o.pagerNumber })}</Txt>
                   {o.pagerNotifiedAt ? (
                     <Txt variant="tiny" muted>{t('pager.notified', { time: clockAt(o.pagerNotifiedAt) })}</Txt>
-                  ) : (
-                    <Pressable
-                      disabled={working}
-                      hitSlop={6}
-                      onPress={() => void markPagerCalled(o)}
-                      style={({ pressed }) => [
-                        styles.pagerBtn,
-                        { borderColor: theme.border_color_base },
-                        pressed && { opacity: 0.6 },
-                      ]}>
-                      <Icon name="bell" size={12} />
-                      <Txt variant="tiny">{t('pager.notify')}</Txt>
-                    </Pressable>
-                  )}
+                  ) : null}
                 </View>
               ) : null}
             </View>
             <Pressable
               disabled={working}
-              onPress={() => void mutate(() => deliverOrder(o.id))}
+              onPress={() => void handOver(o)}
               style={({ pressed }) => [
                 styles.handOverBtn,
                 { backgroundColor: theme.brand_primary },
@@ -206,6 +200,7 @@ export default function BaristaQueueScreen() {
                     <View style={columns > 1 ? styles.gridCell : null}>
                       <BatchCard
                         batch={item}
+                        image={imageByMenuItem.get(item.menuItemId)}
                         now={now}
                         onStart={(unitIds) => void mutate(() => startBatch(unitIds))}
                         onFinish={(unitIds) => void mutate(() => Promise.all(unitIds.map(completeUnit)))}
@@ -266,15 +261,6 @@ const styles = StyleSheet.create({
   readyInfo: { flex: 1, gap: 1 },
   pagerRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 2 },
   pagerLabel: { fontFamily: fontFamily.bold },
-  pagerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
   handOverBtn: {
     minHeight: 52,
     paddingHorizontal: 14,

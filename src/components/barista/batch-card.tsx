@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+// Image của React Native, không dùng expo-image — xem lý do ở MenuItemCard (blur của AppModal).
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { waitLevelOf } from '@/src/data/batching';
 import { durationSince } from '@/src/data/format';
@@ -59,11 +60,14 @@ function BigButton({
  */
 export function BatchCard({
   batch,
+  image,
   now,
   onStart,
   onFinish,
 }: {
   batch: Batch;
+  /** ảnh minh hoạ món (lấy từ menu theo menuItemId); thiếu thì hiện ô thay thế */
+  image?: string;
   now: number;
   onStart: (lineIds: string[]) => void;
   onFinish: (lineIds: string[]) => void;
@@ -89,21 +93,38 @@ export function BatchCard({
         },
       ]}>
       {level ? <View style={[styles.levelStrip, { backgroundColor: level.border }]} /> : null}
-      {/* Tên món chiếm trọn chiều ngang; số ly + thời gian chờ nằm dòng dưới để không lẹm tên. */}
-      <View style={styles.head}>
-        <Txt style={styles.name} numberOfLines={2}>
-          {batch.name}
-          {batch.sizeLabel ? ` · ${batch.sizeLabel}` : ''}
-        </Txt>
-        <View style={styles.metaRow}>
-          <Txt style={styles.meta} muted numberOfLines={1}>
-            {t('baristaQueue.cupCount', { count: batch.cupCount })}
-            {started ? ` · ${t('baristaQueue.inProgress')}` : ''}
+      {/* Ảnh nhỏ bên trái để nhận món nhanh; tên món chiếm phần còn lại, số ly + thời gian chờ
+          nằm dòng dưới để không lẹm tên. */}
+      <View style={styles.headRow}>
+        {image ? (
+          <Image
+            source={{ uri: image }}
+            style={[styles.thumb, { backgroundColor: theme.fill_body }]}
+            resizeMode="cover"
+            // Ảnh menu là ảnh gốc upload (tới 5MB): giải nén theo kích thước ô thay vì full-size.
+            resizeMethod="resize"
+            fadeDuration={150}
+          />
+        ) : (
+          <View style={[styles.thumb, styles.thumbPlaceholder, { backgroundColor: theme.fill_body }]}>
+            <Icon name="brand" size={24} color={theme.color_text_caption} strokeWidth={1.4} />
+          </View>
+        )}
+        <View style={styles.head}>
+          <Txt style={styles.name} numberOfLines={2}>
+            {batch.name}
+            {batch.sizeLabel ? ` · ${batch.sizeLabel}` : ''}
           </Txt>
-          <View style={[styles.waitBadge, level ? { backgroundColor: level.bg } : null]}>
-            <Txt style={[styles.wait, level ? { color: level.border } : null]} numberOfLines={1}>
-              {t('baristaQueue.waited', { duration: durationSince(batch.oldestPaidAt) })}
+          <View style={styles.metaRow}>
+            <Txt style={styles.meta} muted numberOfLines={1}>
+              {t('baristaQueue.cupCount', { count: batch.cupCount })}
+              {started ? ` · ${t('baristaQueue.inProgress')}` : ''}
             </Txt>
+            <View style={[styles.waitBadge, level ? { backgroundColor: level.bg } : null]}>
+              <Txt style={[styles.wait, level ? { color: level.border } : null]} numberOfLines={1}>
+                {t('baristaQueue.waited', { duration: durationSince(batch.oldestPaidAt) })}
+              </Txt>
+            </View>
           </View>
         </View>
       </View>
@@ -167,7 +188,10 @@ export function BatchCard({
 const styles = StyleSheet.create({
   card: { borderRadius: 6, padding: 14, gap: 10, overflow: 'hidden' },
   levelStrip: { position: 'absolute', top: 0, left: 0, right: 0, height: 6 },
-  head: { gap: 4 },
+  headRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  thumb: { width: 64, height: 64, borderRadius: 8 },
+  thumbPlaceholder: { alignItems: 'center', justifyContent: 'center' },
+  head: { flex: 1, gap: 4 },
   name: { fontFamily: fontFamily.bold, fontSize: 19, lineHeight: 24 },
   metaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   meta: { flexShrink: 1, fontSize: 15 },
