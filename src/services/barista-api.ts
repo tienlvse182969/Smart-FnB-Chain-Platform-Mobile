@@ -105,3 +105,8 @@ export async function setMenuItemAvailability(menuItemId: string, isAvailable: b
 export async function setMenuOptionAvailability(optionId: string, isAvailable: boolean) {
   await apiClient.patch(`/barista/menu-options/${optionId}/availability`, { isAvailable });
 }
+
+/** Topping tính tiền theo phần (menu extra) — bật/tắt còn bán ở chi nhánh của pha chế. */
+export async function setMenuExtraAvailability(extraId: string, isAvailable: boolean) {
+  await apiClient.patch(`/menu-extras/${extraId}/availability`, { isAvailable });
+}

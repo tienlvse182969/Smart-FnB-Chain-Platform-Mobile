@@ -16,6 +16,7 @@ import type { StaffRole } from '@/src/data/types';
 import { setAppLanguage, type AppLanguage } from '@/src/i18n';
 import { APP_VERSION } from '@/src/lib/app-version';
 import { staffRoleKey } from '@/src/i18n/labels';
+import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 
 const initials = (name: string) =>
@@ -29,9 +30,11 @@ export function AccountScreen({ role, children }: { role: StaffRole; children?: 
   const theme = useAppTheme();
   const { t, i18n } = useTranslation();
   const { state, checkOut } = useStore();
-  const { user, logout } = useAuth();
+  const { user, displayName: accountName, logout } = useAuth();
   const staff = staffByRole[role];
-  const displayName = state.currentUser?.name ?? user?.email ?? staff.name;
+  const displayName = state.currentUser?.name || accountName || user?.email || staff.name;
+  // email chỉ hiện ở dòng phụ khi dòng tên đang là họ tên (không lặp lại email hai lần)
+  const email = user?.email && user.email !== displayName ? user.email : null;
 
   const cardStyle = [
     styles.card,
@@ -51,10 +54,15 @@ export function AccountScreen({ role, children }: { role: StaffRole; children?: 
             ]}>
             <Txt variant="title">{initials(displayName)}</Txt>
           </View>
-          <Txt variant="h1" numberOfLines={1} style={styles.profileName}>
+          <Txt variant="h2" numberOfLines={1} style={styles.profileName}>
             {displayName}
           </Txt>
-          <Txt variant="body" muted>
+          {email ? (
+            <Txt variant="body" muted numberOfLines={1}>
+              {email}
+            </Txt>
+          ) : null}
+          <Txt variant="caption" muted style={styles.profileRole}>
             {t(staffRoleKey[role])} · {staff.branch}
           </Txt>
         </View>
@@ -120,7 +128,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 8,
   },
-  profileName: { textAlign: 'center' },
+  // tên in đậm, email nhỏ hơn ở dòng dưới, vai trò nhỏ nhất
+  profileName: { textAlign: 'center', fontFamily: fontFamily.bold, fontSize: 22, lineHeight: 28, marginTop: 8 },
+  profileRole: { marginTop: 2 },
   sectionTitle: { marginTop: 12, marginBottom: 6 },
   settingRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   settingText: { flex: 1, gap: 2 },

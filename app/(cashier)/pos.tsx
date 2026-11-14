@@ -11,6 +11,7 @@ import { ComboOptionsDialog, type ComboDraft } from '@/src/components/pos/combo-
 import { ItemOptionsDialog, type ItemDraft } from '@/src/components/pos/item-options-dialog';
 import { ALL_CATEGORIES, MenuCategoryTabs } from '@/src/components/pos/menu-category-tabs';
 import { MenuItemCard } from '@/src/components/pos/menu-item-card';
+import { SplitPanelLayout } from '@/src/components/split-panel-layout';
 import { Btn } from '@/src/components/ui/button';
 import { Field } from '@/src/components/ui/field';
 import { Icon, IconButton } from '@/src/components/ui/icon';
@@ -99,7 +100,7 @@ export default function PosScreen() {
   const { selectedStation } = useStation();
   const { menu, categories, cart } = state;
 
-  const [width, setWidth] = useState(0);
+  const [menuWidth, setMenuWidth] = useState(0);
   const [category, setCategory] = useState(ALL_CATEGORIES);
   const [query, setQuery] = useState('');
   const [picking, setPicking] = useState<MenuItem | null>(null);
@@ -169,8 +170,6 @@ export default function PosScreen() {
     return () => { active = false; };
   }, [reloadToken, replaceMenu, selectedStation?.id]);
 
-  const cartWidth = Math.min(440, Math.max(320, width * 0.32));
-  const menuWidth = Math.max(0, width - cartWidth);
   const columns = menuWidth >= 760 ? 4 : menuWidth >= 520 ? 3 : 2;
   const itemWidth = (menuWidth - GRID_PADDING * 2 - GRID_GAP * (columns - 1)) / columns;
 
@@ -182,7 +181,6 @@ export default function PosScreen() {
         : categories,
     [combos.length, categories, t],
   );
-  const categoryLabel = (id: string) => tabs.find((c) => c.id === id)?.label ?? '';
   // lọc theo danh mục ("Tất cả" = mọi món + combo) VÀ từ khoá; tìm không phân biệt hoa/thường, không dấu
   const visibleMenu = useMemo(() => {
     const q = normalizeText(query);
@@ -243,9 +241,79 @@ export default function PosScreen() {
     }
   };
 
+  const cartPanel = (
+    <>
+      <View style={styles.cartHeader}>
+        <View style={styles.cartHeadText}>
+          <Txt variant="h2" style={styles.cartTitle}>
+            {t('pos.cartTitle')}
+          </Txt>
+          <Txt variant="caption" muted>
+            {t('pos.cartCount', { count: cartCount })}
+          </Txt>
+        </View>
+        {cart.length > 0 ? <IconButton name="remove" size={18} onPress={clearCart} /> : null}
+      </View>
+      <CustomerDisplayBar />
+      <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
+
+      {cart.length === 0 ? (
+        <View style={styles.emptyWrap}>
+          <EmptyState icon="receipt" title={t('pos.emptyCartTitle')} hint={t('pos.emptyCart')} />
+        </View>
+      ) : (
+        <FlatList
+          style={styles.cartList}
+          data={cart}
+          keyExtractor={(l) => l.key}
+          contentContainerStyle={styles.cartListContent}
+          renderItem={({ item: l }) => {
+            const size = l.options.find((o) => o.groupId === 'size');
+            const detail = cartLineDetail(l).join('\n');
+            return (
+              <View style={[styles.cartLine, { borderBottomColor: theme.border_color_thin }]}>
+                <View style={styles.cartLineTitleRow}>
+                  <Txt variant="bodyStrong" numberOfLines={2} style={styles.cartLineName}>
+                    {l.name}
+                    {size ? ` (${size.label})` : ''}
+                  </Txt>
+                  <Txt variant="bodyStrong">{formatVnd(l.unitPrice * l.qty)}</Txt>
+                </View>
+                {detail ? (
+                  <Txt variant="caption" muted numberOfLines={l.combo ? 8 : 3}>
+                    {detail}
+                  </Txt>
+                ) : null}
+                <View style={styles.cartLineFoot}>
+                  <Stepper value={l.qty} size="sm" onChange={(q) => setCartQty(l.key, q)} />
+                  <IconButton name="remove" size={15} onPress={() => removeCartLine(l.key)} />
+                </View>
+              </View>
+            );
+          }}
+        />
+      )}
+
+      <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
+      <View style={styles.cartFooter}>
+        <View style={styles.summaryRow}>
+          <Txt style={styles.summaryTotal}>{formatVnd(total)}</Txt>
+        </View>
+        <Btn
+          label={t('pos.checkoutBtn', { total: formatVnd(total) })}
+          icon="payment"
+          block
+          disabled={cart.length === 0}
+          loading={checkingOut}
+          onPress={() => void checkout()}
+        />
+      </View>
+    </>
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
-      <View style={styles.split} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+      <SplitPanelLayout onMainWidth={setMenuWidth} panel={cartPanel}>
         <View style={styles.menuSide}>
           <View style={styles.searchWrap}>
             <Field
@@ -293,7 +361,6 @@ export default function PosScreen() {
               <View style={{ width: itemWidth }}>
                 <MenuItemCard
                   item={item}
-                  categoryLabel={categoryLabel(item.categoryId)}
                   available={comboById.get(item.id)?.available ?? isMenuAvailable(item.id)}
                   qtyInCart={qtyByMenuItem[item.id] ?? 0}
                   onPress={() => {
@@ -307,79 +374,7 @@ export default function PosScreen() {
             )}
           />
         </View>
-
-        <View
-          style={[
-            styles.cartPanel,
-            { width: cartWidth, backgroundColor: theme.fill_base, borderColor: theme.border_color_thin },
-          ]}>
-          <View style={styles.cartHeader}>
-            <View style={styles.cartHeadText}>
-              <Txt variant="h2" style={styles.cartTitle}>
-                {t('pos.cartTitle')}
-              </Txt>
-              <Txt variant="caption" muted>
-                {t('pos.cartCount', { count: cartCount })}
-              </Txt>
-            </View>
-            {cart.length > 0 ? <IconButton name="remove" size={18} onPress={clearCart} /> : null}
-          </View>
-          <CustomerDisplayBar />
-          <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
-
-          {cart.length === 0 ? (
-            <View style={styles.emptyWrap}>
-              <EmptyState icon="receipt" title={t('pos.emptyCartTitle')} hint={t('pos.emptyCart')} />
-            </View>
-          ) : (
-            <FlatList
-              style={styles.cartList}
-              data={cart}
-              keyExtractor={(l) => l.key}
-              contentContainerStyle={styles.cartListContent}
-              renderItem={({ item: l }) => {
-                const size = l.options.find((o) => o.groupId === 'size');
-                const detail = cartLineDetail(l).join('\n');
-                return (
-                  <View style={[styles.cartLine, { borderBottomColor: theme.border_color_thin }]}>
-                    <View style={styles.cartLineTitleRow}>
-                      <Txt variant="bodyStrong" numberOfLines={2} style={styles.cartLineName}>
-                        {l.name}
-                        {size ? ` (${size.label})` : ''}
-                      </Txt>
-                      <Txt variant="bodyStrong">{formatVnd(l.unitPrice * l.qty)}</Txt>
-                    </View>
-                    {detail ? (
-                      <Txt variant="caption" muted numberOfLines={l.combo ? 8 : 3}>
-                        {detail}
-                      </Txt>
-                    ) : null}
-                    <View style={styles.cartLineFoot}>
-                      <Stepper value={l.qty} size="sm" onChange={(q) => setCartQty(l.key, q)} />
-                      <IconButton name="remove" size={15} onPress={() => removeCartLine(l.key)} />
-                    </View>
-                  </View>
-                );
-              }}
-            />
-          )}
-
-          <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
-          <View style={styles.cartFooter}>
-            <View style={styles.summaryRow}>
-              <Txt style={styles.summaryTotal}>{formatVnd(total)}</Txt>
-            </View>
-            <Btn
-              label={t('pos.checkoutBtn', { total: formatVnd(total) })}
-              icon="payment"
-              block
-              disabled={cart.length === 0}
-              loading={checkingOut}
-              onPress={() => void checkout()}
-            />
-          </View>
-        </View>
-      </View>
+      </SplitPanelLayout>
 
       <ItemOptionsDialog
         visible={!!picking}
@@ -404,7 +399,6 @@ export default function PosScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  split: { flex: 1, flexDirection: 'row' },
   menuSide: { flex: 1 },
   searchWrap: { paddingHorizontal: GRID_PADDING, paddingTop: 12 },
   tabsWrap: { paddingHorizontal: GRID_PADDING, paddingTop: 8 },
@@ -413,7 +407,6 @@ const styles = StyleSheet.create({
   list: { flex: 1 },
   grid: { gap: GRID_GAP, padding: GRID_PADDING },
   row: { gap: GRID_GAP },
-  cartPanel: { borderLeftWidth: StyleSheet.hairlineWidth },
   cartHeader: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 8 },
   cartHeadText: { flex: 1, gap: 3 },
   cartTitle: { fontFamily: fontFamily.semibold },

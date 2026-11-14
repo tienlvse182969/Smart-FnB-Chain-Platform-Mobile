@@ -183,7 +183,7 @@ export function ServerCheckoutDialog({
         return;
       }
       if (result.status === 'AMOUNT_MISMATCH' || result.status === 'REQUIRES_ATTENTION') {
-        setRecheckError('Khoản tiền cần Quản lý kiểm tra trước khi chuyển xuống pha chế.');
+        setRecheckError('Khoản tiền cần Quản lý kiểm tra trước khi chuyển xuống bếp & pha chế.');
       } else if (result.status === 'EXPIRED' || result.status === 'FAILED') {
         setRecheckError('Mã QR đã hết hiệu lực. Hãy quay lại và tạo thanh toán mới.');
       } else {

@@ -71,7 +71,7 @@
     },
     "role": {
       "cashier": "Cashier",
-      "barista": "Barista"
+      "barista": "Kitchen & bar"
     },
     "print": {
       "failed": "Print failed"
@@ -89,11 +89,11 @@
   "nav": {
     "cashier": {
       "pos": "Sales",
-      "orders": "Today's orders"
+      "orders": "Order history"
     },
     "barista": {
       "queue": "Queue",
-      "menu": "Items & toppings"
+      "menu": "Item check"
     }
   },
   "login": {
@@ -121,8 +121,8 @@
   },
   "itemOptionsDialog": {
     "qtyLabel": "Quantity",
-    "noteLabel": "Note for the barista",
-    "notePlaceholder": "Second cup less sweet…",
+    "noteLabel": "Note for the kitchen & bar",
+    "notePlaceholder": "e.g. less sweet, no onions…",
     "addBtn": "Add · {{total}}",
     "required": "Required",
     "maxHint": "Choose up to {{max}}",
@@ -151,12 +151,13 @@
     "expired": "The QR code expired and the order was cancelled.",
     "cancelled": "The order was cancelled.",
     "printFailedTitle": "Print failed",
-    "printFailedHint": "The order is still paid and sent to the bar. Check the printer, then reprint.",
+    "printFailedHint": "The order is still paid and sent to the kitchen & bar. Check the printer, then reprint.",
     "reprint": "Reprint"
   },
   "orders": {
-    "title": "Today's orders",
+    "title": "Order history",
     "subtitle": "{{count}} orders",
+    "filterRefunded": "Refunded",
     "dayToday": "Today",
     "dayYesterday": "Yesterday",
     "emptyTitle": "No orders yet",
@@ -205,13 +206,13 @@
   },
   "baristaQueue": {
     "title": "Preparation queue",
-    "subtitle": "{{batches}} batches · {{cups}} cups",
+    "subtitle": "{{batches}} items · {{cups}} servings",
     "filterAll": "All",
     "filterDrink": "Drinks",
     "filterFood": "Food",
-    "emptyTitle": "No batches",
+    "emptyTitle": "Nothing to prepare",
     "emptyHint": "Orders show up here once they are paid.",
-    "cupCount": "{{count}} cups",
+    "cupCount": "{{count}} servings",
     "defaultOptions": "Default",
     "waited": "Waiting {{duration}}",
     "startBatch": "Start batch",
@@ -219,18 +220,42 @@
     "finishCup": "Done",
     "inProgress": "In progress",
     "readyTitle": "Ready for pickup",
+    "readyCount": "{{count}} waiting for pickup",
     "readyEmpty": "No orders waiting for pickup.",
     "handOver": "Handed over",
     "outOfStockTitle": "Paid but out of stock — tell the manager",
     "outOfStockItem": "#{{call}} · {{name}}",
     "newOrderBanner": "New order #{{call}}",
-    "newOrderMore": "+{{count}} more"
+    "newOrderMore": "+{{count}} more",
+    "showMoreCups": "+{{count}} more servings",
+    "showLessCups": "Show less"
   },
   "baristaMenu": {
-    "title": "Items & toppings",
-    "subtitle": "Mark items or toppings as out of stock — the cashier can no longer sell them.",
-    "itemsSection": "Items",
-    "optionsSection": "Options"
+    "title": "Item check",
+    "searchPlaceholder": "Search items or toppings…",
+    "toppingTab": "Toppings",
+    "extraGroup": "Add-on topping",
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "filterAll": "All ({{count}})",
+    "filterAvailable": "Available ({{count}})",
+    "filterUnavailable": "Unavailable ({{count}})",
+    "noStatusMatch": "Nothing in this status",
+    "chainDisabled": "Disabled by owner",
+    "notAssigned": "Not assigned to branch",
+    "noPortions": "No portions left",
+    "loadFailed": "Could not load the menu",
+    "updateItemFailed": "Could not update the item",
+    "updateOptionFailed": "Could not update the option",
+    "confirmAvailableTitle": "Confirm available",
+    "confirmUnavailableTitle": "Confirm unavailable",
+    "confirmAvailableBody": "Are you sure \"{{name}}\" is available? The cashier can sell it right away.",
+    "confirmUnavailableBody": "Are you sure \"{{name}}\" is out of stock? The cashier will no longer be able to sell it.",
+    "confirmUnavailableItemNote": "Paid orders containing this item will be marked out of stock and the manager will be notified.",
+    "confirmMarkAvailable": "Available",
+    "confirmMarkUnavailable": "Unavailable",
+    "savedAvailable": "\"{{name}}\" set to available",
+    "savedUnavailable": "\"{{name}}\" set to unavailable"
   },
   "customerDisplay": {
     "label": "Customer display",
@@ -333,7 +358,7 @@
           "2": "Tap Try again once it is sorted."
         }
       },
-      "orderPaid": "The payment is still recorded. You can reprint any time from Today’s orders."
+      "orderPaid": "The payment is still recorded. You can reprint any time from Order history."
     }
   },
   "refund": {
