@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -18,6 +18,7 @@ import { Field } from '../ui/field';
 import { Icon } from '../ui/icon';
 import { Stepper } from '../ui/stepper';
 import { Txt } from '../ui/txt';
+import { useScrollToEndOnKeyboard } from '../ui/use-keyboard';
 
 export type ItemDraft = {
   qty: number;
@@ -218,6 +219,8 @@ export function ItemOptionsDialog({
   const [note, setNote] = useState('');
   const [selected, setSelected] = useState<OptionSelection>({});
   const [extraSel, setExtraSel] = useState<ExtraSelection>({});
+  const scrollRef = useRef<ScrollView>(null);
+  const noteFocus = useScrollToEndOnKeyboard(scrollRef);
 
   useEffect(() => {
     if (!visible || !item) return;
@@ -257,7 +260,11 @@ export function ItemOptionsDialog({
           disabled: !valid,
         },
       ]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.body}>
+      <ScrollView
+        ref={scrollRef}
+        style={styles.scroll}
+        contentContainerStyle={styles.body}
+        keyboardShouldPersistTaps="handled">
         <OptionGroupsPicker
           item={item}
           selected={selected}
@@ -276,6 +283,8 @@ export function ItemOptionsDialog({
           placeholder={t('itemOptionsDialog.notePlaceholder')}
           value={note}
           onChangeText={setNote}
+          onFocus={noteFocus.onFocus}
+          onBlur={noteFocus.onBlur}
         />
       </ScrollView>
     </AppModal>

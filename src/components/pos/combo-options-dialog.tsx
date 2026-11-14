@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
@@ -22,6 +22,7 @@ import { AppModal } from '../ui/app-modal';
 import { Field } from '../ui/field';
 import { Stepper } from '../ui/stepper';
 import { Txt } from '../ui/txt';
+import { useScrollToEndOnKeyboard } from '../ui/use-keyboard';
 import {
   ExtrasPicker,
   extrasFromSelection,
@@ -79,6 +80,8 @@ export function ComboOptionsDialog({
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState('');
   const [parts, setParts] = useState<Record<string, ComponentState>>({});
+  const scrollRef = useRef<ScrollView>(null);
+  const noteFocus = useScrollToEndOnKeyboard(scrollRef);
 
   const stateFor = (component: MenuComboComponent, menuItemId: string): ComponentState => {
     const item = menuById.get(menuItemId);
@@ -152,7 +155,11 @@ export function ComboOptionsDialog({
           disabled: !valid,
         },
       ]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={optionStyles.body}>
+      <ScrollView
+        ref={scrollRef}
+        style={styles.scroll}
+        contentContainerStyle={optionStyles.body}
+        keyboardShouldPersistTaps="handled">
         {combo.description ? (
           <Txt variant="caption" muted>
             {combo.description}
@@ -210,6 +217,8 @@ export function ComboOptionsDialog({
           placeholder={t('itemOptionsDialog.notePlaceholder')}
           value={note}
           onChangeText={setNote}
+          onFocus={noteFocus.onFocus}
+          onBlur={noteFocus.onBlur}
         />
       </ScrollView>
     </AppModal>
