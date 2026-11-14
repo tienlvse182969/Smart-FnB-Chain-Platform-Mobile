@@ -117,7 +117,8 @@
     "searchPlaceholder": "Search items…",
     "noResultsTitle": "No items found",
     "noResultsHint": "Try another keyword or pick \"All\".",
-    "comboTab": "Combos"
+    "comboTab": "Combos",
+    "comboMore": "+{{count}} more"
   },
   "itemOptionsDialog": {
     "qtyLabel": "Quantity",

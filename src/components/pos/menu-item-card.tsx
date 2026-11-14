@@ -35,6 +35,7 @@ export function MenuItemCard({
   onPress,
   onDecrement,
   toggle,
+  details,
   hideImage = false,
 }: {
   item: MenuItem;
@@ -43,6 +44,8 @@ export function MenuItemCard({
   onPress?: () => void;
   onDecrement?: () => void;
   toggle?: MenuCardToggle;
+  /** các dòng mô tả dưới tên (vd. món trong combo) */
+  details?: string[];
   /** thẻ gọn không có ô ảnh (topping) */
   hideImage?: boolean;
 }) {
@@ -126,6 +129,15 @@ export function MenuItemCard({
         <Txt variant="title" numberOfLines={2} style={hideImage ? undefined : styles.name}>
           {item.name}
         </Txt>
+        {details?.length ? (
+          <View style={styles.details}>
+            {details.map((line, index) => (
+              <Txt key={index} variant="caption" muted numberOfLines={2}>
+                {line}
+              </Txt>
+            ))}
+          </View>
+        ) : null}
         {toggle ? (
           <>
             <View style={styles.toggleRow}>
@@ -161,6 +173,8 @@ export function MenuItemCard({
 
 const styles = StyleSheet.create({
   card: {
+    // giãn theo ô cao nhất trong hàng (thẻ combo có thêm danh sách món) → giá các thẻ vẫn nằm đáy
+    flexGrow: 1,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 10,
     overflow: 'hidden',
@@ -199,10 +213,11 @@ const styles = StyleSheet.create({
   },
   stepperBtn: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   stepperQty: { minWidth: 16, textAlign: 'center' },
-  info: { padding: 12, gap: 10 },
+  info: { flexGrow: 1, padding: 12, gap: 10 },
   // đủ chỗ 2 dòng tên (lineHeight 22) để giá các thẻ thẳng hàng
   name: { minHeight: 44 },
-  price: { fontFamily: fontFamily.bold, fontSize: 17 },
+  details: { gap: 2, marginTop: -4 },
+  price: { fontFamily: fontFamily.bold, fontSize: 17, marginTop: 'auto' },
   toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   toggleLabel: { flexShrink: 1 },
 });

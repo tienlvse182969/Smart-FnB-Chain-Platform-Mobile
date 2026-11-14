@@ -117,7 +117,8 @@
     "searchPlaceholder": "Tìm món…",
     "noResultsTitle": "Không tìm thấy món",
     "noResultsHint": "Thử từ khoá khác hoặc chọn \"Tất cả\".",
-    "comboTab": "Combo"
+    "comboTab": "Combo",
+    "comboMore": "+{{count}} món khác"
   },
   "itemOptionsDialog": {
     "qtyLabel": "Số lượng",

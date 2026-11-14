@@ -57,6 +57,21 @@ const comboCard = (combo: MenuCombo): MenuItem => ({
   batchable: true,
 });
 
+/** Hiện tối đa ngần này thành phần trên thẻ combo, còn lại gộp thành "+N món khác". */
+const COMBO_CARD_MAX_LINES = 4;
+
+/** Các món trong combo, hiện dưới tên trên thẻ: món cố định ghi tên, thành phần được chọn ghi các lựa chọn. */
+function comboCardDetails(combo: MenuCombo, more: (count: number) => string): string[] {
+  const lines = combo.components.map((c) => {
+    const qty = c.quantity > 1 ? `${c.quantity}× ` : '';
+    const names = c.type === 'FIXED' ? c.choices[0]?.name ?? c.name : c.choices.map((x) => x.name).join(' / ');
+    return `• ${qty}${names || c.name}`;
+  });
+  if (lines.length <= COMBO_CARD_MAX_LINES) return lines;
+  const shown = lines.slice(0, COMBO_CARD_MAX_LINES - 1);
+  return [...shown, more(lines.length - shown.length)];
+}
+
 /** Dòng mô tả dưới tên món trong giỏ: tuỳ chọn (trừ size), topping, món trong combo, ghi chú. */
 function cartLineDetail(l: CartLine): string[] {
   if (l.combo) {
@@ -174,6 +189,10 @@ export default function PosScreen() {
   const itemWidth = (menuWidth - GRID_PADDING * 2 - GRID_GAP * (columns - 1)) / columns;
 
   const comboById = useMemo(() => new Map(combos.map((c) => [c.id, c])), [combos]);
+  const comboDetailsById = useMemo(
+    () => new Map(combos.map((c) => [c.id, comboCardDetails(c, (count) => t('pos.comboMore', { count }))])),
+    [combos, t],
+  );
   const tabs = useMemo<MenuCategory[]>(
     () =>
       combos.length
@@ -362,6 +381,7 @@ export default function PosScreen() {
                 <MenuItemCard
                   item={item}
                   available={comboById.get(item.id)?.available ?? isMenuAvailable(item.id)}
+                  details={comboDetailsById.get(item.id)}
                   qtyInCart={qtyByMenuItem[item.id] ?? 0}
                   onPress={() => {
                     const combo = comboById.get(item.id);
