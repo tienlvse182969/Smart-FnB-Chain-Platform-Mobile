@@ -232,7 +232,6 @@
   },
   "baristaMenu": {
     "title": "Item check",
-    "subtitle": "Mark items or toppings as out of stock — the cashier can no longer sell them.",
     "searchPlaceholder": "Search items or toppings…",
     "toppingTab": "Toppings",
     "extraGroup": "Add-on topping",
@@ -247,7 +246,16 @@
     "noPortions": "No portions left",
     "loadFailed": "Could not load the menu",
     "updateItemFailed": "Could not update the item",
-    "updateOptionFailed": "Could not update the option"
+    "updateOptionFailed": "Could not update the option",
+    "confirmAvailableTitle": "Confirm available",
+    "confirmUnavailableTitle": "Confirm unavailable",
+    "confirmAvailableBody": "Are you sure \"{{name}}\" is available? The cashier can sell it right away.",
+    "confirmUnavailableBody": "Are you sure \"{{name}}\" is out of stock? The cashier will no longer be able to sell it.",
+    "confirmUnavailableItemNote": "Paid orders containing this item will be marked out of stock and the manager will be notified.",
+    "confirmMarkAvailable": "Available",
+    "confirmMarkUnavailable": "Unavailable",
+    "savedAvailable": "\"{{name}}\" set to available",
+    "savedUnavailable": "\"{{name}}\" set to unavailable"
   },
   "customerDisplay": {
     "label": "Customer display",

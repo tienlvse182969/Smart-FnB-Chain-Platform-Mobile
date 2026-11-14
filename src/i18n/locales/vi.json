@@ -232,7 +232,6 @@
   },
   "baristaMenu": {
     "title": "Kiểm tra món",
-    "subtitle": "Báo hết món hoặc hết topping — quầy thu ngân sẽ không bán được ngay.",
     "searchPlaceholder": "Tìm món hoặc topping…",
     "toppingTab": "Topping",
     "extraGroup": "Topping thêm",
@@ -247,7 +246,16 @@
     "noPortions": "Đã hết số lượng",
     "loadFailed": "Không thể tải danh sách món",
     "updateItemFailed": "Không thể cập nhật món",
-    "updateOptionFailed": "Không thể cập nhật tuỳ chọn"
+    "updateOptionFailed": "Không thể cập nhật tuỳ chọn",
+    "confirmAvailableTitle": "Xác nhận có sẵn",
+    "confirmUnavailableTitle": "Xác nhận không có sẵn",
+    "confirmAvailableBody": "Bạn chắc chắn \"{{name}}\" đang có sẵn? Quầy thu ngân sẽ bán được ngay.",
+    "confirmUnavailableBody": "Bạn chắc chắn \"{{name}}\" đã hết, không còn sẵn? Quầy thu ngân sẽ không bán được ngay.",
+    "confirmUnavailableItemNote": "Các đơn đã thanh toán có món này sẽ chuyển Hết món và báo Quản lý.",
+    "confirmMarkAvailable": "Có sẵn",
+    "confirmMarkUnavailable": "Không có sẵn",
+    "savedAvailable": "Đã đặt \"{{name}}\" có sẵn",
+    "savedUnavailable": "Đã đặt \"{{name}}\" không có sẵn"
   },
   "customerDisplay": {
     "label": "Màn hình khách",

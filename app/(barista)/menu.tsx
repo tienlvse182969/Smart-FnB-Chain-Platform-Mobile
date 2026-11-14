@@ -9,9 +9,11 @@ import { EmptyState } from '@/src/components/empty-state';
 import { ALL_CATEGORIES, MenuCategoryTabs } from '@/src/components/pos/menu-category-tabs';
 import { MenuItemCard, type MenuCardToggle } from '@/src/components/pos/menu-item-card';
 import { ScreenHeader } from '@/src/components/screen-header';
+import { AppModal } from '@/src/components/ui/app-modal';
 import { Field } from '@/src/components/ui/field';
 import { Icon, IconButton } from '@/src/components/ui/icon';
 import { Segmented } from '@/src/components/ui/segmented';
+import { Txt } from '@/src/components/ui/txt';
 import { normalizeText } from '@/src/data/order-utils';
 import { useStore } from '@/src/data/store';
 import type { MenuCategory, MenuItem } from '@/src/data/types';
@@ -86,12 +88,40 @@ export default function BaristaMenuScreen() {
       return next;
     });
 
-  const changeItem = async (id: string, available: boolean) => {
+  // Bật/tắt công tắc chỉ mở hộp xác nhận; công tắc là controlled nên giữ nguyên vị trí cho tới khi
+  // pha chế bấm xác nhận. `pending` được giữ lại khi đóng để nội dung không mất trong hiệu ứng đóng.
+  const [pending, setPending] = useState<{ card: Card; next: boolean } | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const askChange = (card: Card, next: boolean) => {
+    setPending({ card, next });
+    setConfirmOpen(true);
+  };
+
+  const confirmChange = () => {
+    if (!pending || !confirmOpen) return;
+    setConfirmOpen(false);
+    const { card, next } = pending;
+    const change = card.kind === 'item' ? changeItem : card.kind === 'extra' ? changeExtra : changeOption;
+    void change(card.item.id, next, card.item.name);
+  };
+
+  // báo đã lưu xong (sau khi tải lại menu) bằng toast đen có icon giữa màn hình
+  const notifySaved = (name: string, available: boolean) =>
+    toast.success(
+      available ? t('baristaMenu.savedAvailable', { name }) : t('baristaMenu.savedUnavailable', { name }),
+      1.5,
+      undefined,
+      false,
+    );
+
+  const changeItem = async (id: string, available: boolean, name: string) => {
     markWorking(id, true);
     try {
       await updateItem(id, available);
       setMenuAvailability(id, available);
       await reload();
+      notifySaved(name, available);
     } catch (reason) {
       toast.fail(reason instanceof Error ? reason.message : t('baristaMenu.updateItemFailed'), 2, undefined, false);
     } finally {
@@ -99,12 +129,13 @@ export default function BaristaMenuScreen() {
     }
   };
 
-  const changeOption = async (id: string, available: boolean) => {
+  const changeOption = async (id: string, available: boolean, name: string) => {
     markWorking(id, true);
     try {
       await updateOption(id, available);
       setOptionAvailability(id, available);
       await reload();
+      notifySaved(name, available);
     } catch (reason) {
       toast.fail(reason instanceof Error ? reason.message : t('baristaMenu.updateOptionFailed'), 2, undefined, false);
     } finally {
@@ -113,11 +144,12 @@ export default function BaristaMenuScreen() {
   };
 
   // extra không có cờ riêng trong store: lưu xong thì tải lại menu để lấy trạng thái mới
-  const changeExtra = async (id: string, available: boolean) => {
+  const changeExtra = async (id: string, available: boolean, name: string) => {
     markWorking(id, true);
     try {
       await updateExtra(id, available);
       await reload();
+      notifySaved(name, available);
     } catch (reason) {
       toast.fail(reason instanceof Error ? reason.message : t('baristaMenu.updateOptionFailed'), 2, undefined, false);
     } finally {
@@ -225,14 +257,13 @@ export default function BaristaMenuScreen() {
   const toggleFor = (card: Card): MenuCardToggle => {
     const busy = working.has(card.item.id);
     if (card.kind !== 'item') {
-      const change = card.kind === 'extra' ? changeExtra : changeOption;
       return {
         checked: card.branchAvailable,
         disabled: busy || !card.chainAvailable,
         loading: busy,
         note: card.chainAvailable ? undefined : t('baristaMenu.chainDisabled'),
         noteColor: theme.brand_error,
-        onChange: (v) => void change(card.item.id, v),
+        onChange: (v) => askChange(card, v),
       };
     }
     const { item } = card;
@@ -251,14 +282,14 @@ export default function BaristaMenuScreen() {
       loading: busy,
       note,
       noteColor: chainOff || notAssigned ? theme.brand_error : theme.brand_warning,
-      onChange: (v) => void changeItem(item.id, v),
+      onChange: (v) => askChange(card, v),
     };
   };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
       <View style={styles.headerWrap}>
-        <ScreenHeader title={t('baristaMenu.title')} subtitle={t('baristaMenu.subtitle')} />
+        <ScreenHeader title={t('baristaMenu.title')} />
         <Field
           value={query}
           onChangeText={setQuery}
@@ -323,6 +354,30 @@ export default function BaristaMenuScreen() {
           />
         ) : null}
       </View>
+      <AppModal
+        visible={confirmOpen}
+        icon={pending?.next ? 'done' : 'unavailable'}
+        title={pending?.next ? t('baristaMenu.confirmAvailableTitle') : t('baristaMenu.confirmUnavailableTitle')}
+        onClose={() => setConfirmOpen(false)}
+        actions={[
+          { text: t('common.cancel'), onPress: () => setConfirmOpen(false) },
+          {
+            text: pending?.next ? t('baristaMenu.confirmMarkAvailable') : t('baristaMenu.confirmMarkUnavailable'),
+            onPress: confirmChange,
+            primary: true,
+          },
+        ]}>
+        <Txt variant="body" style={styles.confirmText}>
+          {pending?.next
+            ? t('baristaMenu.confirmAvailableBody', { name: pending?.card.item.name ?? '' })
+            : t('baristaMenu.confirmUnavailableBody', { name: pending?.card.item.name ?? '' })}
+        </Txt>
+        {pending && !pending.next && pending.card.kind === 'item' ? (
+          <Txt variant="caption" muted style={styles.confirmText}>
+            {t('baristaMenu.confirmUnavailableItemNote')}
+          </Txt>
+        ) : null}
+      </AppModal>
     </SafeAreaView>
   );
 }
@@ -335,4 +390,5 @@ const styles = StyleSheet.create({
   list: { flex: 1 },
   grid: { gap: GRID_GAP, padding: GRID_PADDING },
   row: { gap: GRID_GAP, alignItems: 'flex-start' },
+  confirmText: { textAlign: 'center' },
 });
