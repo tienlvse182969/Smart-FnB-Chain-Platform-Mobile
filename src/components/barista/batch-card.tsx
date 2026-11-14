@@ -161,10 +161,17 @@ export function BatchCard({
                 <Txt style={styles.callNumber}>{String(e.callNumber).padStart(3, '0')}</Txt>
               </View>
               <View style={styles.cupInfo}>
-                <Txt style={[styles.cupText, extras.length === 0 && styles.cupDefault]}>
-                  {e.line.qty > 1 ? `×${e.line.qty}  ` : ''}
-                  {extras.length ? extras.map((o) => o.label).join(' · ') : t('baristaQueue.defaultOptions')}
-                </Txt>
+                {e.line.qty > 1 ? <Txt style={styles.cupText}>×{e.line.qty}</Txt> : null}
+                {/* Mỗi tuỳ chọn/topping một dòng để pha chế đọc lướt không sót. */}
+                {extras.length ? (
+                  extras.map((o, i) => (
+                    <Txt key={`${o.choiceId}-${i}`} style={styles.cupText}>
+                      • {o.label}
+                    </Txt>
+                  ))
+                ) : (
+                  <Txt style={[styles.cupText, styles.cupDefault]}>{t('baristaQueue.defaultOptions')}</Txt>
+                )}
                 {e.line.note ? (
                   <Txt style={styles.note} numberOfLines={2}>
                     ✎ {e.line.note}

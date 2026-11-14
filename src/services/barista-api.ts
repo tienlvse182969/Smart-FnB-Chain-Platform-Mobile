@@ -8,7 +8,14 @@ type ApiOptionSnapshot = {
   groupName?: string;
   name?: string;
   priceDelta?: string;
+  /** 'EXTRA' = topping tính theo phần; tuỳ chọn thường không có trường này */
+  kind?: string;
+  /** số phần topping khách chọn (chỉ có ở topping) */
+  quantity?: number;
 };
+
+const isExtraSnapshot = (option: ApiOptionSnapshot) =>
+  option.kind === 'EXTRA' || option.groupCode === 'EXTRA';
 
 type ApiBatch = {
   id: string;
@@ -37,16 +44,29 @@ export type ReadyCounterOrder = {
   items: { id: string; itemName: string; quantity: number }[];
 };
 
+/**
+ * Snapshot tuỳ chọn của dòng đơn → OrderOption. Backend lưu topping trước tuỳ chọn và kèm số phần
+ * (`quantity`); ở đây đưa tuỳ chọn lên trước, topping ghi giống giỏ POS ("+Trân châu đen ×2").
+ */
 export function mapOptions(value: unknown): OrderOption[] {
   if (!Array.isArray(value)) return [];
-  return (value as ApiOptionSnapshot[]).map((option) => ({
-    groupId: option.groupCode?.toLowerCase() === 'size' ? 'size' : option.groupId ?? '',
-    groupLabel: option.groupName ?? '',
-    choiceId: option.id ?? '',
-    label: option.name ?? '',
-    priceDelta: Number(option.priceDelta ?? 0),
-    isDefault: false,
-  }));
+  const snapshots = value as ApiOptionSnapshot[];
+  const ordered = [
+    ...snapshots.filter((option) => !isExtraSnapshot(option)),
+    ...snapshots.filter(isExtraSnapshot),
+  ];
+  return ordered.map((option) => {
+    const extra = isExtraSnapshot(option);
+    const qty = Number(option.quantity ?? 1);
+    return {
+      groupId: option.groupCode?.toLowerCase() === 'size' ? 'size' : option.groupId ?? (extra ? 'extra' : ''),
+      groupLabel: option.groupName ?? '',
+      choiceId: option.id ?? '',
+      label: extra ? `+${option.name ?? ''}${qty > 1 ? ` ×${qty}` : ''}` : option.name ?? '',
+      priceDelta: Number(option.priceDelta ?? 0),
+      isDefault: false,
+    };
+  });
 }
 
 export async function loadBaristaQueue(): Promise<Batch[]> {

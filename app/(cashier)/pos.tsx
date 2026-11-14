@@ -72,29 +72,33 @@ function comboCardDetails(combo: MenuCombo, more: (count: number) => string): st
   return [...shown, more(lines.length - shown.length)];
 }
 
-/** Dòng mô tả dưới tên món trong giỏ: tuỳ chọn (trừ size), topping, món trong combo, ghi chú. */
+/**
+ * Dòng mô tả dưới tên món trong giỏ, mỗi tuỳ chọn một dòng: tuỳ chọn (trừ size), topping,
+ * món trong combo (tuỳ chọn của từng món thụt vào bên dưới), ghi chú.
+ */
 function cartLineDetail(l: CartLine): string[] {
+  const note = l.note ? [`“${l.note}”`] : [];
   if (l.combo) {
     return [
-      ...l.combo.components.map((c) => {
+      ...l.combo.components.flatMap((c) => {
         const size = c.options.find((o) => o.groupId === 'size');
         const rest = [
           ...c.options.filter((o) => o.groupId !== 'size').map((o) => o.label),
           ...c.extras.map(extraLabel),
-        ].join(' · ');
-        return `• ${c.quantity > 1 ? `${c.quantity}× ` : ''}${c.itemName}${size ? ` (${size.label})` : ''}${rest ? ` · ${rest}` : ''}`;
+        ];
+        return [
+          `• ${c.quantity > 1 ? `${c.quantity}× ` : ''}${c.itemName}${size ? ` (${size.label})` : ''}`,
+          ...rest.map((label) => `    – ${label}`),
+        ];
       }),
-      ...(l.note ? [`“${l.note}”`] : []),
+      ...note,
     ];
   }
-  const detail = [
-    ...l.options.filter((o) => o.groupId !== 'size').map((o) => o.label),
-    ...(l.extras ?? []).map(extraLabel),
-    l.note ? `“${l.note}”` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-  return detail ? [detail] : [];
+  return [
+    ...l.options.filter((o) => o.groupId !== 'size').map((o) => `• ${o.label}`),
+    ...(l.extras ?? []).map((e) => `• ${extraLabel(e)}`),
+    ...note,
+  ];
 }
 
 /** POS tạo đơn tại quầy (CS-01): chọn món + tuỳ chọn, giỏ ở cột phải, chốt đơn rồi thu tiền. */
@@ -299,7 +303,7 @@ export default function PosScreen() {
                   <Txt variant="bodyStrong">{formatVnd(l.unitPrice * l.qty)}</Txt>
                 </View>
                 {detail ? (
-                  <Txt variant="caption" muted numberOfLines={l.combo ? 8 : 3}>
+                  <Txt variant="caption" muted>
                     {detail}
                   </Txt>
                 ) : null}
