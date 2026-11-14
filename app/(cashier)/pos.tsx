@@ -181,7 +181,6 @@ export default function PosScreen() {
         : categories,
     [combos.length, categories, t],
   );
-  const categoryLabel = (id: string) => tabs.find((c) => c.id === id)?.label ?? '';
   // lọc theo danh mục ("Tất cả" = mọi món + combo) VÀ từ khoá; tìm không phân biệt hoa/thường, không dấu
   const visibleMenu = useMemo(() => {
     const q = normalizeText(query);
@@ -362,7 +361,6 @@ export default function PosScreen() {
               <View style={{ width: itemWidth }}>
                 <MenuItemCard
                   item={item}
-                  categoryLabel={categoryLabel(item.categoryId)}
                   available={comboById.get(item.id)?.available ?? isMenuAvailable(item.id)}
                   qtyInCart={qtyByMenuItem[item.id] ?? 0}
                   onPress={() => {

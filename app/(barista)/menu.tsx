@@ -289,15 +289,21 @@ export default function BaristaMenuScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'right', 'bottom']}>
       <View style={styles.headerWrap}>
-        <ScreenHeader title={t('baristaMenu.title')} />
-        <Field
-          value={query}
-          onChangeText={setQuery}
-          placeholder={t('baristaMenu.searchPlaceholder')}
-          autoCorrect={false}
-          autoCapitalize="none"
-          left={<Icon name="search" size={16} color={theme.color_text_caption} />}
-          right={query ? <IconButton name="clear" size={16} onPress={() => setQuery('')} /> : undefined}
+        <ScreenHeader
+          title={t('baristaMenu.title')}
+          right={
+            <Field
+              // ô tìm nằm bên phải tiêu đề: rộng tối đa 360, co lại trên màn hẹp để tiêu đề còn chỗ
+              containerStyle={{ width: Math.min(360, Math.max(220, width / 2)) }}
+              value={query}
+              onChangeText={setQuery}
+              placeholder={t('baristaMenu.searchPlaceholder')}
+              autoCorrect={false}
+              autoCapitalize="none"
+              left={<Icon name="search" size={16} color={theme.color_text_caption} />}
+              right={query ? <IconButton name="clear" size={16} onPress={() => setQuery('')} /> : undefined}
+            />
+          }
         />
       </View>
       <View style={styles.tabsWrap}>
@@ -344,7 +350,6 @@ export default function BaristaMenuScreen() {
               <View style={{ width: itemWidth }}>
                 <MenuItemCard
                   item={card.item}
-                  categoryLabel={card.label}
                   available={card.item.available}
                   hideImage={card.kind !== 'item'}
                   toggle={toggleFor(card)}

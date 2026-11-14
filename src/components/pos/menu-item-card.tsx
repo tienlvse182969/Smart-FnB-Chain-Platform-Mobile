@@ -7,6 +7,7 @@ import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { formatVnd } from '@/src/data/format';
 import type { MenuItem } from '@/src/data/types';
+import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { Icon } from '../ui/icon';
 import { Txt } from '../ui/txt';
@@ -29,7 +30,6 @@ export type MenuCardToggle = {
 
 export function MenuItemCard({
   item,
-  categoryLabel,
   available,
   qtyInCart = 0,
   onPress,
@@ -38,7 +38,6 @@ export function MenuItemCard({
   hideImage = false,
 }: {
   item: MenuItem;
-  categoryLabel: string;
   available: boolean;
   qtyInCart?: number;
   onPress?: () => void;
@@ -124,14 +123,11 @@ export function MenuItemCard({
       )}
 
       <View style={styles.info}>
-        <Txt variant="bodyStrong" numberOfLines={2} style={hideImage ? undefined : styles.name}>
+        <Txt variant="title" numberOfLines={2} style={hideImage ? undefined : styles.name}>
           {item.name}
         </Txt>
         {toggle ? (
           <>
-            <Txt variant="tiny" muted numberOfLines={1}>
-              {categoryLabel}
-            </Txt>
             <View style={styles.toggleRow}>
               <Switch
                 checked={toggle.checked}
@@ -154,12 +150,9 @@ export function MenuItemCard({
             ) : null}
           </>
         ) : (
-          <View style={styles.footRow}>
-            <Txt variant="body">{formatVnd(item.price)}</Txt>
-            <Txt variant="tiny" muted numberOfLines={1} style={styles.category}>
-              {categoryLabel}
-            </Txt>
-          </View>
+          <Txt variant="title" style={styles.price}>
+            {formatVnd(item.price)}
+          </Txt>
         )}
       </View>
     </Pressable>
@@ -207,9 +200,9 @@ const styles = StyleSheet.create({
   stepperBtn: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   stepperQty: { minWidth: 16, textAlign: 'center' },
   info: { padding: 12, gap: 10 },
-  name: { minHeight: 40 },
-  footRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 6 },
-  category: { flexShrink: 1 },
+  // đủ chỗ 2 dòng tên (lineHeight 22) để giá các thẻ thẳng hàng
+  name: { minHeight: 44 },
+  price: { fontFamily: fontFamily.bold, fontSize: 17 },
   toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   toggleLabel: { flexShrink: 1 },
 });
