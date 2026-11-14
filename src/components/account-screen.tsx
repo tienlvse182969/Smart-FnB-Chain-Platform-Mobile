@@ -25,8 +25,17 @@ const initials = (name: string) =>
 /**
  * Màn hình tài khoản dùng chung cho Cashier và Barista — mở khi bấm avatar ở NavRail.
  * `children` = mục riêng của từng vai trò, hiện ngay dưới thẻ hồ sơ.
+ * `settings` = cài đặt thiết bị riêng của vai trò, hiện thành thẻ dưới thẻ Ngôn ngữ.
  */
-export function AccountScreen({ role, children }: { role: StaffRole; children?: ReactNode }) {
+export function AccountScreen({
+  role,
+  children,
+  settings,
+}: {
+  role: StaffRole;
+  children?: ReactNode;
+  settings?: ReactNode;
+}) {
   const theme = useAppTheme();
   const { t, i18n } = useTranslation();
   const { state, checkOut } = useStore();
@@ -92,6 +101,7 @@ export function AccountScreen({ role, children }: { role: StaffRole; children?: 
             style={styles.languageSegmented}
           />
         </View>
+        {settings ? <View style={cardStyle}>{settings}</View> : null}
 
         <Btn
           label={t('account.logout')}

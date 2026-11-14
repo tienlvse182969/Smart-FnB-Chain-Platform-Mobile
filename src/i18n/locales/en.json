@@ -46,6 +46,10 @@
       "vi": "Tiếng Việt",
       "en": "English"
     },
+    "newOrderSound": {
+      "label": "New order sound",
+      "description": "Play a sound when a new item enters the prep queue"
+    },
     "simulatePrinterFail": "Simulate: printer error",
     "simulatePrinterFailHint": "Orders paid while this is on show Print failed (nothing is really printed)."
   },
@@ -226,8 +230,6 @@
     "handOver": "Handed over",
     "outOfStockTitle": "Paid but out of stock — tell the manager",
     "outOfStockItem": "#{{call}} · {{name}}",
-    "newOrderBanner": "New order #{{call}}",
-    "newOrderMore": "+{{count}} more",
     "showMoreCups": "+{{count}} more servings",
     "showLessCups": "Show less"
   },

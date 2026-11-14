@@ -101,6 +101,8 @@ export function BatchCard({
   const level = LEVEL_COLOR[waitLevelOf(batch.oldestPaidAt, now)];
   const lineIds = batch.entries.map((e) => e.line.id);
   const started = batch.state === 'started';
+  // Mẻ chỉ một phần: không cần nút Xong từng phần, nút dưới chỉ ghi "Xong".
+  const single = batch.entries.length === 1;
   // Giới hạn số dòng ly để các thẻ trong grid không chênh chiều cao quá nhiều.
   const hiddenCount = expanded ? 0 : Math.max(0, batch.entries.length - MAX_VISIBLE_CUPS);
   const visibleEntries = hiddenCount > 0 ? batch.entries.slice(0, MAX_VISIBLE_CUPS) : batch.entries;
@@ -178,7 +180,7 @@ export function BatchCard({
                   </Txt>
                 ) : null}
               </View>
-              {started ? (
+              {started && !single ? (
                 <BigButton
                   small
                   label={t('baristaQueue.finishCup')}
@@ -207,7 +209,7 @@ export function BatchCard({
       <View style={styles.btnRow}>
         {started ? (
           <BigButton
-            label={t('baristaQueue.finishBatch')}
+            label={single ? t('baristaQueue.finishCup') : t('baristaQueue.finishBatch')}
             icon="done"
             active
             flex
