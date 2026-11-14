@@ -229,6 +229,7 @@ export default function BaristaMenuScreen() {
       return {
         checked: card.branchAvailable,
         disabled: busy || !card.chainAvailable,
+        loading: busy,
         note: card.chainAvailable ? undefined : t('baristaMenu.chainDisabled'),
         noteColor: theme.brand_error,
         onChange: (v) => void change(card.item.id, v),
@@ -247,6 +248,7 @@ export default function BaristaMenuScreen() {
     return {
       checked: isChecked(card),
       disabled: busy || chainOff || notAssigned,
+      loading: busy,
       note,
       noteColor: chainOff || notAssigned ? theme.brand_error : theme.brand_warning,
       onChange: (v) => void changeItem(item.id, v),

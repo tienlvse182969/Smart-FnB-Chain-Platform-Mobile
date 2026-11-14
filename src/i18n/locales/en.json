@@ -220,6 +220,7 @@
     "finishCup": "Done",
     "inProgress": "In progress",
     "readyTitle": "Ready for pickup",
+    "readyCount": "{{count}} waiting for pickup",
     "readyEmpty": "No orders waiting for pickup.",
     "handOver": "Handed over",
     "outOfStockTitle": "Paid but out of stock — tell the manager",

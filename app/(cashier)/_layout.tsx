@@ -18,7 +18,7 @@ export default function CashierLayout() {
   const isPortrait = height >= width;
   const compact = isPortrait ? false : width < 820;
   const { state } = useStore();
-  const { user, loading } = useAuth();
+  const { user, displayName, loading } = useAuth();
   const { selectedStation, loading: stationLoading } = useStation();
 
   // chưa đăng nhập hoặc sai vai trò → về màn hình đăng nhập
@@ -31,7 +31,8 @@ export default function CashierLayout() {
     { href: '/(cashier)/pos', match: '/pos', label: t('nav.cashier.pos'), icon: 'pos' },
     { href: '/(cashier)/orders', match: '/orders', label: t('nav.cashier.orders'), icon: 'orders' },
   ];
-  const staffName = state.currentUser?.name ?? user.email;
+  // tên tài khoản (họ tên nhân viên) dưới avatar; chỉ khi không biết tên mới hiện email
+  const staffName = state.currentUser?.name || displayName || user.email;
 
   return (
     <CustomerDisplayProvider station={selectedStation}>

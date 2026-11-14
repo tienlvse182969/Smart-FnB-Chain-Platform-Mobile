@@ -14,7 +14,7 @@ export default function BaristaLayout() {
   const isPortrait = height >= width;
   const compact = isPortrait ? false : width < 820;
   const { state } = useStore();
-  const { user, loading } = useAuth();
+  const { user, displayName, loading } = useAuth();
 
   // chưa đăng nhập hoặc sai vai trò → về màn hình đăng nhập
   if (loading) return null;
@@ -29,7 +29,8 @@ export default function BaristaLayout() {
     },
     { href: '/(barista)/menu', match: '/menu', label: t('nav.barista.menu'), icon: 'grid' },
   ];
-  const staffName = state.currentUser?.name ?? user.email;
+  // tên tài khoản (họ tên nhân viên) dưới avatar; chỉ khi không biết tên mới hiện email
+  const staffName = state.currentUser?.name || displayName || user.email;
 
   return (
     <View
@@ -44,7 +45,6 @@ export default function BaristaLayout() {
           dests={dests}
           staffName={staffName}
           staffHref="/(barista)/account"
-          size="lg"
         />
       ) : null}
       <View style={styles.content}>

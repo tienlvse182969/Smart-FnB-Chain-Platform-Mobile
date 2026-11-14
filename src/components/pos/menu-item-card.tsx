@@ -20,6 +20,8 @@ export type MenuCardToggle = {
   onChange: (value: boolean) => void;
   /** khoá công tắc (Owner đã tắt, món chưa gán chi nhánh, đang lưu…) */
   disabled?: boolean;
+  /** đang lưu → công tắc hiện vòng quay */
+  loading?: boolean;
   /** lý do khoá / ghi chú hiển thị dưới công tắc */
   note?: string;
   noteColor?: string;
@@ -131,7 +133,12 @@ export function MenuItemCard({
               {categoryLabel}
             </Txt>
             <View style={styles.toggleRow}>
-              <Switch checked={toggle.checked} disabled={toggle.disabled} onChange={toggle.onChange} />
+              <Switch
+                checked={toggle.checked}
+                disabled={toggle.disabled}
+                loading={toggle.loading}
+                onChange={toggle.onChange}
+              />
               <Txt
                 variant="label"
                 numberOfLines={1}

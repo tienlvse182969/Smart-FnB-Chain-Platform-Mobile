@@ -220,6 +220,7 @@
     "finishCup": "Xong",
     "inProgress": "Đang làm",
     "readyTitle": "Sẵn sàng nhận",
+    "readyCount": "{{count}} đơn chờ nhận",
     "readyEmpty": "Chưa có đơn nào chờ khách nhận.",
     "handOver": "Đã giao",
     "outOfStockTitle": "Đã trả tiền nhưng hết món — báo Quản lý",

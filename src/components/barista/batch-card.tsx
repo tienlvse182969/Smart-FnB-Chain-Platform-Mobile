@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 // Image của React Native, không dùng expo-image — xem lý do ở MenuItemCard (blur của AppModal).
-import { Image, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { waitLevelOf } from '@/src/data/batching';
 import { durationSince } from '@/src/data/format';
@@ -28,12 +28,21 @@ function BigButton({
   active,
   onPress,
   flex,
+  small,
+  loading,
+  disabled,
 }: {
   label: string;
   icon?: 'play' | 'check' | 'done';
   active?: boolean;
   onPress: () => void;
   flex?: boolean;
+  /** nút gọn trên từng dòng ly — chừa chỗ cho chữ tuỳ chọn khi thẻ hẹp */
+  small?: boolean;
+  /** đang gửi thao tác của chính nút này → vòng quay thay icon (nút gọn: thay chữ) */
+  loading?: boolean;
+  /** đang có thao tác khác chạy → khoá và làm mờ */
+  disabled?: boolean;
 }) {
   const theme = useAppTheme();
   const bg = active ? theme.brand_primary : theme.fill_base;
@@ -41,14 +50,21 @@ function BigButton({
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled || loading}
       style={({ pressed }) => [
         styles.bigBtn,
+        small && styles.smallBtn,
         flex && { flexGrow: 1 },
         { backgroundColor: bg, borderColor: theme.border_color_base },
+        disabled && !loading && styles.btnDisabled,
         pressed && { opacity: 0.7 },
       ]}>
-      {icon ? <Icon name={icon} size={19} color={fg} /> : null}
-      <Txt style={[styles.bigBtnText, { color: fg }]}>{label}</Txt>
+      {loading ? (
+        <ActivityIndicator size="small" color={fg} />
+      ) : icon ? (
+        <Icon name={icon} size={19} color={fg} />
+      ) : null}
+      {loading && small ? null : <Txt style={[styles.bigBtnText, { color: fg }]}>{label}</Txt>}
     </Pressable>
   );
 }
@@ -64,13 +80,20 @@ export function BatchCard({
   now,
   onStart,
   onFinish,
+  busy,
+  disabled,
 }: {
   batch: Batch;
   /** ảnh minh hoạ món (lấy từ menu theo menuItemId); thiếu thì hiện ô thay thế */
   image?: string;
   now: number;
   onStart: (lineIds: string[]) => void;
-  onFinish: (lineIds: string[]) => void;
+  /** `part`: 'all' = Xong tất cả, hoặc id dòng ly khi bấm Xong từng ly — để hiện vòng quay đúng nút */
+  onFinish: (lineIds: string[], part: string) => void;
+  /** nút đang xử lý trong thẻ này: 'start' | 'all' | id dòng ly */
+  busy?: string | null;
+  /** đang có thao tác khác chạy trên màn hình → khoá các nút */
+  disabled?: boolean;
 }) {
   const theme = useAppTheme();
   const { t } = useTranslation();
@@ -149,7 +172,13 @@ export function BatchCard({
                 ) : null}
               </View>
               {started ? (
-                <BigButton label={t('baristaQueue.finishCup')} icon="check" onPress={() => onFinish([e.line.id])} />
+                <BigButton
+                  small
+                  label={t('baristaQueue.finishCup')}
+                  loading={busy === e.line.id}
+                  disabled={disabled}
+                  onPress={() => onFinish([e.line.id], e.line.id)}
+                />
               ) : null}
             </View>
           );
@@ -175,10 +204,20 @@ export function BatchCard({
             icon="done"
             active
             flex
-            onPress={() => onFinish(lineIds)}
+            loading={busy === 'all'}
+            disabled={disabled}
+            onPress={() => onFinish(lineIds, 'all')}
           />
         ) : (
-          <BigButton label={t('baristaQueue.startBatch')} icon="play" active flex onPress={() => onStart(lineIds)} />
+          <BigButton
+            label={t('baristaQueue.startBatch')}
+            icon="play"
+            active
+            flex
+            loading={busy === 'start'}
+            disabled={disabled}
+            onPress={() => onStart(lineIds)}
+          />
         )}
       </View>
     </View>
@@ -186,23 +225,24 @@ export function BatchCard({
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 6, padding: 14, gap: 10, overflow: 'hidden' },
+  // flexGrow: giãn bằng thẻ cao nhất cùng hàng trong lưới; nút bấm luôn nằm đáy thẻ (btnRow marginTop auto)
+  card: { flexGrow: 1, borderRadius: 6, padding: 14, gap: 10, overflow: 'hidden' },
   levelStrip: { position: 'absolute', top: 0, left: 0, right: 0, height: 6 },
   headRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   thumb: { width: 64, height: 64, borderRadius: 8 },
   thumbPlaceholder: { alignItems: 'center', justifyContent: 'center' },
   head: { flex: 1, gap: 4 },
-  name: { fontFamily: fontFamily.bold, fontSize: 19, lineHeight: 24 },
+  name: { fontFamily: fontFamily.bold, fontSize: 17, lineHeight: 22 },
   metaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  meta: { flexShrink: 1, fontSize: 15 },
+  meta: { flexShrink: 1, fontSize: 14 },
   waitBadge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1 },
-  wait: { fontFamily: fontFamily.bold, fontSize: 14, lineHeight: 20 },
+  wait: { fontFamily: fontFamily.bold, fontSize: 13, lineHeight: 18 },
   moreBtn: { alignSelf: 'flex-start', paddingVertical: 4 },
-  moreText: { fontFamily: fontFamily.bold, fontSize: 14, textDecorationLine: 'underline' },
+  moreText: { fontFamily: fontFamily.bold, fontSize: 13, textDecorationLine: 'underline' },
   cups: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 8, gap: 8 },
-  cupRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  cupRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   callChip: {
-    minWidth: 56,
+    minWidth: 52,
     height: 40,
     borderRadius: 8,
     borderWidth: 1,
@@ -210,12 +250,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 8,
   },
-  callNumber: { fontFamily: fontFamily.black, fontSize: 18, lineHeight: 24 },
+  callNumber: { fontFamily: fontFamily.black, fontSize: 16, lineHeight: 22 },
   cupInfo: { flex: 1, gap: 2 },
-  cupText: { fontFamily: fontFamily.bold, fontSize: 16, lineHeight: 22 },
+  cupText: { fontFamily: fontFamily.bold, fontSize: 14, lineHeight: 20 },
   cupDefault: { fontFamily: fontFamily.regular, opacity: 0.55 },
-  note: { fontFamily: fontFamily.bold, fontSize: 15 },
-  btnRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  note: { fontFamily: fontFamily.bold, fontSize: 13 },
+  btnRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 'auto' },
   bigBtn: {
     minHeight: 48,
     minWidth: 80,
@@ -227,5 +267,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 14,
   },
-  bigBtnText: { fontFamily: fontFamily.bold, fontSize: 17 },
+  smallBtn: { minWidth: 60, paddingHorizontal: 10 },
+  btnDisabled: { opacity: 0.45 },
+  bigBtnText: { fontFamily: fontFamily.bold, fontSize: 15 },
 });
