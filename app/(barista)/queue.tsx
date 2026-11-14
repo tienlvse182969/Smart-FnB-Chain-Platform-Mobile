@@ -17,6 +17,7 @@ import type { Batch } from '@/src/data/types';
 import { useNow } from '@/src/data/use-now';
 import { completeUnit, deliverOrder, loadBaristaQueue, loadReadyOrders, startBatch, type ReadyCounterOrder } from '@/src/services/barista-api';
 import { loadBaristaMenu } from '@/src/services/cashier-api';
+import { useNewOrderSound } from '@/src/services/new-order-sound';
 import { notifyPager, pagerErrorMessage } from '@/src/services/pager-api';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
@@ -40,6 +41,8 @@ export default function BaristaQueueScreen() {
   const now = useNow(15_000);
   const { state, replaceMenu } = useStore();
   const [batches, setBatches] = useState<Batch[]>([]);
+  /** đã tải hàng đợi thành công ít nhất một lần — trước đó chưa so được món mới */
+  const [queueLoaded, setQueueLoaded] = useState(false);
   const [readyOrders, setReadyOrders] = useState<ReadyCounterOrder[]>([]);
   const [loading, setLoading] = useState(true);
   /** Thao tác đang gửi (để hiện vòng quay đúng nút): `<batchKey>:start|all|<lineId>` hoặc `deliver:<orderId>`. */
@@ -53,6 +56,7 @@ export default function BaristaQueueScreen() {
     try {
       const [queue, ready, menu] = await Promise.all([loadBaristaQueue(), loadReadyOrders(), loadBaristaMenu()]);
       setBatches(queue);
+      setQueueLoaded(true);
       setReadyOrders(ready);
       replaceMenu(menu.menu, menu.categories);
     } catch (reason) {
@@ -67,6 +71,13 @@ export default function BaristaQueueScreen() {
     const timer = setInterval(() => void refresh(), 5_000);
     return () => clearInterval(timer);
   }, [refresh]);
+
+  // Âm báo khi có ly/phần mới vào hàng đợi (mọi loại, không theo bộ lọc Đồ uống/Đồ ăn).
+  const unitIds = useMemo(
+    () => (queueLoaded ? batches.flatMap((b) => b.entries.map((e) => e.line.id)) : null),
+    [batches, queueLoaded],
+  );
+  useNewOrderSound(unitIds);
 
   // Vòng quay giữ tới khi tải lại xong để thẻ không nháy về trạng thái cũ trước khi cập nhật.
   const mutate = async (key: string, action: () => Promise<unknown>) => {

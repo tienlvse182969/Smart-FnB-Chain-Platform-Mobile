@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   BackHandler,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   StyleSheet,
   useWindowDimensions,
@@ -20,6 +18,7 @@ import { GlassLayer } from './glass/glass-layer';
 import type { GlassBackdrop, WindowRect } from './glass/types';
 import { Icon, type IconName } from './icon';
 import { Txt } from './txt';
+import { useKeyboardHeight } from './use-keyboard';
 
 type ModalAction = { text: string; onPress: () => void; primary?: boolean; disabled?: boolean };
 
@@ -62,6 +61,7 @@ export function AppModal({
   const { width } = useWindowDimensions();
   const dialogWidth = Math.min(maxWidth, width - 48);
   const capture = useBackdropCapture();
+  const keyboardHeight = useKeyboardHeight();
 
   // Giữ modal trong cây thêm một nhịp sau khi `visible` = false để chạy hiệu ứng đóng.
   const [mounted, setMounted] = useState(false);
@@ -137,10 +137,9 @@ export function AppModal({
       <View ref={wrapperRef} style={StyleSheet.absoluteFill} pointerEvents={visible ? 'auto' : 'none'}>
         <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, fadeStyle]} />
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessible={false} />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.center}
-          pointerEvents="box-none">
+        {/* Chừa chỗ cho bàn phím: khung căn giữa phần màn hình còn lại, và co lại (ScrollView bên
+            trong cuộn được) nếu không đủ cao. Không dùng KeyboardAvoidingView vì Android edge-to-edge. */}
+        <View style={[styles.center, { paddingBottom: keyboardHeight + 16 }]} pointerEvents="box-none">
           <Animated.View onLayout={onDialogLayout} style={[styles.dialog, { width: dialogWidth }, dialogStyle]}>
             <GlassLayer frame={frame} backdrop={backdrop} blur={GLASS_BLUR} veil={GLASS_VEIL} />
             <View style={styles.body}>
@@ -168,7 +167,7 @@ export function AppModal({
               ) : null}
             </View>
           </Animated.View>
-        </KeyboardAvoidingView>
+        </View>
       </View>
     </Portal>
   );
@@ -176,16 +175,18 @@ export function AppModal({
 
 const styles = StyleSheet.create({
   backdrop: { backgroundColor: BACKDROP },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 16 },
   dialog: {
+    maxHeight: '100%',
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: GLASS_BORDER,
   },
-  body: { paddingTop: 20, paddingHorizontal: 20, paddingBottom: 20 },
+  // flexShrink để khi bàn phím mở, phần nội dung (ScrollView) co lại thay vì tràn khỏi khung.
+  body: { flexShrink: 1, paddingTop: 20, paddingHorizontal: 20, paddingBottom: 20 },
   icon: { alignItems: 'center', marginBottom: 10 },
   title: { marginBottom: 12, textAlign: 'center', fontFamily: fontFamily.semibold },
-  content: { gap: 10 },
+  content: { flexShrink: 1, gap: 10 },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 18 },
 });

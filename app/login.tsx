@@ -144,7 +144,7 @@ export default function LoginScreen() {
   const roleLabel = (role: RecentAccount['role']) => (role === 'CASHIER' ? 'Thu ngân' : 'Bếp & pha chế');
 
   return (
-    <ImageBackground source={LOGIN_BACKGROUND} style={styles.safe} resizeMode="cover">
+    <ImageBackground source={LOGIN_BACKGROUND} style={styles.safe} imageStyle={styles.backgroundImage} resizeMode="cover">
     <View ref={backgroundRef} collapsable={false} pointerEvents="none" style={StyleSheet.absoluteFill} onLayout={measureBackground} />
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView style={styles.safe} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -219,6 +219,8 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
+  // Web: không có width/height thì Image lấy kích thước gốc của ảnh (1280×853) → màn lớn hơn lộ nền trắng.
+  backgroundImage: { width: '100%', height: '100%' },
   center: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   card: {
     width: '100%',

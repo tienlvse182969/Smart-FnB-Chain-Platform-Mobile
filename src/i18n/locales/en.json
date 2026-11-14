@@ -46,6 +46,10 @@
       "vi": "Tiếng Việt",
       "en": "English"
     },
+    "newOrderSound": {
+      "label": "New order sound",
+      "description": "Play a sound when a new item enters the prep queue"
+    },
     "simulatePrinterFail": "Simulate: printer error",
     "simulatePrinterFailHint": "Orders paid while this is on show Print failed (nothing is really printed)."
   },
@@ -117,7 +121,8 @@
     "searchPlaceholder": "Search items…",
     "noResultsTitle": "No items found",
     "noResultsHint": "Try another keyword or pick \"All\".",
-    "comboTab": "Combos"
+    "comboTab": "Combos",
+    "comboMore": "+{{count}} more"
   },
   "itemOptionsDialog": {
     "qtyLabel": "Quantity",
@@ -225,8 +230,6 @@
     "handOver": "Handed over",
     "outOfStockTitle": "Paid but out of stock — tell the manager",
     "outOfStockItem": "#{{call}} · {{name}}",
-    "newOrderBanner": "New order #{{call}}",
-    "newOrderMore": "+{{count}} more",
     "showMoreCups": "+{{count}} more servings",
     "showLessCups": "Show less"
   },

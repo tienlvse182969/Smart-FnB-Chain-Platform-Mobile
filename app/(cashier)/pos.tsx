@@ -57,29 +57,48 @@ const comboCard = (combo: MenuCombo): MenuItem => ({
   batchable: true,
 });
 
-/** Dòng mô tả dưới tên món trong giỏ: tuỳ chọn (trừ size), topping, món trong combo, ghi chú. */
+/** Hiện tối đa ngần này thành phần trên thẻ combo, còn lại gộp thành "+N món khác". */
+const COMBO_CARD_MAX_LINES = 4;
+
+/** Các món trong combo, hiện dưới tên trên thẻ: món cố định ghi tên, thành phần được chọn ghi các lựa chọn. */
+function comboCardDetails(combo: MenuCombo, more: (count: number) => string): string[] {
+  const lines = combo.components.map((c) => {
+    const qty = c.quantity > 1 ? `${c.quantity}× ` : '';
+    const names = c.type === 'FIXED' ? c.choices[0]?.name ?? c.name : c.choices.map((x) => x.name).join(' / ');
+    return `• ${qty}${names || c.name}`;
+  });
+  if (lines.length <= COMBO_CARD_MAX_LINES) return lines;
+  const shown = lines.slice(0, COMBO_CARD_MAX_LINES - 1);
+  return [...shown, more(lines.length - shown.length)];
+}
+
+/**
+ * Dòng mô tả dưới tên món trong giỏ, mỗi tuỳ chọn một dòng: tuỳ chọn (trừ size), topping,
+ * món trong combo (tuỳ chọn của từng món thụt vào bên dưới), ghi chú.
+ */
 function cartLineDetail(l: CartLine): string[] {
+  const note = l.note ? [`“${l.note}”`] : [];
   if (l.combo) {
     return [
-      ...l.combo.components.map((c) => {
+      ...l.combo.components.flatMap((c) => {
         const size = c.options.find((o) => o.groupId === 'size');
         const rest = [
           ...c.options.filter((o) => o.groupId !== 'size').map((o) => o.label),
           ...c.extras.map(extraLabel),
-        ].join(' · ');
-        return `• ${c.quantity > 1 ? `${c.quantity}× ` : ''}${c.itemName}${size ? ` (${size.label})` : ''}${rest ? ` · ${rest}` : ''}`;
+        ];
+        return [
+          `• ${c.quantity > 1 ? `${c.quantity}× ` : ''}${c.itemName}${size ? ` (${size.label})` : ''}`,
+          ...rest.map((label) => `    – ${label}`),
+        ];
       }),
-      ...(l.note ? [`“${l.note}”`] : []),
+      ...note,
     ];
   }
-  const detail = [
-    ...l.options.filter((o) => o.groupId !== 'size').map((o) => o.label),
-    ...(l.extras ?? []).map(extraLabel),
-    l.note ? `“${l.note}”` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-  return detail ? [detail] : [];
+  return [
+    ...l.options.filter((o) => o.groupId !== 'size').map((o) => `• ${o.label}`),
+    ...(l.extras ?? []).map((e) => `• ${extraLabel(e)}`),
+    ...note,
+  ];
 }
 
 /** POS tạo đơn tại quầy (CS-01): chọn món + tuỳ chọn, giỏ ở cột phải, chốt đơn rồi thu tiền. */
@@ -174,6 +193,10 @@ export default function PosScreen() {
   const itemWidth = (menuWidth - GRID_PADDING * 2 - GRID_GAP * (columns - 1)) / columns;
 
   const comboById = useMemo(() => new Map(combos.map((c) => [c.id, c])), [combos]);
+  const comboDetailsById = useMemo(
+    () => new Map(combos.map((c) => [c.id, comboCardDetails(c, (count) => t('pos.comboMore', { count }))])),
+    [combos, t],
+  );
   const tabs = useMemo<MenuCategory[]>(
     () =>
       combos.length
@@ -280,7 +303,7 @@ export default function PosScreen() {
                   <Txt variant="bodyStrong">{formatVnd(l.unitPrice * l.qty)}</Txt>
                 </View>
                 {detail ? (
-                  <Txt variant="caption" muted numberOfLines={l.combo ? 8 : 3}>
+                  <Txt variant="caption" muted>
                     {detail}
                   </Txt>
                 ) : null}
@@ -362,6 +385,7 @@ export default function PosScreen() {
                 <MenuItemCard
                   item={item}
                   available={comboById.get(item.id)?.available ?? isMenuAvailable(item.id)}
+                  details={comboDetailsById.get(item.id)}
                   qtyInCart={qtyByMenuItem[item.id] ?? 0}
                   onPress={() => {
                     const combo = comboById.get(item.id);

@@ -46,6 +46,10 @@
       "vi": "Tiếng Việt",
       "en": "English"
     },
+    "newOrderSound": {
+      "label": "Âm báo món mới",
+      "description": "Phát âm thanh khi có món mới vào hàng đợi làm món"
+    },
     "simulatePrinterFail": "Giả lập: máy in lỗi",
     "simulatePrinterFailHint": "Đơn thanh toán khi bật sẽ báo In thất bại (chưa in thật)."
   },
@@ -117,7 +121,8 @@
     "searchPlaceholder": "Tìm món…",
     "noResultsTitle": "Không tìm thấy món",
     "noResultsHint": "Thử từ khoá khác hoặc chọn \"Tất cả\".",
-    "comboTab": "Combo"
+    "comboTab": "Combo",
+    "comboMore": "+{{count}} món khác"
   },
   "itemOptionsDialog": {
     "qtyLabel": "Số lượng",
@@ -225,8 +230,6 @@
     "handOver": "Đã giao",
     "outOfStockTitle": "Đã trả tiền nhưng hết món — báo Quản lý",
     "outOfStockItem": "#{{call}} · {{name}}",
-    "newOrderBanner": "Đơn mới #{{call}}",
-    "newOrderMore": "+{{count}} món khác",
     "showMoreCups": "+{{count}} phần nữa",
     "showLessCups": "Thu gọn"
   },

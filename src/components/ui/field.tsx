@@ -19,8 +19,12 @@ export function Field({
   keyboardType,
   secureTextEntry,
   placeholder,
+  onFocus,
+  onBlur,
   ...rest
-}: Omit<TextInputProps, 'style' | 'onChange'> & {
+}: Omit<TextInputProps, 'style' | 'onChange' | 'onFocus' | 'onBlur'> & {
+  onFocus?: () => void;
+  onBlur?: () => void;
   label?: string;
   left?: ReactNode;
   right?: ReactNode;
@@ -61,8 +65,14 @@ export function Field({
         clear={false}
         extra={right}
         styles={styles}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}>
+        onFocus={() => {
+          setFocused(true);
+          onFocus?.();
+        }}
+        onBlur={() => {
+          setFocused(false);
+          onBlur?.();
+        }}>
         {left}
       </InputItem>
     </View>
