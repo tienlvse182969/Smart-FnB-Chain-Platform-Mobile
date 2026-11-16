@@ -181,6 +181,7 @@
     "reprintReasonPlaceholder": "Ví dụ: giấy kẹt, khách yêu cầu",
     "reprintConfirm": "In lại",
     "reprintFailed": "Không thể in lại bill",
+    "printing": "Đang in…",
     "pdf": {
       "title": "Phiếu thanh toán PDF",
       "view": "Xem / in PDF",

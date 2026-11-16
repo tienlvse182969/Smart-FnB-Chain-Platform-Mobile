@@ -11,7 +11,6 @@ export type Staff = {
   id: string;
   name: string;
   role: StaffRole;
-  branch: string;
 };
 
 /** Nhóm tuỳ chọn có id này là Size — cùng món + cùng size mới gom được thành một mẻ (mục 8.3). */

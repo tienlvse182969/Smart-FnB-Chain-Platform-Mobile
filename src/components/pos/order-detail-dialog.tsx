@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 
 import { useAuth } from '@/src/auth/auth-context';
 import { toast } from '@/src/components/ui/toast';
@@ -338,7 +338,13 @@ export function OrderDetailDialog({
       maxWidth={440}
       actions={[
         { text: t('common.cancel'), onPress: () => setConfirmPayout(false), disabled: completingPayout },
-        { text: t('refund.confirmPayout'), onPress: () => void confirmApprovedPayout(), primary: true, disabled: completingPayout },
+        {
+          text: t('refund.confirmPayout'),
+          onPress: () => void confirmApprovedPayout(),
+          primary: true,
+          disabled: completingPayout,
+          loading: completingPayout,
+        },
       ]}>
       <Txt variant="body">{t('refund.payoutWarning', { amount: formatVnd(Number(approvalRequest?.amount ?? 0)) })}</Txt>
     </AppModal>
@@ -425,6 +431,7 @@ export function OrderDetailDialog({
                     label={t('orders.reprintConfirm')}
                     icon="print"
                     disabled={!refundReprintValid || printing}
+                    loading={printing}
                     onPress={() => void submitRefundReprint(refund.id)}
                   />
                 </View>
@@ -474,6 +481,13 @@ export function OrderDetailDialog({
 
         {paid ? (
           <>
+            {/* in phiếu hoàn tự động / in lại từ hộp thoại lỗi: không có nút nào đang quay nên báo riêng */}
+            {printing && !reasonOpen && !refundReprintId ? (
+              <View style={styles.printingRow}>
+                <ActivityIndicator size="small" color={theme.brand_primary} />
+                <Txt variant="caption" muted>{t('orders.printing')}</Txt>
+              </View>
+            ) : null}
             {reasonOpen ? (
               <View style={styles.reasonBox}>
                 <Field
@@ -489,6 +503,7 @@ export function OrderDetailDialog({
                     label={t('orders.reprintConfirm')}
                     icon="print"
                     disabled={!reasonValid || printing}
+                    loading={printing}
                     onPress={submitReprint}
                   />
                 </View>
@@ -544,6 +559,7 @@ const styles = StyleSheet.create({
   reasonBox: { gap: 10 },
   reasonActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10 },
   note: { textAlign: 'center' },
+  printingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   history: { gap: 6 },
   historyRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   historyMain: { flex: 1 },

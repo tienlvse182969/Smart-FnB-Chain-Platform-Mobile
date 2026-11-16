@@ -15,11 +15,9 @@ import type {
 const now = Date.now();
 const minsAgo = (m: number) => new Date(now - m * 60_000).toISOString();
 
-export const branchName = 'Chi nhánh Q1 · Nguyễn Huệ';
-
 export const staffByRole: Record<StaffRole, Staff> = {
-  'Thu ngân': { id: 'c1', name: 'Lê Văn Tiến', role: 'Thu ngân', branch: branchName },
-  'Pha chế': { id: 'b1', name: 'Nguyễn Thị Barista', role: 'Pha chế', branch: branchName },
+  'Thu ngân': { id: 'c1', name: 'Lê Văn Tiến', role: 'Thu ngân' },
+  'Pha chế': { id: 'b1', name: 'Nguyễn Thị Barista', role: 'Pha chế' },
 };
 
 export const categories: MenuCategory[] = [
