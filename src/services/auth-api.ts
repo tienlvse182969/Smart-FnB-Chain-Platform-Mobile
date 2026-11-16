@@ -11,6 +11,17 @@ export async function me() {
   return data;
 }
 
+/** Hồ sơ của chính tài khoản đang đăng nhập (CM-02); `branchName` là chi nhánh nhân viên đang làm. */
+export type MyProfile = {
+  fullName: string | null;
+  branchName: string | null;
+};
+
+export async function getProfile() {
+  const { data } = await apiClient.get<MyProfile>('/auth/profile');
+  return data;
+}
+
 export async function logout(refreshToken: string) {
   await apiClient.post('/auth/logout', { refreshToken });
 }

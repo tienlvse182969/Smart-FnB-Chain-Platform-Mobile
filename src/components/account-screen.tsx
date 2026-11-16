@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +16,7 @@ import type { StaffRole } from '@/src/data/types';
 import { setAppLanguage, type AppLanguage } from '@/src/i18n';
 import { APP_VERSION } from '@/src/lib/app-version';
 import { staffRoleKey } from '@/src/i18n/labels';
+import { getProfile } from '@/src/services/auth-api';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
 
@@ -42,6 +43,20 @@ export function AccountScreen({
   const { user, displayName: accountName, logout } = useAuth();
   const staff = staffByRole[role];
   const displayName = state.currentUser?.name || accountName || user?.email || staff.name;
+  // chi nhánh nhân viên đang làm, lấy từ DB qua GET /auth/profile; chưa có thì chỉ hiện vai trò
+  const [branchName, setBranchName] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    getProfile()
+      .then((profile) => {
+        if (active) setBranchName(profile.branchName);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [user]);
   // email chỉ hiện ở dòng phụ khi dòng tên đang là họ tên (không lặp lại email hai lần)
   const email = user?.email && user.email !== displayName ? user.email : null;
 
@@ -72,7 +87,8 @@ export function AccountScreen({
             </Txt>
           ) : null}
           <Txt variant="caption" muted style={styles.profileRole}>
-            {t(staffRoleKey[role])} · {staff.branch}
+            {t(staffRoleKey[role])}
+            {branchName ? ` · ${branchName}` : ''}
           </Txt>
         </View>
 

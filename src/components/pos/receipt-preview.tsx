@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 import { Image, StyleSheet, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
-import { branchName } from '@/src/data/mock';
 import { clockAt, formatVnd } from '@/src/data/format';
 import type { HistoryOrder, Order } from '@/src/data/types';
 import { paymentMethodKey } from '@/src/i18n/labels';
@@ -16,11 +15,11 @@ import { Txt } from '../ui/txt';
  */
 export function ReceiptPreview({
   order,
-  branchName: branch = branchName,
+  branchName: branch,
   trackingUrl,
 }: {
   order: Order | HistoryOrder;
-  /** tên chi nhánh thật (từ receipt API); mặc định dùng tên mock */
+  /** tên chi nhánh thật (từ receipt API); chưa có thì ẩn dòng chi nhánh */
   branchName?: string;
   trackingUrl?: string | null;
 }) {
@@ -30,9 +29,11 @@ export function ReceiptPreview({
   return (
     <View style={[styles.wrap, { backgroundColor: theme.fill_base, borderColor: theme.border_color_thin }]}>
       <Image source={require('@/assets/logo/logo1.png')} style={styles.logo} resizeMode="contain" />
-      <Txt variant="caption" muted style={styles.center}>
-        {branch}
-      </Txt>
+      {branch ? (
+        <Txt variant="caption" muted style={styles.center}>
+          {branch}
+        </Txt>
+      ) : null}
       <Txt variant="caption" muted style={styles.center}>
         {t('orders.orderCode', { code: order.orderCode })}
         {order.paidAt ? ` · ${clockAt(order.paidAt)}` : ''}
