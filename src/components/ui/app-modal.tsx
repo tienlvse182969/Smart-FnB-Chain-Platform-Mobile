@@ -20,7 +20,7 @@ import { Icon, type IconName } from './icon';
 import { Txt } from './txt';
 import { useKeyboardHeight } from './use-keyboard';
 
-type ModalAction = { text: string; onPress: () => void; primary?: boolean; disabled?: boolean };
+type ModalAction = { text: string; onPress: () => void; primary?: boolean; disabled?: boolean; loading?: boolean };
 
 /** Độ nhoè của nền kính (dp trên màn hình / px blur trên web). */
 const GLASS_BLUR = 26;
@@ -160,6 +160,7 @@ export function AppModal({
                       label={a.text}
                       onPress={a.onPress}
                       disabled={a.disabled}
+                      loading={a.loading}
                       variant={a.primary ? 'primary' : 'ghost'}
                     />
                   ))}

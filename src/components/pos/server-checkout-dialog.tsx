@@ -59,7 +59,9 @@ export function ServerCheckoutDialog({
   const [paidOrder, setPaidOrder] = useState<CounterOrder | null>(null);
   const [tab, setTab] = useState<PaymentTab>('cash');
   const [qrPayment, setQrPayment] = useState<PayosPayment | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  /** Thao tác đang gửi lên server — tách theo loại để spinner chỉ hiện trên đúng nút đã bấm. */
+  const [busy, setBusy] = useState<'cash' | 'qr' | 'cancel' | 'switch' | null>(null);
+  const submitting = busy !== null;
   const [trackingUrl, setTrackingUrl] = useState<string | null>(null);
   const [printState, setPrintState] = useState<PrintState>('idle');
   const [printError, setPrintError] = useState<string | null>(null);
@@ -254,7 +256,7 @@ export function ServerCheckoutDialog({
     if (submitting) return;
     setConfirming(null);
     if (!paidOrder) {
-      setSubmitting(true);
+      setBusy('cancel');
       try {
         await cancelUnpaidOrder(order.id, 'Thu ngân quay lại sửa đơn');
         if (user && selectedStation) {
@@ -263,17 +265,17 @@ export function ServerCheckoutDialog({
         if (selectedStation) void updateCustomerDisplay(selectedStation.id, cartSnapshot);
       } catch (reason) {
         toast.fail(reason instanceof Error ? reason.message : 'Không thể hủy đơn', 2, undefined, false);
-        setSubmitting(false);
+        setBusy(null);
         return;
       }
-      setSubmitting(false);
+      setBusy(null);
     }
     onClose(!!paidOrder);
   };
 
   const confirmCash = async () => {
     if (!selectedStation || tenderedAmount < total || submitting) return;
-    setSubmitting(true);
+    setBusy('cash');
     try {
       const result = await collectCash(order.id, selectedStation.id, tenderedAmount);
       // phải gán trước setPaidOrder: effect tự in chạy ngay sau khi có paidOrder
@@ -290,13 +292,13 @@ export function ServerCheckoutDialog({
     } catch (reason) {
       toast.fail(reason instanceof Error ? reason.message : 'Không thể ghi nhận thanh toán', 3, undefined, false);
     } finally {
-      setSubmitting(false);
+      setBusy(null);
     }
   };
 
   const showQr = async () => {
     if (!selectedStation || submitting || qrPayment) return;
-    setSubmitting(true);
+    setBusy('qr');
     try {
       const payment = await createPayosPayment(order.id, selectedStation.id);
       setQrPayment(payment);
@@ -324,7 +326,7 @@ export function ServerCheckoutDialog({
     } catch (reason) {
       toast.fail(reason instanceof Error ? reason.message : 'Không thể tạo mã QR', 3, undefined, false);
     } finally {
-      setSubmitting(false);
+      setBusy(null);
     }
   };
 
@@ -339,13 +341,13 @@ export function ServerCheckoutDialog({
   /** Khách đổi ý: hủy QR PayOS đang chờ (không hủy đơn) rồi chuyển sang thu tiền mặt. */
   const switchToCash = async () => {
     if (!qrPayment || submitting) return;
-    setSubmitting(true);
+    setBusy('switch');
     try {
       await cancelPayosPayment(qrPayment.id, 'Khách đổi sang tiền mặt');
     } catch (reason) {
       // QR có thể vừa được thanh toán: đối chiếu lại với PayOS để không thu tiền hai lần.
       setConfirming(null);
-      setSubmitting(false);
+      setBusy(null);
       toast.fail(reason instanceof Error ? reason.message : 'Không thể hủy mã QR', 3, undefined, false);
       void checkPayos(true);
       return;
@@ -365,7 +367,7 @@ export function ServerCheckoutDialog({
         orderCode: order.orderCode,
       });
     }
-    setSubmitting(false);
+    setBusy(null);
   };
 
   return (
@@ -458,8 +460,8 @@ export function ServerCheckoutDialog({
                 label="Xác nhận đã thu tiền"
                 icon="cash"
                 block
-                loading={submitting}
-                disabled={tenderedAmount < total}
+                loading={busy === 'cash'}
+                disabled={tenderedAmount < total || submitting}
                 onPress={() => void confirmCash()}
               />
             </>
@@ -483,9 +485,22 @@ export function ServerCheckoutDialog({
               />
             </View>
           ) : (
-            <Btn label="Tạo mã QR" icon="qr" block loading={submitting} onPress={() => void showQr()} />
+            <Btn
+              label="Tạo mã QR"
+              icon="qr"
+              block
+              loading={busy === 'qr'}
+              disabled={submitting}
+              onPress={() => void showQr()}
+            />
           )}
-          <Btn label="Quay lại sửa đơn" variant="plain" disabled={submitting} onPress={() => void dismiss()} />
+          <Btn
+            label="Quay lại sửa đơn"
+            variant="plain"
+            loading={busy === 'cancel'}
+            disabled={submitting}
+            onPress={() => void dismiss()}
+          />
         </View>
       )}
     </AppModal>
@@ -498,8 +513,20 @@ export function ServerCheckoutDialog({
       actions={[
         { text: 'Giữ mã QR', onPress: () => setConfirming(null), disabled: submitting },
         confirming === 'cash'
-          ? { text: 'Hủy QR, thu tiền mặt', onPress: () => void switchToCash(), primary: true, disabled: submitting }
-          : { text: 'Hủy đơn', onPress: () => void cancelOrderAndClose(), primary: true, disabled: submitting },
+          ? {
+              text: 'Hủy QR, thu tiền mặt',
+              onPress: () => void switchToCash(),
+              primary: true,
+              disabled: submitting,
+              loading: busy === 'switch',
+            }
+          : {
+              text: 'Hủy đơn',
+              onPress: () => void cancelOrderAndClose(),
+              primary: true,
+              disabled: submitting,
+              loading: busy === 'cancel',
+            },
       ]}>
       <Txt variant="body" style={styles.confirmText}>
         {confirming === 'cash'

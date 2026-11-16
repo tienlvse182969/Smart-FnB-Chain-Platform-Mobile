@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppModal } from '@/src/components/ui/app-modal';
 import { Btn } from '@/src/components/ui/button';
@@ -147,7 +147,7 @@ export function PrinterCard() {
         actions={[{ text: t('common.close'), onPress: () => setPickerOpen(false) }]}>
         <ScrollView style={styles.list}>
           {devices === null ? (
-            <Txt muted>…</Txt>
+            <ActivityIndicator color={theme.brand_primary} />
           ) : devices.length === 0 ? (
             <Txt variant="caption" muted>
               {t('printer.pickEmpty')}

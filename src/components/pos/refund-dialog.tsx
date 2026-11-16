@@ -138,6 +138,7 @@ export function RefundDialog({
           onPress: submit,
           primary: true,
           disabled: !valid || submitting,
+          loading: submitting,
         },
       ]}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">

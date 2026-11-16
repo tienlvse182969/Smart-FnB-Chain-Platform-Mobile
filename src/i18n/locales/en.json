@@ -181,6 +181,7 @@
     "reprintReasonPlaceholder": "e.g. paper jam, customer request",
     "reprintConfirm": "Reprint",
     "reprintFailed": "Could not reprint the bill",
+    "printing": "Printing…",
     "pdf": {
       "title": "PDF payment receipt",
       "view": "View / print PDF",

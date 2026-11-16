@@ -45,6 +45,7 @@ export function AccountScreen({
   const displayName = state.currentUser?.name || accountName || user?.email || staff.name;
   // chi nhánh nhân viên đang làm, lấy từ DB qua GET /auth/profile; chưa có thì chỉ hiện vai trò
   const [branchName, setBranchName] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
   useEffect(() => {
     if (!user) return;
     let active = true;
@@ -125,10 +126,17 @@ export function AccountScreen({
           block
           variant="ghost"
           style={styles.logout}
+          loading={loggingOut}
           onPress={async () => {
-            await logout();
-            checkOut();
-            router.replace('/login');
+            if (loggingOut) return;
+            setLoggingOut(true);
+            try {
+              await logout();
+              checkOut();
+              router.replace('/login');
+            } finally {
+              setLoggingOut(false);
+            }
           }}
         />
 
