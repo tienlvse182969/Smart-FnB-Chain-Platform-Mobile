@@ -22,8 +22,14 @@
       "distribution": "internal",
       "android": { "buildType": "apk" }
     },
+    "beta": {
+      "extends": "base",
+      "environment": "preview",
+      "android": { "buildType": "app-bundle" }
+    },
     "production": {
-      "environment": "production"
+      "environment": "preview",
+      "android": { "buildType": "app-bundle" }
     }
   }
 }
