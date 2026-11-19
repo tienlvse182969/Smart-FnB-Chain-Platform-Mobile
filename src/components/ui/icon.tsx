@@ -15,6 +15,8 @@ import {
   Info,
   CupSoda,
   Delete,
+  Eye,
+  EyeOff,
   LayoutGrid,
   ListFilter,
   Loader,
@@ -39,6 +41,7 @@ import {
   RefreshCw,
   Search,
   Send,
+  ShieldCheck,
   ShoppingBag,
   Sun,
   Timer,
@@ -107,6 +110,9 @@ export const Icons = {
   refund: Undo2,
   mail: Mail,
   pager: Vibrate,
+  privacy: ShieldCheck,
+  show: Eye,
+  hide: EyeOff,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof Icons;

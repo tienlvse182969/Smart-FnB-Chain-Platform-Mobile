@@ -1,6 +1,6 @@
 import { Button } from '@ant-design/react-native';
 import type { ButtonStyles } from '@ant-design/react-native/lib/button/style';
-import { View, type ViewStyle } from 'react-native';
+import { ActivityIndicator, View, type ViewStyle } from 'react-native';
 
 import { useAppTheme } from '@/src/theme/use-theme';
 import { Icon, type IconName } from './icon';
@@ -54,23 +54,28 @@ export function Btn({
     ghostDisabledRaw: { borderColor: variant === 'plain' ? 'transparent' : theme.fill_disabled },
   };
 
+  // Không dùng prop `loading` của antd: nó lấy màu spinner qua `'color' in styles.primaryRawText`, nhưng `WithTheme`
+  // gộp `styles` thành mảng [mặc định, ghi đè] nên điều kiện sai → rơi về `defaultRawText` (chữ đen) → spinner đen trên
+  // nền đen, nút trông như trống trơn. Tự vẽ spinner bằng màu `fg` và chặn bấm lặp trong lúc chờ.
   return (
     <Button
       type={solid ? 'primary' : 'ghost'}
       size={size === 'sm' ? 'small' : 'large'}
       disabled={disabled}
-      loading={loading}
-      onPress={onPress}
+      onPress={loading ? undefined : onPress}
+      accessibilityState={{ disabled: !!disabled, busy: !!loading }}
       style={{ ...(block ? { alignSelf: 'stretch' as const } : null), ...style }}
       styles={styles}>
-      {loading ? null : (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-          {icon ? <Icon name={icon} size={size === 'sm' ? 15 : 17} color={fg} /> : null}
-          <Txt variant="bodyStrong" color={fg}>
-            {label}
-          </Txt>
-        </View>
-      )}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+        {loading ? (
+          <ActivityIndicator size="small" color={fg} />
+        ) : icon ? (
+          <Icon name={icon} size={size === 'sm' ? 15 : 17} color={fg} />
+        ) : null}
+        <Txt variant="bodyStrong" color={fg}>
+          {label}
+        </Txt>
+      </View>
     </Button>
   );
 }

@@ -15,6 +15,7 @@ import { useStore } from '@/src/data/store';
 import type { StaffRole } from '@/src/data/types';
 import { setAppLanguage, type AppLanguage } from '@/src/i18n';
 import { APP_VERSION } from '@/src/lib/app-version';
+import { openPrivacyPolicy } from '@/src/lib/legal-links';
 import { staffRoleKey } from '@/src/i18n/labels';
 import { getProfile } from '@/src/services/auth-api';
 import { fontFamily } from '@/src/theme/typography';
@@ -121,6 +122,15 @@ export function AccountScreen({
         {settings ? <View style={cardStyle}>{settings}</View> : null}
 
         <Btn
+          label={t('account.privacyPolicy')}
+          icon="privacy"
+          block
+          variant="plain"
+          style={styles.privacy}
+          onPress={() => void openPrivacyPolicy()}
+        />
+
+        <Btn
           label={t('account.logout')}
           icon="logout"
           block
@@ -169,6 +179,7 @@ const styles = StyleSheet.create({
   settingRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   settingText: { flex: 1, gap: 2 },
   languageSegmented: { marginTop: 12 },
-  logout: { marginTop: 12 },
+  privacy: { marginTop: 4 },
+  logout: { marginTop: 4 },
   version: { textAlign: 'center', marginTop: 4 },
 });
