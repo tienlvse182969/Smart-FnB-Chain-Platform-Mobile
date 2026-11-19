@@ -15,6 +15,7 @@ import { Icon } from '@/src/components/ui/icon';
 import { Txt } from '@/src/components/ui/txt';
 import { useStore } from '@/src/data/store';
 import { APP_VERSION } from '@/src/lib/app-version';
+import { openPrivacyPolicy } from '@/src/lib/legal-links';
 import { ApiError } from '@/src/services/auth-types';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
@@ -208,7 +209,13 @@ export default function LoginScreen() {
                 {accounts.length ? <Btn label="Chọn từ tài khoản đã đăng nhập" variant="plain" block onPress={showPicker} /> : null}
               </>
             )}
-            <Txt variant="tiny" muted style={styles.version}>Phiên bản {APP_VERSION}</Txt>
+            <View style={styles.footer}>
+              <Pressable accessibilityRole="link" hitSlop={8} onPress={() => void openPrivacyPolicy()} style={styles.privacy}>
+                <Icon name="privacy" size={14} color={theme.color_text_caption} />
+                <Txt variant="caption" muted style={styles.privacyText}>Chính sách quyền riêng tư</Txt>
+              </Pressable>
+              <Txt variant="tiny" muted style={styles.version}>Phiên bản {APP_VERSION}</Txt>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -242,5 +249,8 @@ const styles = StyleSheet.create({
   avatar: { alignItems: 'center', justifyContent: 'center' },
   removeBadge: { position: 'absolute', top: 4, right: 12, width: 20, height: 20, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   selected: { alignItems: 'center', gap: 4 },
-  version: { textAlign: 'center', marginTop: -4 },
+  footer: { alignItems: 'center', gap: 4, marginTop: -4 },
+  privacy: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
+  privacyText: { textDecorationLine: 'underline' },
+  version: { textAlign: 'center' },
 });

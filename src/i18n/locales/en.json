@@ -39,6 +39,7 @@
     "screenTitle": "Account",
     "settingsSection": "Device settings",
     "logout": "Sign out",
+    "privacyPolicy": "Privacy policy",
     "version": "Version {{version}}",
     "language": {
       "label": "Language",

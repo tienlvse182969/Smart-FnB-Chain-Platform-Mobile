@@ -1,11 +1,12 @@
 import { useState, type ReactNode } from 'react';
-import { View, type TextInputProps, type ViewStyle } from 'react-native';
+import { Pressable, View, type TextInputProps, type ViewStyle } from 'react-native';
 
 import { InputItem } from '@ant-design/react-native';
 import type { InputItemStyle } from '@ant-design/react-native/lib/input-item/style';
 
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
+import { Icon } from './icon';
 import { Txt } from './txt';
 
 /** Ô nhập dựng trên antd `InputItem` — border/box override để khớp theme B&W thay vì kiểu list-item mặc định. */
@@ -32,6 +33,21 @@ export function Field({
 }) {
   const theme = useAppTheme();
   const [focused, setFocused] = useState(false);
+  // Ô mật khẩu có nút con mắt để xem lại ký tự đã nhập (trừ khi nơi dùng tự truyền `right`).
+  const [revealed, setRevealed] = useState(false);
+  const masked = !!secureTextEntry && !revealed;
+  const trailing =
+    right ??
+    (secureTextEntry ? (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={revealed ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+        hitSlop={10}
+        onPress={() => setRevealed((v) => !v)}
+        style={{ paddingLeft: 8 }}>
+        <Icon name={revealed ? 'hide' : 'show'} size={18} color={theme.color_text_caption} />
+      </Pressable>
+    ) : undefined);
 
   const styles: Partial<InputItemStyle> = {
     container: {
@@ -54,16 +70,17 @@ export function Field({
         </Txt>
       ) : null}
       <InputItem
+        {...(secureTextEntry ? { autoCapitalize: 'none' as const, autoCorrect: false } : null)}
         {...rest}
         value={value}
         onChange={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={theme.color_text_placeholder}
-        type={secureTextEntry ? 'password' : (keyboardType as InputItemTypeCompat) ?? 'text'}
+        type={masked ? 'password' : secureTextEntry ? 'text' : (keyboardType as InputItemTypeCompat) ?? 'text'}
         labelPosition="left"
         labelNumber={left ? 1 : 0}
         clear={false}
-        extra={right}
+        extra={trailing}
         styles={styles}
         onFocus={() => {
           setFocused(true);
