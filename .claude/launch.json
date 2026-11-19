@@ -6,6 +6,12 @@
       "runtimeExecutable": "cmd",
       "runtimeArgs": ["/c", "set NODE_OPTIONS=--max-old-space-size=8192 && npx expo start --web --port 8082"],
       "port": 8082
+    },
+    {
+      "name": "web-tien",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd /d D:\\Projects\\Capstone_Project_Web\\Smart_FnB_Web_Version && npx vite --port 5179 --strictPort"],
+      "port": 5179
     }
   ]
 }
