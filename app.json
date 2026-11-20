@@ -22,7 +22,6 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.smartfnb.pos",
       "permissions": [
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
