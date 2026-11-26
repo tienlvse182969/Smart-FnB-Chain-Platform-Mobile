@@ -10,7 +10,6 @@ import {
   collectCash,
   createPayosPayment,
   getCounterOrder,
-  getOrderReceipt,
   recheckPayosPayment,
   type CounterOrder,
   type PayosPayment,
@@ -62,7 +61,6 @@ export function ServerCheckoutDialog({
   /** Thao tác đang gửi lên server — tách theo loại để spinner chỉ hiện trên đúng nút đã bấm. */
   const [busy, setBusy] = useState<'cash' | 'qr' | 'cancel' | 'switch' | null>(null);
   const submitting = busy !== null;
-  const [trackingUrl, setTrackingUrl] = useState<string | null>(null);
   const [printState, setPrintState] = useState<PrintState>('idle');
   const [printError, setPrintError] = useState<string | null>(null);
   /** Lỗi in đang chờ thu ngân xác nhận trong modal; tách khỏi `printState` để đóng modal vẫn còn nút "In lại". */
@@ -83,7 +81,6 @@ export function ServerCheckoutDialog({
     setTab('cash');
     setQrPayment(null);
     setTendered(order ? String(Number(order.totalAmount)) : '');
-    setTrackingUrl(null);
     setPrintState('idle');
     setPrintError(null);
     setPrintFailure(null);
@@ -96,7 +93,6 @@ export function ServerCheckoutDialog({
     if (order.paymentStatus === 'PAID') {
       setPaidOrder(order);
       void clearPendingPayosCheckout(user.id, selectedStation.branchId);
-      void getOrderReceipt(order.id).then((receipt) => setTrackingUrl(receipt.tracking?.url ?? null));
       return;
     }
     let active = true;
@@ -151,7 +147,6 @@ export function ServerCheckoutDialog({
     if (user && selectedStation) {
       await clearPendingPayosCheckout(user.id, selectedStation.branchId).catch(() => undefined);
     }
-    void getOrderReceipt(latest.id).then((receipt) => setTrackingUrl(receipt.tracking?.url ?? null));
     if (selectedStation) {
       void updateCustomerDisplay(selectedStation.id, {
         ...cartSnapshot,
@@ -281,7 +276,6 @@ export function ServerCheckoutDialog({
       // phải gán trước setPaidOrder: effect tự in chạy ngay sau khi có paidOrder
       printJobIds.current = result.printJobs?.map((job) => job.id);
       setPaidOrder(result.order);
-      setTrackingUrl(result.tracking.url);
       void updateCustomerDisplay(selectedStation.id, {
         ...cartSnapshot,
         state: 'PAID',
@@ -422,12 +416,6 @@ export function ServerCheckoutDialog({
               <Btn label="In lại" icon="print" variant="ghost" onPress={() => void printBill(paidOrder.id)} />
             </>
           ) : null}
-          {trackingUrl ? (
-            <View style={styles.trackingQr}>
-              <QRCode value={trackingUrl} size={150} />
-              <Txt variant="caption" muted>Quét để nhận thông báo khi món xong</Txt>
-            </View>
-          ) : null}
         </View>
       ) : (
         <View style={styles.body}>
@@ -547,7 +535,6 @@ const styles = StyleSheet.create({
   qrFrame: { padding: 12, borderRadius: 8, backgroundColor: '#FFF' },
   success: { alignItems: 'center', gap: 10, paddingVertical: 12 },
   callNumber: { fontFamily: fontFamily.black, fontSize: 64, lineHeight: 72 },
-  trackingQr: { alignItems: 'center', gap: 8, marginTop: 12 },
   printError: { textAlign: 'center' },
   confirmText: { textAlign: 'center' },
 });
