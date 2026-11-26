@@ -1,7 +1,15 @@
 import { toast } from '@/src/components/ui/toast';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BatchCard } from '@/src/components/barista/batch-card';
@@ -65,6 +73,25 @@ export default function BaristaQueueScreen() {
       setLoading(false);
     }
   }, [replaceMenu]);
+
+  /** Kéo xuống để làm mới (cả lưới mẻ lẫn cột Sẵn sàng nhận), ngoài vòng tự tải 5 giây. */
+  const [refreshing, setRefreshing] = useState(false);
+  const pullRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refresh]);
+  const refreshControl = (
+    <RefreshControl
+      refreshing={refreshing}
+      onRefresh={() => void pullRefresh()}
+      tintColor={theme.brand_primary}
+      colors={[theme.brand_primary]}
+    />
+  );
 
   useEffect(() => {
     void refresh(true);
@@ -209,6 +236,7 @@ export default function BaristaQueueScreen() {
           data={readyOrders}
           keyExtractor={(o) => o.id}
           contentContainerStyle={styles.readyListContent}
+          refreshControl={refreshControl}
           renderItem={({ item }) => readyRow(item)}
         />
       )}
@@ -255,6 +283,7 @@ export default function BaristaQueueScreen() {
           keyExtractor={(b) => b.key}
           contentContainerStyle={styles.grid}
           columnWrapperStyle={columns > 1 ? styles.gridRow : undefined}
+          refreshControl={refreshControl}
           ListEmptyComponent={
             <EmptyState icon="bellOff" title={t('baristaQueue.emptyTitle')} hint={t('baristaQueue.emptyHint')} />
           }
