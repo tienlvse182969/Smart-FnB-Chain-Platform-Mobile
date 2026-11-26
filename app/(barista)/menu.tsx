@@ -2,7 +2,7 @@ import { toast } from '@/src/components/ui/toast';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/src/components/empty-state';
@@ -72,6 +72,16 @@ export default function BaristaMenuScreen() {
       toast.fail(reason instanceof Error ? reason.message : t('baristaMenu.loadFailed'), 2, undefined, false);
     }
   }, [replaceMenu, t]);
+
+  const [refreshing, setRefreshing] = useState(false);
+  const pullRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await reload();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [reload]);
 
   // màn hình tự tải menu mỗi lần được focus, không dựa vào việc hàng đợi đã tải trước
   useFocusEffect(
@@ -337,6 +347,14 @@ export default function BaristaMenuScreen() {
             columnWrapperStyle={styles.row}
             contentContainerStyle={styles.grid}
             keyboardShouldPersistTaps="handled"
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={() => void pullRefresh()}
+                tintColor={theme.brand_primary}
+                colors={[theme.brand_primary]}
+              />
+            }
             ListEmptyComponent={
               matched.length > 0 ? (
                 <EmptyState icon="search" title={t('baristaMenu.noStatusMatch')} />

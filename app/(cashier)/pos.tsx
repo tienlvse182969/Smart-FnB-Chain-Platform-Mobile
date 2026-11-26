@@ -1,7 +1,7 @@
 import { toast } from '@/src/components/ui/toast';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/src/components/empty-state';
@@ -130,6 +130,8 @@ export default function PosScreen() {
   const [menuLoading, setMenuLoading] = useState(true);
   const [menuError, setMenuError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const pullRefresh = useRef(false);
 
   const closeCheckout = useCallback((paid: boolean) => {
     setCheckoutOrder(null);
@@ -170,10 +172,15 @@ export default function PosScreen() {
 
   useEffect(() => {
     let active = true;
-    setMenuLoading(true);
+    // kéo xuống để làm mới: giữ nguyên thực đơn đang hiện, chỉ dùng spinner của RefreshControl
+    const pulled = pullRefresh.current;
+    pullRefresh.current = false;
     setMenuError(null);
-    replaceMenu([], []);
-    setCombos([]);
+    if (!pulled) {
+      setMenuLoading(true);
+      replaceMenu([], []);
+      setCombos([]);
+    }
     loadCashierMenu()
       .then((result) => {
         if (!active) return;
@@ -184,10 +191,18 @@ export default function PosScreen() {
         if (active) setMenuError(reason instanceof Error ? reason.message : 'Không thể tải thực đơn');
       })
       .finally(() => {
-        if (active) setMenuLoading(false);
+        if (!active) return;
+        setMenuLoading(false);
+        setRefreshing(false);
       });
     return () => { active = false; };
   }, [reloadToken, replaceMenu, selectedStation?.id]);
+
+  const refreshMenu = useCallback(() => {
+    pullRefresh.current = true;
+    setRefreshing(true);
+    setReloadToken((value) => value + 1);
+  }, []);
 
   const columns = menuWidth >= 760 ? 4 : menuWidth >= 520 ? 3 : 2;
   const itemWidth = (menuWidth - GRID_PADDING * 2 - GRID_GAP * (columns - 1)) / columns;
@@ -373,6 +388,14 @@ export default function PosScreen() {
             columnWrapperStyle={styles.row}
             contentContainerStyle={styles.grid}
             keyboardShouldPersistTaps="handled"
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={refreshMenu}
+                tintColor={theme.brand_primary}
+                colors={[theme.brand_primary]}
+              />
+            }
             ListEmptyComponent={
               searching ? (
                 <EmptyState icon="search" title={t('pos.noResultsTitle')} hint={t('pos.noResultsHint')} />
