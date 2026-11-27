@@ -14,7 +14,7 @@ import { Field } from '@/src/components/ui/field';
 import { Icon, IconButton } from '@/src/components/ui/icon';
 import { Segmented } from '@/src/components/ui/segmented';
 import { Txt } from '@/src/components/ui/txt';
-import { normalizeText } from '@/src/data/order-utils';
+import { newItemsFirst, normalizeText } from '@/src/data/order-utils';
 import { useStore } from '@/src/data/store';
 import type { MenuCategory, MenuItem } from '@/src/data/types';
 import {
@@ -240,11 +240,15 @@ export default function BaristaMenuScreen() {
 
   const itemCards = useMemo<Card[]>(
     () =>
-      state.menu.map((item) => ({
-        kind: 'item',
-        item,
-        label: state.categories.find((c) => c.id === item.categoryId)?.label ?? '',
-      })),
+      // món mới (badge "Mới") lên đầu; lọc danh mục / từ khoá / trạng thái phía sau giữ nguyên thứ tự này
+      newItemsFirst(
+        state.menu.map((item): Card => ({
+          kind: 'item',
+          item,
+          label: state.categories.find((c) => c.id === item.categoryId)?.label ?? '',
+        })),
+        (c) => c.item,
+      ),
     [state.menu, state.categories],
   );
 

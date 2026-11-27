@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { formatVnd } from '@/src/data/format';
+import { isNewMenuItem } from '@/src/data/order-utils';
 import type { MenuItem } from '@/src/data/types';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
@@ -56,6 +57,7 @@ export function MenuItemCard({
   const theme = useAppTheme();
   const { t } = useTranslation();
   const pressable = !toggle && available && !!onPress;
+  const isNew = isNewMenuItem(item);
 
   return (
     <Pressable
@@ -91,6 +93,14 @@ export function MenuItemCard({
               <Icon name="brand" size={32} color={theme.color_text_caption} strokeWidth={1.4} />
             </View>
           )}
+          {isNew ? (
+            // góc trên phải: không đè badge "Hết món"/"Không có sẵn" (góc trên trái) và nút "+" (góc dưới phải)
+            <View style={[styles.newBadge, { backgroundColor: theme.brand_primary }]}>
+              <Txt variant="caption" color={theme.brand_on_primary} style={styles.newBadgeText}>
+                {t('pos.newItem')}
+              </Txt>
+            </View>
+          ) : null}
           {!available ? (
             <View style={[styles.offBadge, { backgroundColor: theme.fill_mask }]}>
               <Txt variant="caption" color={theme.color_text_base_inverse}>
@@ -199,6 +209,15 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 4,
   },
+  newBadge: {
+    position: 'absolute',
+    right: 8,
+    top: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  newBadgeText: { fontFamily: fontFamily.bold },
   addBadge: {
     position: 'absolute',
     right: 8,

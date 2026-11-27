@@ -116,6 +116,8 @@ export type MenuItem = {
   options: MenuOptionGroup[];
   /** false = món pha/làm riêng từng phần (sinh tố xay, bánh mì kẹp…), mỗi dòng là một mẻ (mục 8.3) */
   batchable: boolean;
+  /** Thời điểm tạo món (ISO, `menu_items.created_at`); dùng để gắn badge "Mới". */
+  createdAt?: string;
 };
 
 export type MenuCategory = {

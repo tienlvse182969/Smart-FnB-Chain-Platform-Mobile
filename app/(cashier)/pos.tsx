@@ -18,7 +18,7 @@ import { Icon, IconButton } from '@/src/components/ui/icon';
 import { Stepper } from '@/src/components/ui/stepper';
 import { Txt } from '@/src/components/ui/txt';
 import { formatVnd } from '@/src/data/format';
-import { extraLabel, normalizeText } from '@/src/data/order-utils';
+import { extraLabel, newItemsFirst, normalizeText } from '@/src/data/order-utils';
 import { useStore, type CartLine } from '@/src/data/store';
 import type { MenuCategory, MenuCombo, MenuItem } from '@/src/data/types';
 import {
@@ -222,12 +222,14 @@ export default function PosScreen() {
   // lọc theo danh mục ("Tất cả" = mọi món + combo) VÀ từ khoá; tìm không phân biệt hoa/thường, không dấu
   const visibleMenu = useMemo(() => {
     const q = normalizeText(query);
-    return [...combos.map(comboCard), ...menu].filter((m) => {
+    const filtered = [...combos.map(comboCard), ...menu].filter((m) => {
       if (category !== ALL_CATEGORIES && m.categoryId !== category) return false;
       if (!q) return true;
       const label = tabs.find((c) => c.id === m.categoryId)?.label ?? '';
       return normalizeText(`${m.name} ${label}`).includes(q);
     });
+    // món mới (badge "Mới") luôn lên đầu, kể cả trước combo
+    return newItemsFirst(filtered, (m) => m);
   }, [menu, combos, tabs, category, query]);
   const searching = query.trim().length > 0;
   const total = cart.reduce((s, l) => s + l.unitPrice * l.qty, 0);

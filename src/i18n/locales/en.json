@@ -120,6 +120,7 @@
     },
     "allCategories": "All",
     "searchPlaceholder": "Search items…",
+    "newItem": "New",
     "noResultsTitle": "No items found",
     "noResultsHint": "Try another keyword or pick \"All\".",
     "comboTab": "Combos",

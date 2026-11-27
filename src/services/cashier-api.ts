@@ -59,6 +59,7 @@ type ApiBranchMenuItem = {
     allowBatching?: boolean;
     isActive: boolean;
     isAvailable: boolean;
+    createdAt?: string;
     category: { id: string; name: string };
     optionGroups: ApiOptionGroupLink[];
     maxExtras?: number;
@@ -242,6 +243,7 @@ async function loadMenu(path: '/cashier/context' | '/barista/context'): Promise<
       ),
       image: absoluteAssetUrl(menuItem.imageUrl) ?? '',
       batchable: menuItem.allowBatching ?? true,
+      createdAt: menuItem.createdAt,
       maxExtras: menuItem.maxExtras ?? 0,
       extras: (menuItem.extras ?? [])
         .filter((e) => e.isActive)
