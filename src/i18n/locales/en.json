@@ -247,6 +247,7 @@
     "filterUnavailable": "Unavailable ({{count}})",
     "noStatusMatch": "Nothing in this status",
     "chainDisabled": "Disabled by owner",
+    "discontinued": "Discontinued",
     "notAssigned": "Not assigned to branch",
     "noPortions": "No portions left",
     "loadFailed": "Could not load the menu",

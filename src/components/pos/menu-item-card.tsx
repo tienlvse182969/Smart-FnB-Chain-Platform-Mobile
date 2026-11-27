@@ -26,6 +26,10 @@ export type MenuCardToggle = {
   /** lý do khoá / ghi chú hiển thị dưới công tắc */
   note?: string;
   noteColor?: string;
+  /** chữ trên badge ảnh và cạnh công tắc khi món không bán được (mặc định "Không có sẵn") */
+  badge?: string;
+  /** ẩn công tắc và ghi chú (món ngừng kinh doanh: chỉ còn badge trên ảnh) */
+  hidden?: boolean;
 };
 
 export function MenuItemCard({
@@ -90,7 +94,11 @@ export function MenuItemCard({
           {!available ? (
             <View style={[styles.offBadge, { backgroundColor: theme.fill_mask }]}>
               <Txt variant="caption" color={theme.color_text_base_inverse}>
-                {toggle ? t('baristaMenu.unavailable') : t('status.line.outOfStock')}
+                {toggle
+                  ? (toggle.badge ?? t('baristaMenu.unavailable'))
+                  : item.chainAvailable === false
+                    ? t('baristaMenu.discontinued')
+                    : t('status.line.outOfStock')}
               </Txt>
             </View>
           ) : toggle ? null : qtyInCart > 0 ? (
@@ -138,7 +146,7 @@ export function MenuItemCard({
             ))}
           </View>
         ) : null}
-        {toggle ? (
+        {toggle?.hidden ? null : toggle ? (
           <>
             <View style={styles.toggleRow}>
               <Switch
@@ -152,7 +160,7 @@ export function MenuItemCard({
                 numberOfLines={1}
                 style={styles.toggleLabel}
                 color={toggle.checked ? theme.brand_success : theme.brand_error}>
-                {toggle.checked ? t('baristaMenu.available') : t('baristaMenu.unavailable')}
+                {toggle.checked ? t('baristaMenu.available') : (toggle.badge ?? t('baristaMenu.unavailable'))}
               </Txt>
             </View>
             {toggle.note ? (

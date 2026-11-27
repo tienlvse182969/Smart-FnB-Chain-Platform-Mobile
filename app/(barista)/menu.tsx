@@ -44,9 +44,17 @@ type Card =
 
 type StatusFilter = 'all' | 'available' | 'unavailable';
 
-/** Trạng thái công tắc của thẻ (cờ còn bán ở chi nhánh do pha chế/quản lý bật tắt). */
+/** Owner đã tắt món/tuỳ chọn ở cấp chuỗi → ngừng kinh doanh, chi nhánh không bật lại được. */
+const isChainOff = (card: Card) =>
+  card.kind === 'item' ? card.item.chainAvailable === false : !card.chainAvailable;
+
+/**
+ * Trạng thái công tắc của thẻ (cờ còn bán ở chi nhánh do pha chế/quản lý bật tắt). Món Owner đã tắt
+ * luôn tính là không có sẵn, dù cờ chi nhánh còn bật.
+ */
 const isChecked = (card: Card) =>
-  card.kind === 'item' ? (card.item.branchAvailable ?? card.item.available) : card.branchAvailable;
+  !isChainOff(card) &&
+  (card.kind === 'item' ? (card.item.branchAvailable ?? card.item.available) : card.branchAvailable);
 
 /**
  * Báo hết món hoặc hết một tuỳ chọn như topping (BA-03, mục 6.6). Bố cục giống lưới chọn món của
@@ -268,11 +276,12 @@ export default function BaristaMenuScreen() {
     const busy = working.has(card.item.id);
     if (card.kind !== 'item') {
       return {
-        checked: card.branchAvailable,
+        checked: isChecked(card),
         disabled: busy || !card.chainAvailable,
         loading: busy,
         note: card.chainAvailable ? undefined : t('baristaMenu.chainDisabled'),
         noteColor: theme.brand_error,
+        badge: card.chainAvailable ? undefined : t('baristaMenu.discontinued'),
         onChange: (v) => askChange(card, v),
       };
     }
@@ -292,6 +301,9 @@ export default function BaristaMenuScreen() {
       loading: busy,
       note,
       noteColor: chainOff || notAssigned ? theme.brand_error : theme.brand_warning,
+      badge: chainOff ? t('baristaMenu.discontinued') : undefined,
+      // ngừng kinh doanh: badge trên ảnh đã đủ, ẩn công tắc + ghi chú vì chi nhánh không bật lại được
+      hidden: chainOff,
       onChange: (v) => askChange(card, v),
     };
   };

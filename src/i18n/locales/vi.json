@@ -247,6 +247,7 @@
     "filterUnavailable": "Không có sẵn ({{count}})",
     "noStatusMatch": "Không có món nào ở trạng thái này",
     "chainDisabled": "Owner đã tắt món",
+    "discontinued": "Ngừng kinh doanh",
     "notAssigned": "Chưa gán cho chi nhánh",
     "noPortions": "Đã hết số lượng",
     "loadFailed": "Không thể tải danh sách món",
