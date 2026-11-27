@@ -37,6 +37,7 @@
   },
   "account": {
     "screenTitle": "Tài khoản",
+    "branch": "Chi nhánh {{name}}",
     "settingsSection": "Cài đặt thiết bị",
     "logout": "Đăng xuất",
     "privacyPolicy": "Chính sách quyền riêng tư",
@@ -115,11 +116,15 @@
     "emptyCart": "Chọn món ở bên trái để thêm vào đơn.",
     "emptyMenu": "Danh mục này chưa có món nào.",
     "checkoutBtn": "Thanh toán · {{total}}",
+    "clearCartTitle": "Xoá đơn đang tạo?",
+    "clearCartMessage": "Toàn bộ {{count}} món trong đơn sẽ bị xoá. Bạn có chắc muốn xoá không?",
+    "clearCartConfirm": "Xoá đơn",
     "errors": {
       "unavailable": "Có món hoặc topping vừa hết: {{names}}. Vui lòng bỏ khỏi đơn rồi thử lại."
     },
     "allCategories": "Tất cả",
     "searchPlaceholder": "Tìm món…",
+    "newItem": "Mới",
     "noResultsTitle": "Không tìm thấy món",
     "noResultsHint": "Thử từ khoá khác hoặc chọn \"Tất cả\".",
     "comboTab": "Combo",
@@ -247,6 +252,7 @@
     "filterUnavailable": "Không có sẵn ({{count}})",
     "noStatusMatch": "Không có món nào ở trạng thái này",
     "chainDisabled": "Owner đã tắt món",
+    "discontinued": "Ngừng kinh doanh",
     "notAssigned": "Chưa gán cho chi nhánh",
     "noPortions": "Đã hết số lượng",
     "loadFailed": "Không thể tải danh sách món",

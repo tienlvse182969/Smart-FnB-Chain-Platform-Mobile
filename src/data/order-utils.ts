@@ -72,6 +72,32 @@ export const sizeOf = (options: OrderOption[]) => options.find((o) => o.groupId 
 /** Tuỳ chọn khác mặc định — thứ pha chế cần nhìn thấy nhất. */
 export const customOptions = (options: OrderOption[]) => options.filter((o) => !o.isDefault);
 
+/** Số ngày kể từ lúc tạo mà món vẫn được gắn badge "Mới". */
+export const NEW_ITEM_DAYS = 7;
+
+/** Món mới: tạo trong vòng NEW_ITEM_DAYS ngày gần đây (dựa vào `createdAt`). */
+export function isNewMenuItem(item: Pick<MenuItem, 'createdAt'>, now: number = Date.now()): boolean {
+  if (!item.createdAt) return false;
+  const created = new Date(item.createdAt).getTime();
+  if (Number.isNaN(created)) return false;
+  const age = now - created;
+  return age >= 0 && age < NEW_ITEM_DAYS * 24 * 60 * 60 * 1000;
+}
+
+/**
+ * Đưa món mới (isNewMenuItem) lên đầu danh sách, món tạo gần nhất đứng trước;
+ * các món còn lại giữ nguyên thứ tự ban đầu.
+ */
+export function newItemsFirst<T>(list: T[], itemOf: (x: T) => Pick<MenuItem, 'createdAt'>): T[] {
+  const now = Date.now();
+  const fresh: T[] = [];
+  const rest: T[] = [];
+  for (const x of list) (isNewMenuItem(itemOf(x), now) ? fresh : rest).push(x);
+  if (!fresh.length) return list;
+  fresh.sort((a, b) => (itemOf(b).createdAt ?? '').localeCompare(itemOf(a).createdAt ?? ''));
+  return [...fresh, ...rest];
+}
+
 /** Chuẩn hoá để tìm kiếm: chữ thường, bỏ dấu tiếng Việt (đ → d), gọn khoảng trắng. */
 export const normalizeText = (s: string) =>
   s

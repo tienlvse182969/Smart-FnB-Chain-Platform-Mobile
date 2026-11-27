@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { StaffAvatarButton } from './staff-avatar';
 import { Txt } from './ui/txt';
 
 export function ScreenHeader({
@@ -14,15 +15,19 @@ export function ScreenHeader({
 }) {
   return (
     <View style={styles.row}>
-      <View style={styles.titleBox}>
-        <Txt variant="h1" numberOfLines={1}>
-          {title}
-        </Txt>
-        {subtitle ? (
-          <Txt variant="body" muted numberOfLines={1} style={styles.subtitle}>
-            {subtitle}
+      <View style={styles.left}>
+        {/* màn hình dọc: avatar nằm bên trái tiêu đề; màn hình ngang không hiện gì */}
+        <StaffAvatarButton />
+        <View style={styles.titleBox}>
+          <Txt variant="h1" numberOfLines={1}>
+            {title}
           </Txt>
-        ) : null}
+          {subtitle ? (
+            <Txt variant="body" muted numberOfLines={1} style={styles.subtitle}>
+              {subtitle}
+            </Txt>
+          ) : null}
+        </View>
       </View>
       {right ? <View style={styles.right}>{right}</View> : null}
     </View>
@@ -37,6 +42,7 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingBottom: 12,
   },
+  left: { flexDirection: 'row', alignItems: 'center', gap: 12, flexShrink: 1 },
   titleBox: { flexShrink: 1 },
   subtitle: { marginTop: 2 },
   right: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' },

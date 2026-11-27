@@ -237,14 +237,18 @@ export function ServerCheckoutDialog({
   const change = useMemo(() => Math.max(0, tenderedAmount - total), [tenderedAmount, total]);
   if (!order) return null;
 
-  /** Thoát modal; đơn chưa thanh toán sẽ bị hủy. Đang có QR chờ thì hỏi lại trước. */
+  /**
+   * Thoát modal. Đang có QR chờ thì hỏi lại trước và hủy đơn (QR còn sống có thể bị quét);
+   * chưa tạo QR thì chỉ đóng để sửa đơn, không hủy đơn trên server.
+   */
   const dismiss = async () => {
     if (submitting) return;
     if (!paidOrder && qrPayment) {
       setConfirming('dismiss');
       return;
     }
-    await cancelOrderAndClose();
+    if (!paidOrder && selectedStation) void updateCustomerDisplay(selectedStation.id, cartSnapshot);
+    onClose(!!paidOrder);
   };
 
   const cancelOrderAndClose = async () => {

@@ -12,13 +12,15 @@ import { ItemOptionsDialog, type ItemDraft } from '@/src/components/pos/item-opt
 import { ALL_CATEGORIES, MenuCategoryTabs } from '@/src/components/pos/menu-category-tabs';
 import { MenuItemCard } from '@/src/components/pos/menu-item-card';
 import { SplitPanelLayout } from '@/src/components/split-panel-layout';
+import { StaffAvatarButton } from '@/src/components/staff-avatar';
+import { AppModal } from '@/src/components/ui/app-modal';
 import { Btn } from '@/src/components/ui/button';
 import { Field } from '@/src/components/ui/field';
 import { Icon, IconButton } from '@/src/components/ui/icon';
 import { Stepper } from '@/src/components/ui/stepper';
 import { Txt } from '@/src/components/ui/txt';
 import { formatVnd } from '@/src/data/format';
-import { extraLabel, normalizeText } from '@/src/data/order-utils';
+import { extraLabel, newItemsFirst, normalizeText } from '@/src/data/order-utils';
 import { useStore, type CartLine } from '@/src/data/store';
 import type { MenuCategory, MenuCombo, MenuItem } from '@/src/data/types';
 import {
@@ -127,6 +129,7 @@ export default function PosScreen() {
   const [pickingCombo, setPickingCombo] = useState<MenuCombo | null>(null);
   const [checkoutOrder, setCheckoutOrder] = useState<CounterOrder | null>(null);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [confirmingClear, setConfirmingClear] = useState(false);
   const [menuLoading, setMenuLoading] = useState(true);
   const [menuError, setMenuError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
@@ -222,12 +225,14 @@ export default function PosScreen() {
   // lọc theo danh mục ("Tất cả" = mọi món + combo) VÀ từ khoá; tìm không phân biệt hoa/thường, không dấu
   const visibleMenu = useMemo(() => {
     const q = normalizeText(query);
-    return [...combos.map(comboCard), ...menu].filter((m) => {
+    const filtered = [...combos.map(comboCard), ...menu].filter((m) => {
       if (category !== ALL_CATEGORIES && m.categoryId !== category) return false;
       if (!q) return true;
       const label = tabs.find((c) => c.id === m.categoryId)?.label ?? '';
       return normalizeText(`${m.name} ${label}`).includes(q);
     });
+    // món mới (badge "Mới") luôn lên đầu, kể cả trước combo
+    return newItemsFirst(filtered, (m) => m);
   }, [menu, combos, tabs, category, query]);
   const searching = query.trim().length > 0;
   const total = cart.reduce((s, l) => s + l.unitPrice * l.qty, 0);
@@ -290,7 +295,7 @@ export default function PosScreen() {
             {t('pos.cartCount', { count: cartCount })}
           </Txt>
         </View>
-        {cart.length > 0 ? <IconButton name="remove" size={18} onPress={clearCart} /> : null}
+        {cart.length > 0 ? <IconButton name="remove" size={18} onPress={() => setConfirmingClear(true)} /> : null}
       </View>
       <CustomerDisplayBar />
       <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
@@ -354,15 +359,19 @@ export default function PosScreen() {
       <SplitPanelLayout onMainWidth={setMenuWidth} panel={cartPanel}>
         <View style={styles.menuSide}>
           <View style={styles.searchWrap}>
-            <Field
-              value={query}
-              onChangeText={setQuery}
-              placeholder={t('pos.searchPlaceholder')}
-              autoCorrect={false}
-              autoCapitalize="none"
-              left={<Icon name="search" size={16} color={theme.color_text_caption} />}
-              right={query ? <IconButton name="clear" size={16} onPress={() => setQuery('')} /> : undefined}
-            />
+            {/* màn hình dọc: POS không có tiêu đề nên avatar nằm bên trái ô tìm món */}
+            <StaffAvatarButton />
+            <View style={styles.searchField}>
+              <Field
+                value={query}
+                onChangeText={setQuery}
+                placeholder={t('pos.searchPlaceholder')}
+                autoCorrect={false}
+                autoCapitalize="none"
+                left={<Icon name="search" size={16} color={theme.color_text_caption} />}
+                right={query ? <IconButton name="clear" size={16} onPress={() => setQuery('')} /> : undefined}
+              />
+            </View>
           </View>
           <View style={styles.tabsWrap}>
             <MenuCategoryTabs
@@ -435,6 +444,27 @@ export default function PosScreen() {
         onDismiss={() => setPickingCombo(null)}
         onConfirm={addComboFromDraft}
       />
+      <AppModal
+        visible={confirmingClear}
+        icon="remove"
+        title={t('pos.clearCartTitle')}
+        onClose={() => setConfirmingClear(false)}
+        maxWidth={400}
+        actions={[
+          { text: t('common.cancel'), onPress: () => setConfirmingClear(false) },
+          {
+            text: t('pos.clearCartConfirm'),
+            primary: true,
+            onPress: () => {
+              setConfirmingClear(false);
+              clearCart();
+            },
+          },
+        ]}>
+        <Txt variant="body" style={styles.confirmText}>
+          {t('pos.clearCartMessage', { count: cartCount })}
+        </Txt>
+      </AppModal>
       <ServerCheckoutDialog
         order={checkoutOrder}
         cartSnapshot={cartSnapshot}
@@ -447,7 +477,8 @@ export default function PosScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   menuSide: { flex: 1 },
-  searchWrap: { paddingHorizontal: GRID_PADDING, paddingTop: 12 },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: GRID_PADDING, paddingTop: 12 },
+  searchField: { flex: 1 },
   tabsWrap: { paddingHorizontal: GRID_PADDING, paddingTop: 8 },
   menuNotice: { margin: GRID_PADDING, padding: 12, borderWidth: StyleSheet.hairlineWidth, borderRadius: 6, gap: 8 },
   loader: { padding: 20 },
@@ -466,6 +497,7 @@ const styles = StyleSheet.create({
   cartLineName: { flexShrink: 1 },
   cartLineFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   cartFooter: { padding: 14, gap: 10 },
+  confirmText: { textAlign: 'center' },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   summaryTotal: { fontFamily: fontFamily.bold, fontSize: 22, lineHeight: 28 },
 });

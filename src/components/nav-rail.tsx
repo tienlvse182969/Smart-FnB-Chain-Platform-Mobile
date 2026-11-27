@@ -1,13 +1,14 @@
 import { Badge } from '@ant-design/react-native';
 import type { Href } from 'expo-router';
 import { router, usePathname } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useBrand } from '@/src/branding/branding-context';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
+import { initials, type AvatarAnchor } from './staff-avatar';
 import { Icon, type IconName } from './ui/icon';
 import { Txt } from './ui/txt';
 
@@ -18,9 +19,6 @@ export type NavDest = {
   icon: IconName;
   badgeCount?: number;
 };
-
-const initials = (name: string) =>
-  name.split(' ').slice(-2).map((w) => w[0]).join('').toUpperCase();
 
 /** Logo của chuỗi (Owner tải lên); chưa có hoặc tải lỗi thì dùng logo nền tảng đóng gói sẵn. */
 function BrandLogo({ compact }: { compact: boolean }) {
@@ -59,20 +57,32 @@ export function NavRail({
   edge = 'left',
   dests,
   staffName,
-  staffHref,
+  onStaffPress,
+  staffActive = false,
   size = 'md',
 }: {
   compact: boolean;
   edge?: 'left' | 'bottom';
   dests: NavDest[];
   staffName: string;
-  staffHref: Href;
+  /**
+   * Bấm avatar ở thanh bên (màn hình ngang) — mở modal Tài khoản của layout, kèm vị trí nút để
+   * modal bay ra từ đó. Thanh dưới (màn hình dọc) không có avatar: dùng `StaffAvatarButton` trên đầu trang.
+   */
+  onStaffPress: (anchor?: AvatarAnchor) => void;
+  staffActive?: boolean;
   size?: 'md' | 'lg';
 }) {
   const theme = useAppTheme();
   const brand = useBrand();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
+  const avatarRef = useRef<View>(null);
+  const pressAvatar = () => {
+    const node = avatarRef.current;
+    if (!node) return onStaffPress();
+    node.measureInWindow((x, y, width, height) => onStaffPress({ x, y, width, height }));
+  };
 
   const bottom = edge === 'bottom';
   const large = size === 'lg';
@@ -182,8 +192,13 @@ export function NavRail({
       {!bottom ? (
         <View style={styles.footer}>
           <Pressable
-            onPress={() => router.replace(staffHref)}
-            style={[styles.avatar, { borderColor: theme.border_color_base }]}>
+            ref={avatarRef}
+            onPress={pressAvatar}
+            style={[
+              styles.avatar,
+              { borderColor: theme.border_color_base },
+              staffActive && { backgroundColor: theme.fill_tap },
+            ]}>
             <Txt variant="label">{initials(staffName)}</Txt>
           </Pressable>
           {!compact ? (
@@ -225,6 +240,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  staffName: { maxWidth: 100, textAlign: 'center' },
+  },  staffName: { maxWidth: 100, textAlign: 'center' },
 });

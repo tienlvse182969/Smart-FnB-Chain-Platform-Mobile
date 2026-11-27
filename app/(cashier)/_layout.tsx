@@ -1,8 +1,13 @@
 import { Redirect, Stack } from 'expo-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
+import { AccountScreen } from '@/src/components/account-screen';
 import { NavRail, type NavDest } from '@/src/components/nav-rail';
+import { StaffAvatarProvider, type AvatarAnchor } from '@/src/components/staff-avatar';
+import { CustomerDisplayCard } from '@/src/components/pos/customer-display-card';
+import { PrinterCard } from '@/src/components/pos/printer-card';
 import { CustomerDisplayDialog } from '@/src/components/pos/customer-display-dialog';
 import { ReceiptPrintHost } from '@/src/components/pos/receipt-print-host';
 import { useAuth } from '@/src/auth/auth-context';
@@ -20,6 +25,12 @@ export default function CashierLayout() {
   const { state } = useStore();
   const { user, displayName, loading } = useAuth();
   const { selectedStation, loading: stationLoading } = useStation();
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [accountAnchor, setAccountAnchor] = useState<AvatarAnchor>();
+  const openAccount = (anchor?: AvatarAnchor) => {
+    setAccountAnchor(anchor);
+    setAccountOpen(true);
+  };
 
   // chưa đăng nhập hoặc sai vai trò → về màn hình đăng nhập
   if (loading) return null;
@@ -36,6 +47,7 @@ export default function CashierLayout() {
 
   return (
     <CustomerDisplayProvider station={selectedStation}>
+      <StaffAvatarProvider value={{ name: staffName, active: accountOpen, onPress: openAccount }}>
       <View
         style={[
           styles.shell,
@@ -47,7 +59,8 @@ export default function CashierLayout() {
             edge="left"
             dests={dests}
             staffName={staffName}
-            staffHref="/(cashier)/account"
+            onStaffPress={openAccount}
+            staffActive={accountOpen}
           />
         ) : null}
         <View style={styles.content}>
@@ -64,10 +77,19 @@ export default function CashierLayout() {
             edge="bottom"
             dests={dests}
             staffName={staffName}
-            staffHref="/(cashier)/account"
+            onStaffPress={openAccount}
           />
         ) : null}
+        <AccountScreen
+          role="Thu ngân"
+          visible={accountOpen}
+          anchor={accountAnchor}
+          onClose={() => setAccountOpen(false)}>
+          <CustomerDisplayCard />
+          <PrinterCard />
+        </AccountScreen>
       </View>
+      </StaffAvatarProvider>
       <CustomerDisplayDialog />
       <ReceiptPrintHost />
     </CustomerDisplayProvider>

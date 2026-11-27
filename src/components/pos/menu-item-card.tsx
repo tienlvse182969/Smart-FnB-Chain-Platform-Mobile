@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { formatVnd } from '@/src/data/format';
+import { isNewMenuItem } from '@/src/data/order-utils';
 import type { MenuItem } from '@/src/data/types';
 import { fontFamily } from '@/src/theme/typography';
 import { useAppTheme } from '@/src/theme/use-theme';
@@ -26,6 +27,10 @@ export type MenuCardToggle = {
   /** lý do khoá / ghi chú hiển thị dưới công tắc */
   note?: string;
   noteColor?: string;
+  /** chữ trên badge ảnh và cạnh công tắc khi món không bán được (mặc định "Không có sẵn") */
+  badge?: string;
+  /** ẩn công tắc và ghi chú (món ngừng kinh doanh: chỉ còn badge trên ảnh) */
+  hidden?: boolean;
 };
 
 export function MenuItemCard({
@@ -52,6 +57,7 @@ export function MenuItemCard({
   const theme = useAppTheme();
   const { t } = useTranslation();
   const pressable = !toggle && available && !!onPress;
+  const isNew = isNewMenuItem(item);
 
   return (
     <Pressable
@@ -87,10 +93,22 @@ export function MenuItemCard({
               <Icon name="brand" size={32} color={theme.color_text_caption} strokeWidth={1.4} />
             </View>
           )}
+          {isNew ? (
+            // góc trên phải: không đè badge "Hết món"/"Không có sẵn" (góc trên trái) và nút "+" (góc dưới phải)
+            <View style={[styles.newBadge, { backgroundColor: theme.brand_primary }]}>
+              <Txt variant="caption" color={theme.brand_on_primary} style={styles.newBadgeText}>
+                {t('pos.newItem')}
+              </Txt>
+            </View>
+          ) : null}
           {!available ? (
             <View style={[styles.offBadge, { backgroundColor: theme.fill_mask }]}>
               <Txt variant="caption" color={theme.color_text_base_inverse}>
-                {toggle ? t('baristaMenu.unavailable') : t('status.line.outOfStock')}
+                {toggle
+                  ? (toggle.badge ?? t('baristaMenu.unavailable'))
+                  : item.chainAvailable === false
+                    ? t('baristaMenu.discontinued')
+                    : t('status.line.outOfStock')}
               </Txt>
             </View>
           ) : toggle ? null : qtyInCart > 0 ? (
@@ -138,7 +156,7 @@ export function MenuItemCard({
             ))}
           </View>
         ) : null}
-        {toggle ? (
+        {toggle?.hidden ? null : toggle ? (
           <>
             <View style={styles.toggleRow}>
               <Switch
@@ -152,7 +170,7 @@ export function MenuItemCard({
                 numberOfLines={1}
                 style={styles.toggleLabel}
                 color={toggle.checked ? theme.brand_success : theme.brand_error}>
-                {toggle.checked ? t('baristaMenu.available') : t('baristaMenu.unavailable')}
+                {toggle.checked ? t('baristaMenu.available') : (toggle.badge ?? t('baristaMenu.unavailable'))}
               </Txt>
             </View>
             {toggle.note ? (
@@ -191,6 +209,15 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 4,
   },
+  newBadge: {
+    position: 'absolute',
+    right: 8,
+    top: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  newBadgeText: { fontFamily: fontFamily.bold },
   addBadge: {
     position: 'absolute',
     right: 8,

@@ -37,6 +37,7 @@
   },
   "account": {
     "screenTitle": "Account",
+    "branch": "Branch {{name}}",
     "settingsSection": "Device settings",
     "logout": "Sign out",
     "privacyPolicy": "Privacy policy",
@@ -115,11 +116,15 @@
     "emptyCart": "Pick items on the left to add them to the order.",
     "emptyMenu": "This category has no items.",
     "checkoutBtn": "Pay · {{total}}",
+    "clearCartTitle": "Clear current order?",
+    "clearCartMessage": "All {{count}} items in the order will be removed. Are you sure?",
+    "clearCartConfirm": "Clear order",
     "errors": {
       "unavailable": "Some items or toppings just ran out: {{names}}. Remove them from the order and try again."
     },
     "allCategories": "All",
     "searchPlaceholder": "Search items…",
+    "newItem": "New",
     "noResultsTitle": "No items found",
     "noResultsHint": "Try another keyword or pick \"All\".",
     "comboTab": "Combos",
@@ -247,6 +252,7 @@
     "filterUnavailable": "Unavailable ({{count}})",
     "noStatusMatch": "Nothing in this status",
     "chainDisabled": "Disabled by owner",
+    "discontinued": "Discontinued",
     "notAssigned": "Not assigned to branch",
     "noPortions": "No portions left",
     "loadFailed": "Could not load the menu",
