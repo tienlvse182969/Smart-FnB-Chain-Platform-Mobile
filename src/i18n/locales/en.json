@@ -116,6 +116,9 @@
     "emptyCart": "Pick items on the left to add them to the order.",
     "emptyMenu": "This category has no items.",
     "checkoutBtn": "Pay · {{total}}",
+    "clearCartTitle": "Clear current order?",
+    "clearCartMessage": "All {{count}} items in the order will be removed. Are you sure?",
+    "clearCartConfirm": "Clear order",
     "errors": {
       "unavailable": "Some items or toppings just ran out: {{names}}. Remove them from the order and try again."
     },

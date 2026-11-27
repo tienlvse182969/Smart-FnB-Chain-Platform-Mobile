@@ -13,6 +13,7 @@ import { ALL_CATEGORIES, MenuCategoryTabs } from '@/src/components/pos/menu-cate
 import { MenuItemCard } from '@/src/components/pos/menu-item-card';
 import { SplitPanelLayout } from '@/src/components/split-panel-layout';
 import { StaffAvatarButton } from '@/src/components/staff-avatar';
+import { AppModal } from '@/src/components/ui/app-modal';
 import { Btn } from '@/src/components/ui/button';
 import { Field } from '@/src/components/ui/field';
 import { Icon, IconButton } from '@/src/components/ui/icon';
@@ -128,6 +129,7 @@ export default function PosScreen() {
   const [pickingCombo, setPickingCombo] = useState<MenuCombo | null>(null);
   const [checkoutOrder, setCheckoutOrder] = useState<CounterOrder | null>(null);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [confirmingClear, setConfirmingClear] = useState(false);
   const [menuLoading, setMenuLoading] = useState(true);
   const [menuError, setMenuError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
@@ -293,7 +295,7 @@ export default function PosScreen() {
             {t('pos.cartCount', { count: cartCount })}
           </Txt>
         </View>
-        {cart.length > 0 ? <IconButton name="remove" size={18} onPress={clearCart} /> : null}
+        {cart.length > 0 ? <IconButton name="remove" size={18} onPress={() => setConfirmingClear(true)} /> : null}
       </View>
       <CustomerDisplayBar />
       <View style={[styles.divider, { backgroundColor: theme.border_color_thin }]} />
@@ -442,6 +444,27 @@ export default function PosScreen() {
         onDismiss={() => setPickingCombo(null)}
         onConfirm={addComboFromDraft}
       />
+      <AppModal
+        visible={confirmingClear}
+        icon="remove"
+        title={t('pos.clearCartTitle')}
+        onClose={() => setConfirmingClear(false)}
+        maxWidth={400}
+        actions={[
+          { text: t('common.cancel'), onPress: () => setConfirmingClear(false) },
+          {
+            text: t('pos.clearCartConfirm'),
+            primary: true,
+            onPress: () => {
+              setConfirmingClear(false);
+              clearCart();
+            },
+          },
+        ]}>
+        <Txt variant="body" style={styles.confirmText}>
+          {t('pos.clearCartMessage', { count: cartCount })}
+        </Txt>
+      </AppModal>
       <ServerCheckoutDialog
         order={checkoutOrder}
         cartSnapshot={cartSnapshot}
@@ -474,6 +497,7 @@ const styles = StyleSheet.create({
   cartLineName: { flexShrink: 1 },
   cartLineFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   cartFooter: { padding: 14, gap: 10 },
+  confirmText: { textAlign: 'center' },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   summaryTotal: { fontFamily: fontFamily.bold, fontSize: 22, lineHeight: 28 },
 });

@@ -116,6 +116,9 @@
     "emptyCart": "Chọn món ở bên trái để thêm vào đơn.",
     "emptyMenu": "Danh mục này chưa có món nào.",
     "checkoutBtn": "Thanh toán · {{total}}",
+    "clearCartTitle": "Xoá đơn đang tạo?",
+    "clearCartMessage": "Toàn bộ {{count}} món trong đơn sẽ bị xoá. Bạn có chắc muốn xoá không?",
+    "clearCartConfirm": "Xoá đơn",
     "errors": {
       "unavailable": "Có món hoặc topping vừa hết: {{names}}. Vui lòng bỏ khỏi đơn rồi thử lại."
     },
