@@ -37,6 +37,7 @@
   },
   "account": {
     "screenTitle": "Account",
+    "branch": "Branch {{name}}",
     "settingsSection": "Device settings",
     "logout": "Sign out",
     "privacyPolicy": "Privacy policy",

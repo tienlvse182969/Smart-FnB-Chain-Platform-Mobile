@@ -12,6 +12,7 @@ import { ItemOptionsDialog, type ItemDraft } from '@/src/components/pos/item-opt
 import { ALL_CATEGORIES, MenuCategoryTabs } from '@/src/components/pos/menu-category-tabs';
 import { MenuItemCard } from '@/src/components/pos/menu-item-card';
 import { SplitPanelLayout } from '@/src/components/split-panel-layout';
+import { StaffAvatarButton } from '@/src/components/staff-avatar';
 import { Btn } from '@/src/components/ui/button';
 import { Field } from '@/src/components/ui/field';
 import { Icon, IconButton } from '@/src/components/ui/icon';
@@ -356,15 +357,19 @@ export default function PosScreen() {
       <SplitPanelLayout onMainWidth={setMenuWidth} panel={cartPanel}>
         <View style={styles.menuSide}>
           <View style={styles.searchWrap}>
-            <Field
-              value={query}
-              onChangeText={setQuery}
-              placeholder={t('pos.searchPlaceholder')}
-              autoCorrect={false}
-              autoCapitalize="none"
-              left={<Icon name="search" size={16} color={theme.color_text_caption} />}
-              right={query ? <IconButton name="clear" size={16} onPress={() => setQuery('')} /> : undefined}
-            />
+            {/* màn hình dọc: POS không có tiêu đề nên avatar nằm bên trái ô tìm món */}
+            <StaffAvatarButton />
+            <View style={styles.searchField}>
+              <Field
+                value={query}
+                onChangeText={setQuery}
+                placeholder={t('pos.searchPlaceholder')}
+                autoCorrect={false}
+                autoCapitalize="none"
+                left={<Icon name="search" size={16} color={theme.color_text_caption} />}
+                right={query ? <IconButton name="clear" size={16} onPress={() => setQuery('')} /> : undefined}
+              />
+            </View>
           </View>
           <View style={styles.tabsWrap}>
             <MenuCategoryTabs
@@ -449,7 +454,8 @@ export default function PosScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   menuSide: { flex: 1 },
-  searchWrap: { paddingHorizontal: GRID_PADDING, paddingTop: 12 },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: GRID_PADDING, paddingTop: 12 },
+  searchField: { flex: 1 },
   tabsWrap: { paddingHorizontal: GRID_PADDING, paddingTop: 8 },
   menuNotice: { margin: GRID_PADDING, padding: 12, borderWidth: StyleSheet.hairlineWidth, borderRadius: 6, gap: 8 },
   loader: { padding: 20 },

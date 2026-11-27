@@ -37,6 +37,7 @@
   },
   "account": {
     "screenTitle": "Tài khoản",
+    "branch": "Chi nhánh {{name}}",
     "settingsSection": "Cài đặt thiết bị",
     "logout": "Đăng xuất",
     "privacyPolicy": "Chính sách quyền riêng tư",

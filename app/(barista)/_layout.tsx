@@ -1,9 +1,13 @@
 import { Redirect, Stack } from 'expo-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { useAuth } from '@/src/auth/auth-context';
+import { AccountScreen } from '@/src/components/account-screen';
+import { NewOrderSoundSetting } from '@/src/components/barista/new-order-sound-setting';
 import { NavRail, type NavDest } from '@/src/components/nav-rail';
+import { StaffAvatarProvider, type AvatarAnchor } from '@/src/components/staff-avatar';
 import { useStore } from '@/src/data/store';
 import { useAppTheme } from '@/src/theme/use-theme';
 
@@ -15,6 +19,12 @@ export default function BaristaLayout() {
   const compact = isPortrait ? false : width < 820;
   const { state } = useStore();
   const { user, displayName, loading } = useAuth();
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [accountAnchor, setAccountAnchor] = useState<AvatarAnchor>();
+  const openAccount = (anchor?: AvatarAnchor) => {
+    setAccountAnchor(anchor);
+    setAccountOpen(true);
+  };
 
   // chưa đăng nhập hoặc sai vai trò → về màn hình đăng nhập
   if (loading) return null;
@@ -33,6 +43,7 @@ export default function BaristaLayout() {
   const staffName = state.currentUser?.name || displayName || user.email;
 
   return (
+    <StaffAvatarProvider value={{ name: staffName, active: accountOpen, onPress: openAccount }}>
     <View
       style={[
         styles.shell,
@@ -44,7 +55,8 @@ export default function BaristaLayout() {
           edge="left"
           dests={dests}
           staffName={staffName}
-          staffHref="/(barista)/account"
+          onStaffPress={openAccount}
+          staffActive={accountOpen}
         />
       ) : null}
       <View style={styles.content}>
@@ -61,11 +73,19 @@ export default function BaristaLayout() {
           edge="bottom"
           dests={dests}
           staffName={staffName}
-          staffHref="/(barista)/account"
+          onStaffPress={openAccount}
           size="lg"
         />
       ) : null}
+      <AccountScreen
+        role="Pha chế"
+        visible={accountOpen}
+        anchor={accountAnchor}
+        onClose={() => setAccountOpen(false)}
+        settings={<NewOrderSoundSetting />}
+      />
     </View>
+    </StaffAvatarProvider>
   );
 }
 
