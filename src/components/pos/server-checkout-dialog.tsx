@@ -1,6 +1,6 @@
 import { toast } from '@/src/components/ui/toast';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState, StyleSheet, View } from 'react-native';
+import { AppState, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import QRCode from 'react-native-qrcode-svg';
 
@@ -395,10 +395,12 @@ export function ServerCheckoutDialog({
       maxWidth={520}
       actions={paidOrder ? [{ text: 'Đơn mới', onPress: () => void dismiss(), primary: true }] : undefined}>
       {paidOrder ? (
-        <View style={styles.success}>
-          <Txt variant="caption" muted>SỐ GỌI</Txt>
-          <Txt style={styles.callNumber}>{String(paidOrder.callNumber ?? 0).padStart(3, '0')}</Txt>
-          <Txt variant="body">Đơn đã được chuyển tới màn hình pha chế.</Txt>
+        // ScrollView để khi bàn phím mở (ô số bàn) nội dung cuộn được thay vì tràn đè lên nút "Đơn mới"
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.success}
+          keyboardShouldPersistTaps="handled">
+          <Txt variant="body">Đơn đã được chuyển tới pha chế.</Txt>
           <PagerPanel
             orderId={paidOrder.id}
             pagerNumber={paidOrder.pagerNumber}
@@ -424,7 +426,7 @@ export function ServerCheckoutDialog({
               <Btn label="In lại" icon="print" variant="ghost" onPress={() => void printBill(paidOrder.id)} />
             </>
           ) : null}
-        </View>
+        </ScrollView>
       ) : (
         <View style={styles.body}>
           <View style={styles.totalBox}>
@@ -541,8 +543,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   qrArea: { alignItems: 'center', gap: 10 },
   qrFrame: { padding: 12, borderRadius: 8, backgroundColor: '#FFF' },
+  scroll: { maxHeight: 620 },
   success: { alignItems: 'center', gap: 10, paddingVertical: 12 },
-  callNumber: { fontFamily: fontFamily.black, fontSize: 64, lineHeight: 72 },
   printError: { textAlign: 'center' },
   confirmText: { textAlign: 'center' },
 });
