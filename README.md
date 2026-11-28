@@ -67,6 +67,10 @@ thu gọn icon-only khi bề rộng < 820. Layout co giãn cho cả ngang lẫn 
 - **In bill / phiếu số (CS-04, BR-21):** chưa in thật. Bản có backend dựng bill thành ảnh rồi gửi ESC/POS tới máy in nhiệt
   (Bluetooth/WiFi). App mô phỏng trạng thái in: in lỗi **không chặn** thanh toán và đơn vẫn xuống pha chế; POS hiện
   cảnh báo **In thất bại** + nút **In lại**, lịch sử đơn có nhãn. Bật công tắc **Giả lập: máy in lỗi** ở Tài khoản (Thu ngân) để thử.
+- **Máy in:** chọn ở Tài khoản > Máy in hóa đơn, ba cách nối: **Bluetooth** (ghép đôi trong Android), **USB** (cắm dây vào cổng
+  USB của máy POS, app tự xin quyền USB) và **Tích hợp** (máy POS Sunmi có sẵn máy in). USB và Tích hợp dùng module native
+  `modules/pos-printer` (Kotlin, Expo local module) nên cần **development build** (`expo run:android`), không chạy trên Expo Go.
+  Bill ảnh rộng 384 điểm (giấy 58mm).
 - QR ở POS là mã giả (`SMARTFNB|mã đơn|số tiền`); nút **"Giả lập: khách đã chuyển khoản"** thay cho webhook PayOS.
 - Chưa làm: màn hình phía khách, màn hình gọi số, ghép thiết bị, Socket.IO, Manager/Owner.
 - Font HarmonyOS Sans được phủ lên **mọi** `<Text>` (kể cả bên trong component antd)

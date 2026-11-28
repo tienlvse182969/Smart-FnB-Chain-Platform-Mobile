@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 
-import { PrinterError } from '@/src/services/printer/bluetooth-printer';
+import { PrinterError } from '@/src/services/printer/printer-core';
 import { CAPTURE_SCALE, PRINT_WIDTH_DOTS } from '@/src/services/printer/raster';
 
 type Job = {

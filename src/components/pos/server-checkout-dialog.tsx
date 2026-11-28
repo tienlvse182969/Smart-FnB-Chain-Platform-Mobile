@@ -1,6 +1,7 @@
 import { toast } from '@/src/components/ui/toast';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState, StyleSheet, View } from 'react-native';
+import { AppState, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import QRCode from 'react-native-qrcode-svg';
 
 import { formatVnd } from '@/src/data/format';
@@ -18,7 +19,7 @@ import {
   PrinterNotConfiguredError,
   toPrintFailure,
   type PrintFailure,
-} from '@/src/services/printer/bluetooth-printer';
+} from '@/src/services/printer/printer-core';
 import { printOrderReceipt } from '@/src/services/printer/print-service';
 import { useStation } from '@/src/stations/station-context';
 import { fontFamily } from '@/src/theme/typography';
@@ -53,6 +54,7 @@ export function ServerCheckoutDialog({
   onClose: (paid: boolean) => void;
 }) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { selectedStation } = useStation();
   const [tendered, setTendered] = useState('');
   const [paidOrder, setPaidOrder] = useState<CounterOrder | null>(null);
@@ -112,6 +114,8 @@ export function ServerCheckoutDialog({
       try {
         await printOrderReceipt(orderId, selectedStation, printJobIds.current);
         setPrintState('done');
+        // mask=false để toast không chặn thu ngân bấm "Đơn mới"
+        toast.success(t('checkout.printed'), 1.5, undefined, false);
       } catch (failure) {
         setPrintFailure(toPrintFailure(failure));
         if (failure instanceof PrinterNotConfiguredError) {
@@ -122,7 +126,7 @@ export function ServerCheckoutDialog({
         }
       }
     },
-    [selectedStation],
+    [selectedStation, t],
   );
 
   const paidOrderId = paidOrder?.id;
@@ -391,10 +395,12 @@ export function ServerCheckoutDialog({
       maxWidth={520}
       actions={paidOrder ? [{ text: 'Đơn mới', onPress: () => void dismiss(), primary: true }] : undefined}>
       {paidOrder ? (
-        <View style={styles.success}>
-          <Txt variant="caption" muted>SỐ GỌI</Txt>
-          <Txt style={styles.callNumber}>{String(paidOrder.callNumber ?? 0).padStart(3, '0')}</Txt>
-          <Txt variant="body">Đơn đã được chuyển tới màn hình pha chế.</Txt>
+        // ScrollView để khi bàn phím mở (ô số bàn) nội dung cuộn được thay vì tràn đè lên nút "Đơn mới"
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.success}
+          keyboardShouldPersistTaps="handled">
+          <Txt variant="body">Đơn đã được chuyển tới pha chế.</Txt>
           <PagerPanel
             orderId={paidOrder.id}
             pagerNumber={paidOrder.pagerNumber}
@@ -420,7 +426,7 @@ export function ServerCheckoutDialog({
               <Btn label="In lại" icon="print" variant="ghost" onPress={() => void printBill(paidOrder.id)} />
             </>
           ) : null}
-        </View>
+        </ScrollView>
       ) : (
         <View style={styles.body}>
           <View style={styles.totalBox}>
@@ -537,8 +543,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   qrArea: { alignItems: 'center', gap: 10 },
   qrFrame: { padding: 12, borderRadius: 8, backgroundColor: '#FFF' },
+  scroll: { maxHeight: 620 },
   success: { alignItems: 'center', gap: 10, paddingVertical: 12 },
-  callNumber: { fontFamily: fontFamily.black, fontSize: 64, lineHeight: 72 },
   printError: { textAlign: 'center' },
   confirmText: { textAlign: 'center' },
 });

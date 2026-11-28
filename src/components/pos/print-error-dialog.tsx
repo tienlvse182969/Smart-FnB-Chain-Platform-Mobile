@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import type { PrintFailure, PrinterErrorKind } from '@/src/services/printer/bluetooth-printer';
+import type { PrintFailure, PrinterErrorKind } from '@/src/services/printer/printer-core';
 import { AppModal } from '../ui/app-modal';
 import { Txt } from '../ui/txt';
 
@@ -11,13 +11,16 @@ const TIP_COUNT: Record<PrinterErrorKind, number> = {
   UNSUPPORTED: 1,
   NO_PERMISSION: 1,
   BLUETOOTH_OFF: 1,
+  USB_PERMISSION: 2,
+  DEVICE_NOT_FOUND: 2,
+  PAPER_OUT: 1,
   CONNECTION: 4,
   UNKNOWN: 3,
 };
 
 /**
  * Báo thu ngân khi lệnh in ném ngoại lệ (chưa chọn/không kết nối được máy in, Bluetooth tắt, máy in lỗi…).
- * Bluetooth ESC/POS không phản hồi tình trạng giấy, nên hết/kẹt giấy chỉ biết được khi kết nối hoặc ghi dữ liệu thất bại.
+ * Máy in Bluetooth/USB ESC/POS không phản hồi tình trạng giấy, nên hết/kẹt giấy chỉ biết được khi kết nối hoặc ghi dữ liệu thất bại (riêng máy in tích hợp Sunmi báo được hết giấy/mở nắp).
  */
 export function PrintErrorDialog({
   failure,

@@ -1,0 +1,20 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.posprinter'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.posprinter"
+  defaultConfig {
+    versionCode 1
+    versionName '1.0.0'
+  }
+}
+
+dependencies {
+  // SDK máy in tích hợp của Sunmi (V1/V2/V2 Pro/T2...); chỉ chạy khi thiết bị có dịch vụ in của Sunmi.
+  implementation "com.sunmi:printerlibrary:1.0.24"
+}

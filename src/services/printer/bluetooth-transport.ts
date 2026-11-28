@@ -1,74 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PermissionsAndroid, Platform } from 'react-native';
+
+import { PrinterError, type PrinterDevice } from './printer-core';
 
 type BluetoothModule = typeof import('react-native-bluetooth-classic').default;
 
-/** Nhóm lỗi in để UI báo đúng nguyên nhân và hướng dẫn xử lý cho thu ngân. */
-export type PrinterErrorKind =
-  | 'NOT_CONFIGURED'
-  | 'UNSUPPORTED'
-  | 'NO_PERMISSION'
-  | 'BLUETOOTH_OFF'
-  | 'CONNECTION'
-  | 'UNKNOWN';
-
-export class PrinterError extends Error {
-  kind: PrinterErrorKind;
-
-  constructor(message: string, kind: PrinterErrorKind = 'UNKNOWN') {
-    super(message);
-    this.kind = kind;
-  }
-}
-
-/** Chưa chọn máy in nào cho thiết bị này (khác với lỗi khi đang in). */
-export class PrinterNotConfiguredError extends PrinterError {
-  constructor(message: string) {
-    super(message, 'NOT_CONFIGURED');
-  }
-}
-
-export type PrintFailure = { kind: PrinterErrorKind; message: string };
-
-/** Chuẩn hoá mọi ngoại lệ phát sinh khi in (kể cả lỗi ngoài PrinterError như mất mạng khi lấy bill) để hiển thị. */
-export function toPrintFailure(error: unknown): PrintFailure {
-  if (error instanceof PrinterError) return { kind: error.kind, message: error.message };
-  return { kind: 'UNKNOWN', message: error instanceof Error ? error.message : String(error ?? '') };
-}
-
-/** `image`: dựng bill thành ảnh (có dấu, font như app). `text`: chữ ASCII không dấu, nhanh hơn. */
-export type PrintMode = 'image' | 'text';
-
-export type PrinterConfig = { address: string; name: string; printMode: PrintMode };
-
-export type PairedPrinter = { address: string; name: string };
-
-const STORAGE_KEY = 'smartfnb.printer';
 const CHUNK_SIZE = 1024;
-
-export async function loadPrinterConfig(): Promise<PrinterConfig | null> {
-  try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    // Cấu hình cũ lưu `textMode` ('ascii' | 'utf8'); máy in này không đọc được UTF-8 nên chuyển sang ảnh.
-    const saved = JSON.parse(raw) as Partial<PrinterConfig> & { address: string; name: string };
-    return {
-      address: saved.address,
-      name: saved.name,
-      printMode: saved.printMode === 'text' ? 'text' : 'image',
-    };
-  } catch {
-    return null;
-  }
-}
-
-export async function savePrinterConfig(config: PrinterConfig) {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-}
-
-export async function clearPrinterConfig() {
-  await AsyncStorage.removeItem(STORAGE_KEY);
-}
 
 // Nạp module native khi cần để app vẫn mở được trên Expo Go (không có module này); khi đó in sẽ báo lỗi rõ ràng.
 function bluetooth(): BluetoothModule {
@@ -97,7 +33,7 @@ async function ensureReady(bt: BluetoothModule) {
 }
 
 /** Các thiết bị đã ghép đôi với máy POS (ghép máy in trong Cài đặt Bluetooth của Android trước). */
-export async function listPairedPrinters(): Promise<PairedPrinter[]> {
+export async function listPairedPrinters(): Promise<PrinterDevice[]> {
   const bt = bluetooth();
   await ensureReady(bt);
   const devices = await bt.getBondedDevices();
@@ -117,10 +53,10 @@ async function writeAll(bt: BluetoothModule, address: string, payload: string, c
 }
 
 /**
- * Gửi dữ liệu ESC/POS tới máy in; kết nối cũ có thể đã chết nên thử lại một lần với kết nối mới.
+ * Gửi dữ liệu ESC/POS qua Bluetooth; kết nối cũ có thể đã chết nên thử lại một lần với kết nối mới.
  * `chunkDelayMs` > 0 dùng cho ảnh (dữ liệu lớn).
  */
-export async function sendToPrinter(address: string, payload: string, chunkDelayMs = 0) {
+export async function sendViaBluetooth(address: string, payload: string, chunkDelayMs: number) {
   const bt = bluetooth();
   await ensureReady(bt);
   try {

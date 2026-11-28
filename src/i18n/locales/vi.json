@@ -9,30 +9,30 @@
     "retry": "Thử lại"
   },
   "pager": {
-    "title": "Máy báo rung",
-    "label": "Số máy báo rung",
+    "title": "Số bàn",
+    "label": "Số bàn",
     "placeholder": "1 – 999",
-    "hint": "Nhập số trên máy báo rung đưa cho khách (không bắt buộc).",
-    "assign": "Gán máy",
-    "change": "Đổi máy",
-    "remove": "Gỡ máy",
+    "hint": "Nhập số bàn của khách (không bắt buộc).",
+    "assign": "Gán bàn",
+    "change": "Đổi bàn",
+    "remove": "Gỡ bàn",
     "save": "Lưu",
-    "short": "Máy #{{number}}",
-    "assigned": "Đã gán máy báo rung #{{number}}",
-    "removed": "Đã gỡ máy báo rung",
-    "notify": "Đã gọi máy",
-    "notifyLong": "Ghi nhận đã gọi máy báo rung",
+    "short": "Bàn #{{number}}",
+    "assigned": "Đã gán bàn #{{number}}",
+    "removed": "Đã gỡ số bàn",
+    "notify": "Đã gọi bàn",
+    "notifyLong": "Ghi nhận đã gọi bàn",
     "notified": "Đã gọi lúc {{time}}",
-    "notifiedToast": "Đã ghi nhận gọi máy #{{number}}",
-    "readyHint": "Món đã xong — bấm gọi trên bộ phát máy báo rung rồi ghi nhận tại đây.",
+    "notifiedToast": "Đã ghi nhận gọi bàn #{{number}}",
+    "readyHint": "Món đã xong — gọi bàn rồi ghi nhận tại đây.",
     "errors": {
-      "range": "Số máy báo rung phải là số nguyên từ 1 đến 999.",
-      "taken": "Máy #{{number}} đang gán cho một đơn khác chưa hoàn tất.",
-      "notOpen": "Chỉ gán được máy báo rung cho đơn đã thanh toán và chưa hoàn tất.",
-      "notReady": "Chỉ ghi nhận gọi khi đơn đã sẵn sàng và vẫn gán đúng máy này.",
+      "range": "Số bàn phải là số nguyên từ 1 đến 999.",
+      "taken": "Bàn #{{number}} đang gán cho một đơn khác chưa hoàn tất.",
+      "notOpen": "Chỉ gán được số bàn cho đơn đã thanh toán và chưa hoàn tất.",
+      "notReady": "Chỉ ghi nhận gọi khi đơn đã sẵn sàng và vẫn gán đúng bàn này.",
       "notFound": "Không tìm thấy đơn trong chi nhánh của bạn.",
-      "forbidden": "Tài khoản không có quyền thao tác máy báo rung.",
-      "generic": "Không cập nhật được máy báo rung"
+      "forbidden": "Tài khoản không có quyền thao tác số bàn.",
+      "generic": "Không cập nhật được số bàn"
     }
   },
   "account": {
@@ -312,14 +312,18 @@
   "printer": {
     "section": "Máy in hóa đơn",
     "none": "Chưa chọn máy in",
-    "noneHint": "Ghép đôi máy in trong Cài đặt Bluetooth của Android, rồi chọn máy in ở đây.",
+    "noneHint": "Chọn máy in Bluetooth đã ghép đôi, máy in cắm cổng USB hoặc máy in tích hợp sẵn trong máy POS.",
     "choose": "Chọn máy in",
     "change": "Đổi máy in",
-    "pickTitle": "Chọn máy in đã ghép đôi",
-    "pickEmpty": "Chưa có thiết bị nào được ghép đôi. Hãy ghép máy in trong Cài đặt Bluetooth của Android (mã PIN thường là 0000 hoặc 1234).",
+    "pickTitle": "Chọn máy in",
+    "pickEmpty": {
+      "BLUETOOTH": "Chưa có thiết bị nào được ghép đôi. Hãy ghép máy in trong Cài đặt Bluetooth của Android (mã PIN thường là 0000 hoặc 1234).",
+      "USB": "Không thấy máy in USB nào. Hãy cắm dây USB từ máy in vào máy POS (dùng cáp OTG nếu cần), bật nguồn máy in rồi chọn lại.",
+      "BUILTIN": "Máy này không có máy in tích hợp được hỗ trợ (hiện hỗ trợ máy POS Sunmi)."
+    },
     "testPrint": "In thử",
     "testPrinted": "Đã gửi phiếu in thử.",
-    "loadFailed": "Không đọc được danh sách thiết bị Bluetooth.",
+    "loadFailed": "Không đọc được danh sách máy in.",
     "remove": "Bỏ chọn",
     "printMode": "Kiểu in trên bill",
     "modeImage": "Ảnh (có dấu)",
@@ -331,13 +335,13 @@
       "NOT_CONFIGURED": {
         "title": "Chưa chọn máy in",
         "tips": {
-          "0": "Vào Tài khoản > Máy in hóa đơn để chọn máy in Bluetooth đã ghép đôi."
+          "0": "Vào Tài khoản > Máy in hóa đơn để chọn máy in (Bluetooth, USB hoặc máy in tích hợp)."
         }
       },
       "UNSUPPORTED": {
         "title": "Thiết bị không in được",
         "tips": {
-          "0": "In Bluetooth chỉ chạy trên Android với development build (không dùng Expo Go)."
+          "0": "In Bluetooth, USB và máy in tích hợp chỉ chạy trên Android với development build (không dùng Expo Go)."
         }
       },
       "NO_PERMISSION": {
@@ -357,7 +361,7 @@
         "tips": {
           "0": "Máy in đã bật nguồn và nằm gần thiết bị POS.",
           "1": "Máy in còn giấy, nắp đóng kín và không bị kẹt giấy.",
-          "2": "Máy in đã ghép đôi trong Cài đặt Bluetooth và không đang kết nối với thiết bị khác.",
+          "2": "Máy in Bluetooth đã ghép đôi và không đang kết nối với thiết bị khác; máy in USB đã cắm chắc dây.",
           "3": "Tắt rồi bật lại máy in nếu vẫn lỗi."
         }
       },
@@ -369,7 +373,32 @@
           "2": "Bấm Thử lại sau khi xử lý xong."
         }
       },
-      "orderPaid": "Thanh toán vẫn đã được ghi nhận. Bạn có thể in lại bất cứ lúc nào trong màn Lịch sử đơn."
+      "orderPaid": "Thanh toán vẫn đã được ghi nhận. Bạn có thể in lại bất cứ lúc nào trong màn Lịch sử đơn.",
+      "USB_PERMISSION": {
+        "title": "Chưa cấp quyền máy in USB",
+        "tips": {
+          "0": "Khi hộp thoại hệ thống hiện ra, chọn Cho phép để ứng dụng dùng máy in USB.",
+          "1": "Rút dây USB rồi cắm lại, sau đó bấm Thử lại."
+        }
+      },
+      "DEVICE_NOT_FOUND": {
+        "title": "Không thấy máy in",
+        "tips": {
+          "0": "Máy in USB đã cắm chắc dây và đã bật nguồn.",
+          "1": "Vào Tài khoản > Máy in hóa đơn để chọn lại máy in nếu bạn đã đổi máy in hoặc cổng cắm."
+        }
+      },
+      "PAPER_OUT": {
+        "title": "Máy in hết giấy hoặc mở nắp",
+        "tips": {
+          "0": "Lắp thêm cuộn giấy và đóng chặt nắp máy in rồi bấm Thử lại."
+        }
+      }
+    },
+    "transport": {
+      "BLUETOOTH": "Bluetooth",
+      "USB": "USB",
+      "BUILTIN": "Tích hợp"
     }
   },
   "refund": {

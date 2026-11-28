@@ -9,27 +9,32 @@ import { Segmented } from '@/src/components/ui/segmented';
 import { toast } from '@/src/components/ui/toast';
 import { Txt } from '@/src/components/ui/txt';
 import {
+  BUILTIN_ADDRESS,
   clearPrinterConfig,
-  listPairedPrinters,
   loadPrinterConfig,
   savePrinterConfig,
   toPrintFailure,
-  type PairedPrinter,
   type PrinterConfig,
+  type PrinterDevice,
+  type PrinterTransport,
   type PrintFailure,
   type PrintMode,
-} from '@/src/services/printer/bluetooth-printer';
+} from '@/src/services/printer/printer-core';
+import { getBuiltInPrinterName, requestUsbPermission } from '@/src/services/printer/native-transport';
 import { printTestPage } from '@/src/services/printer/print-service';
+import { listPrinters } from '@/src/services/printer/transport';
 import { useAppTheme } from '@/src/theme/use-theme';
 import { PrintErrorDialog } from './print-error-dialog';
 
-/** Mục "Máy in hóa đơn" trong Tài khoản của thu ngân: chọn máy in Bluetooth đã ghép đôi, chọn kiểu chữ, in thử. */
+/** Mục "Máy in hóa đơn" trong Tài khoản của thu ngân: chọn máy in (Bluetooth / USB / tích hợp), kiểu chữ, in thử. */
 export function PrinterCard() {
   const theme = useAppTheme();
   const { t } = useTranslation();
   const [config, setConfig] = useState<PrinterConfig | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [devices, setDevices] = useState<PairedPrinter[] | null>(null);
+  const [transport, setTransport] = useState<PrinterTransport>('BLUETOOTH');
+  const [devices, setDevices] = useState<PrinterDevice[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const [testFailure, setTestFailure] = useState<PrintFailure | null>(null);
 
@@ -37,19 +42,47 @@ export function PrinterCard() {
     void loadPrinterConfig().then(setConfig);
   }, []);
 
-  const openPicker = useCallback(async () => {
-    setPickerOpen(true);
-    setDevices(null);
-    try {
-      setDevices(await listPairedPrinters());
-    } catch (failure) {
-      setPickerOpen(false);
-      toast.fail(failure instanceof Error ? failure.message : t('printer.loadFailed'), 3, undefined, false);
-    }
-  }, [t]);
+  const loadDevices = useCallback(
+    async (next: PrinterTransport) => {
+      setTransport(next);
+      setDevices(null);
+      setLoadError(null);
+      try {
+        if (next === 'BUILTIN') {
+          const name = await getBuiltInPrinterName();
+          setDevices(name ? [{ address: BUILTIN_ADDRESS, name }] : []);
+        } else {
+          setDevices(await listPrinters(next));
+        }
+      } catch (failure) {
+        setDevices([]);
+        setLoadError(failure instanceof Error && failure.message ? failure.message : t('printer.loadFailed'));
+      }
+    },
+    [t],
+  );
 
-  const choose = async (device: PairedPrinter) => {
-    const next: PrinterConfig = { address: device.address, name: device.name, printMode: config?.printMode ?? 'image' };
+  const openPicker = useCallback(() => {
+    setPickerOpen(true);
+    void loadDevices(config?.transport ?? 'BLUETOOTH');
+  }, [config?.transport, loadDevices]);
+
+  const choose = async (device: PrinterDevice) => {
+    if (transport === 'USB') {
+      // Xin quyền ngay bây giờ để lúc thanh toán không bị hộp thoại hệ thống chen ngang.
+      try {
+        await requestUsbPermission(device.address);
+      } catch (failure) {
+        toast.fail(failure instanceof Error ? failure.message : t('printer.loadFailed'), 3, undefined, false);
+        return;
+      }
+    }
+    const next: PrinterConfig = {
+      transport,
+      address: device.address,
+      name: device.name,
+      printMode: config?.printMode ?? 'image',
+    };
     await savePrinterConfig(next);
     setConfig(next);
     setPickerOpen(false);
@@ -91,7 +124,11 @@ export function PrinterCard() {
           <View style={styles.text}>
             <Txt variant="body">{config?.name ?? t('printer.none')}</Txt>
             <Txt variant="tiny" muted>
-              {config ? config.address : t('printer.noneHint')}
+              {config
+                ? config.transport === 'BUILTIN'
+                  ? t('printer.transport.BUILTIN')
+                  : `${t(`printer.transport.${config.transport}`)} · ${config.address}`
+                : t('printer.noneHint')}
             </Txt>
           </View>
         </View>
@@ -101,7 +138,7 @@ export function PrinterCard() {
           icon="print"
           variant={config ? 'ghost' : 'primary'}
           block
-          onPress={() => void openPicker()}
+          onPress={openPicker}
           style={styles.button}
         />
 
@@ -145,12 +182,22 @@ export function PrinterCard() {
         onClose={() => setPickerOpen(false)}
         maxWidth={460}
         actions={[{ text: t('common.close'), onPress: () => setPickerOpen(false) }]}>
+        <Segmented<PrinterTransport>
+          value={transport}
+          onChange={(next) => void loadDevices(next)}
+          options={[
+            { value: 'BLUETOOTH', label: t('printer.transport.BLUETOOTH') },
+            { value: 'USB', label: t('printer.transport.USB') },
+            { value: 'BUILTIN', label: t('printer.transport.BUILTIN') },
+          ]}
+          style={styles.transports}
+        />
         <ScrollView style={styles.list}>
           {devices === null ? (
             <ActivityIndicator color={theme.brand_primary} />
           ) : devices.length === 0 ? (
             <Txt variant="caption" muted>
-              {t('printer.pickEmpty')}
+              {loadError ?? t(`printer.pickEmpty.${transport}`)}
             </Txt>
           ) : (
             devices.map((device) => (
@@ -163,9 +210,11 @@ export function PrinterCard() {
                   pressed && { opacity: 0.55 },
                 ]}>
                 <Txt variant="body">{device.name}</Txt>
-                <Txt variant="tiny" muted>
-                  {device.address}
-                </Txt>
+                {transport === 'BUILTIN' ? null : (
+                  <Txt variant="tiny" muted>
+                    {device.address}
+                  </Txt>
+                )}
               </Pressable>
             ))
           )}
@@ -183,6 +232,7 @@ const styles = StyleSheet.create({
   button: { marginTop: 10 },
   label: { marginTop: 10 },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 10 },
+  transports: { flexWrap: 'wrap', marginBottom: 8 },
   list: { maxHeight: 360 },
   device: { paddingVertical: 12, gap: 2, borderBottomWidth: StyleSheet.hairlineWidth },
 });

@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Cổng USB host không phải máy nào cũng có; không khai báo bắt buộc để app vẫn cài được trên mọi máy. -->
+  <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+
+  <!-- Android 11+: cần khai báo để thấy và bind được dịch vụ máy in tích hợp của Sunmi. -->
+  <queries>
+    <package android:name="woyou.aidlservice.jiuiv5" />
+  </queries>
+</manifest>
