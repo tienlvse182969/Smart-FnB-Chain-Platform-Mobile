@@ -10,13 +10,8 @@ import {
   type OrderReceipt,
 } from '@/src/services/cashier-api';
 import type { PosStation } from '@/src/services/stations-api';
-import {
-  loadPrinterConfig,
-  PrinterNotConfiguredError,
-  sendToPrinter,
-  type PrinterConfig,
-} from './bluetooth-printer';
 import { renderReceiptImages, renderTestImages } from './print-images';
+import { loadPrinterConfig, PrinterNotConfiguredError, type PrinterConfig } from './printer-core';
 import { buildRasterPayload } from './raster';
 import {
   buildReceiptPayload,
@@ -24,6 +19,7 @@ import {
   buildTestPayload,
   type RefundSlipHeader,
 } from './receipt-layout';
+import { sendToPrinter } from './transport';
 
 /** Nghỉ giữa các gói khi gửi ảnh; tăng nếu máy in bị mất dòng hoặc in lỗi. */
 const IMAGE_CHUNK_DELAY_MS = 20;
@@ -38,7 +34,7 @@ async function resolvePrinter(station: PosStation | null): Promise<PrinterConfig
   const saved = await loadPrinterConfig();
   if (saved) return saved;
   if (station?.printerConnection === 'BLUETOOTH' && station.printerAddress) {
-    return { address: station.printerAddress, name: station.printerAddress, printMode: 'image' };
+    return { transport: 'BLUETOOTH', address: station.printerAddress, name: station.printerAddress, printMode: 'image' };
   }
   throw new PrinterNotConfiguredError('Chưa chọn máy in. Vào Tài khoản > Máy in hóa đơn để chọn.');
 }
@@ -67,7 +63,7 @@ async function buildPayload(receipt: OrderReceipt, mode: PrinterConfig['printMod
 
 async function print(printer: PrinterConfig, receipt: OrderReceipt) {
   const { data, chunkDelayMs } = await buildPayload(receipt, printer.printMode);
-  await sendToPrinter(printer.address, data, chunkDelayMs);
+  await sendToPrinter(printer, data, chunkDelayMs);
 }
 
 /** Báo kết quả in thật cho backend; lỗi báo cáo không được làm đổi kết quả in vật lý (BR-21). */
@@ -182,7 +178,7 @@ export async function printRefundSlip(job: RefundSlipPrintJob, station: PosStati
       }
     }
     payload ??= await refundTextPayload(job);
-    await sendToPrinter(printer.address, payload.data, payload.chunkDelayMs);
+    await sendToPrinter(printer, payload.data, payload.chunkDelayMs);
   } catch (reason) {
     failure = reason ?? 'Không in được';
   }
@@ -197,10 +193,10 @@ export async function printRefundSlip(job: RefundSlipPrintJob, station: PosStati
 }
 
 /** Phiếu in thử theo đúng chế độ đang chọn; ở chế độ ảnh, lỗi dựng ảnh được báo lên để biết mà sửa. */
-export async function printTestPage(printer: Pick<PrinterConfig, 'address' | 'printMode'>) {
+export async function printTestPage(printer: Pick<PrinterConfig, 'transport' | 'address' | 'printMode'>) {
   if (printer.printMode === 'image') {
-    await sendToPrinter(printer.address, buildRasterPayload(await renderTestImages()), IMAGE_CHUNK_DELAY_MS);
+    await sendToPrinter(printer, buildRasterPayload(await renderTestImages()), IMAGE_CHUNK_DELAY_MS);
     return;
   }
-  await sendToPrinter(printer.address, buildTestPayload());
+  await sendToPrinter(printer, buildTestPayload());
 }

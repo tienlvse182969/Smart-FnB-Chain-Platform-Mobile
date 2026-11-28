@@ -18,7 +18,7 @@ import {
   type PrintJob,
   type RefundApprovalRequest,
 } from '@/src/services/cashier-api';
-import { toPrintFailure, type PrintFailure } from '@/src/services/printer/bluetooth-printer';
+import { toPrintFailure, type PrintFailure } from '@/src/services/printer/printer-core';
 import { printReceipt, printRefundSlip, type RefundSlipPrintJob } from '@/src/services/printer/print-service';
 import { useStation } from '@/src/stations/station-context';
 import { useAppTheme } from '@/src/theme/use-theme';

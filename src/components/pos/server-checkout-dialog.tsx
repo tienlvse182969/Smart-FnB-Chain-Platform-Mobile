@@ -19,7 +19,7 @@ import {
   PrinterNotConfiguredError,
   toPrintFailure,
   type PrintFailure,
-} from '@/src/services/printer/bluetooth-printer';
+} from '@/src/services/printer/printer-core';
 import { printOrderReceipt } from '@/src/services/printer/print-service';
 import { useStation } from '@/src/stations/station-context';
 import { fontFamily } from '@/src/theme/typography';

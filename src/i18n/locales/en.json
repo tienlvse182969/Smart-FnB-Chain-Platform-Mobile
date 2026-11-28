@@ -312,14 +312,18 @@
   "printer": {
     "section": "Receipt printer",
     "none": "No printer selected",
-    "noneHint": "Pair the printer in Android Bluetooth settings, then select it here.",
+    "noneHint": "Select a paired Bluetooth printer, a USB printer or the printer built into the POS device.",
     "choose": "Select printer",
     "change": "Change printer",
-    "pickTitle": "Select a paired printer",
-    "pickEmpty": "No paired devices yet. Pair the printer in Android Bluetooth settings first (PIN is usually 0000 or 1234).",
+    "pickTitle": "Select a printer",
+    "pickEmpty": {
+      "BLUETOOTH": "No paired devices yet. Pair the printer in Android Bluetooth settings first (PIN is usually 0000 or 1234).",
+      "USB": "No USB printer found. Connect the printer to the POS device with a USB cable (use an OTG cable if needed), turn it on and select again.",
+      "BUILTIN": "This device has no supported built-in printer (Sunmi POS devices are supported)."
+    },
     "testPrint": "Test print",
     "testPrinted": "Test page sent.",
-    "loadFailed": "Could not read the Bluetooth device list.",
+    "loadFailed": "Could not read the printer list.",
     "remove": "Remove",
     "printMode": "Receipt print mode",
     "modeImage": "Image (diacritics)",
@@ -331,13 +335,13 @@
       "NOT_CONFIGURED": {
         "title": "No printer selected",
         "tips": {
-          "0": "Go to Account > Receipt printer and pick a paired Bluetooth printer."
+          "0": "Go to Account > Receipt printer and pick a printer (Bluetooth, USB or built-in)."
         }
       },
       "UNSUPPORTED": {
         "title": "This device cannot print",
         "tips": {
-          "0": "Bluetooth printing only works on Android with a development build (not Expo Go)."
+          "0": "Bluetooth, USB and built-in printing only work on Android with a development build (not Expo Go)."
         }
       },
       "NO_PERMISSION": {
@@ -357,7 +361,7 @@
         "tips": {
           "0": "The printer is powered on and close to the POS device.",
           "1": "The printer has paper, the cover is closed and there is no paper jam.",
-          "2": "The printer is paired in Bluetooth settings and not connected to another device.",
+          "2": "A Bluetooth printer is paired and not connected to another device; a USB printer is firmly plugged in.",
           "3": "Turn the printer off and on again if it still fails."
         }
       },
@@ -369,7 +373,32 @@
           "2": "Tap Try again once it is sorted."
         }
       },
-      "orderPaid": "The payment is still recorded. You can reprint any time from Order history."
+      "orderPaid": "The payment is still recorded. You can reprint any time from Order history.",
+      "USB_PERMISSION": {
+        "title": "USB printer permission needed",
+        "tips": {
+          "0": "When the system dialog appears, choose Allow so the app can use the USB printer.",
+          "1": "Unplug and re-plug the USB cable, then tap Try again."
+        }
+      },
+      "DEVICE_NOT_FOUND": {
+        "title": "Printer not found",
+        "tips": {
+          "0": "The USB printer is firmly plugged in and powered on.",
+          "1": "Go to Account > Receipt printer and select the printer again if you changed printer or port."
+        }
+      },
+      "PAPER_OUT": {
+        "title": "Printer is out of paper or open",
+        "tips": {
+          "0": "Load a new paper roll and close the printer cover, then tap Try again."
+        }
+      }
+    },
+    "transport": {
+      "BLUETOOTH": "Bluetooth",
+      "USB": "USB",
+      "BUILTIN": "Built-in"
     }
   },
   "refund": {
