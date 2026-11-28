@@ -1,6 +1,7 @@
 import { toast } from '@/src/components/ui/toast';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import QRCode from 'react-native-qrcode-svg';
 
 import { formatVnd } from '@/src/data/format';
@@ -53,6 +54,7 @@ export function ServerCheckoutDialog({
   onClose: (paid: boolean) => void;
 }) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { selectedStation } = useStation();
   const [tendered, setTendered] = useState('');
   const [paidOrder, setPaidOrder] = useState<CounterOrder | null>(null);
@@ -112,6 +114,8 @@ export function ServerCheckoutDialog({
       try {
         await printOrderReceipt(orderId, selectedStation, printJobIds.current);
         setPrintState('done');
+        // mask=false để toast không chặn thu ngân bấm "Đơn mới"
+        toast.success(t('checkout.printed'), 1.5, undefined, false);
       } catch (failure) {
         setPrintFailure(toPrintFailure(failure));
         if (failure instanceof PrinterNotConfiguredError) {
@@ -122,7 +126,7 @@ export function ServerCheckoutDialog({
         }
       }
     },
-    [selectedStation],
+    [selectedStation, t],
   );
 
   const paidOrderId = paidOrder?.id;
